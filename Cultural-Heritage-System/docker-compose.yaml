@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    container_name: sqlserver
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      MSSQL_SA_PASSWORD: "1236fG543$"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    networks:
+      - medical-appointment-network
+
+  medical-appointment:
+    image: khanhduc/medical-appointment:latest
+    container_name: medical-appointment-api
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=MedicalAppointmentBooking;User Id=sa;Password=1236fG543$;TrustServerCertificate=True;
+      - Jwt__Key=3QrjhFr27/3zYLZuzvKAfwnsi3jCMgEOMh14z57XZQDpp6uJrMvOHTFJFK03fXRF0ZZ=dcCG2Mojz3oY5tlIWwXdC7TMh5mzY6S7t!eR2tLJzExANMm/BYrUMnQCZUlWXZ/bHUaZU3mfTezlfvkGdW4k?!Qn8FX=Nvgh7i5zQ=izaGAyujj7rKb0fSZ=lv?4CS9xNCMEqgFt?4pmYDZ3KVp0zl8hdAXOm?86QcZ8miT8!VCCA1U4PwN3r-GCGF9U
+      - Jwt__Issuer=JwtIssuer
+      - Jwt__Audience=JwtAudience
+      - Jwt__Subject=JwtSubject
+      - Authentication__Google__RedirectUri=http://your-public-domain:3000/oauth2/callback/google
+      - Authentication__Facebook__RedirectUri=http://your-public-domain:3000/oauth2/callback/facebook
+    ports:
+      - "5011:5011"
+    depends_on:
+      - sqlserver
+    networks:
+      - medical-appointment-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5011/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+  
+  medical-appointment-web-webapp:
+    image: khanhduc/medical-appointment-web-webapp:latest
+    container_name: medical-appointment-web-webapp
+    ports:
+      - "3000:3000"
+    depends_on:
+      - medical-appointment
+    networks:
+      - medical-appointment-network
+    restart: unless-stopped
+
+volumes:
+  sql_data:
+    driver: local
+
+networks:
+  medical-appointment-network:
+    driver: bridge

@@ -1,0 +1,62 @@
+﻿# Thư mục build và biên dịch
+bin/
+obj/
+out/
+publish/
+wwwroot/
+
+# Thư mục cấu hình IDE
+.vs/
+medical-appointment-booking/bin/
+medical-appointment-booking/obj/
+medical-appointment-booking/out/
+medical-appointment-booking/vs/
+.vscode/
+.idea/
+*.vs/
+*.ncrunch*
+*.localhistory
+*.vsix
+../vs
+.vsconfig
+
+./appsettings.json
+
+# File cấu hình Visual Studio
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# File log
+**/bin/
+**/obj/
+
+*.log
+
+# File tạm và cache
+*.cache
+*.lock
+*.pid
+*.seed
+*.coveragerc
+
+# File cấu hình môi trường (có thể chứa thông tin nhạy cảm)
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.json
+
+# File cấu hình dự án
+project.lock.json
+project.assets.json
+
+# File build và debug
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.obj
+*.idb
+*.lib
+*.nupkg
+*.ntvs*
