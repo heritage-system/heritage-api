@@ -1,4 +1,5 @@
-﻿using Cultural_Heritage_System.Models;
+﻿using CloudinaryDotNet.Core;
+using Cultural_Heritage_System.Models;
 using medical_appointment_booking.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,13 @@ namespace Cultural_Heritage_System.Repositories
             : base(context)
         {
             _logger = logger;
+        }
+
+        public async Task<User?> FindUserByEmailOrUserName(string emailOrUserName)
+        {
+            return await _context.Users
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Email == emailOrUserName || u.UserName == emailOrUserName);
         }
 
         public async Task<User?> FindUserByEmail(string email)

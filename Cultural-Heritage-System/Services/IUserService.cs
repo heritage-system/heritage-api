@@ -6,5 +6,6 @@ namespace Cultural_Heritage_System.Services
     public interface IUserService
     {
         Task<UserCreationResponse> CreateUser(UserCreationRequest request);
+        Task ChangePassword(ChangePasswordRequest request);
     }
 }

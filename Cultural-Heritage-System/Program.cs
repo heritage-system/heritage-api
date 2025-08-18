@@ -63,7 +63,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
-            //builder.Services.AddScoped<IMailService, MailService>();
+            builder.Services.AddScoped<IMailService, MailService>();
             //builder.Services.AddScoped<IProfileService, ProfileService>();
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
