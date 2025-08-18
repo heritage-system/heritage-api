@@ -5,30 +5,33 @@ using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
     public class UserService : IUserService
     {
+        private readonly IHttpContextAccessor httpContextAccessor;
         private readonly UserRepository userRepository;
         private readonly ProfileRepository profileRepository;
         private readonly RoleRepository roleRepository;
         private readonly PasswordHasher<User> passwordHasher;
         private readonly IMapper mapper;
-        //private readonly IMailService mailService;
+        private readonly IMailService mailService;
         private readonly ILogger<UserService> logger;
 
-        public UserService(UserRepository userRepository, RoleRepository roleRepository, ILogger<UserService> logger,
-            ProfileRepository profileRepository, IMapper mapper)
+        public UserService(UserRepository userRepository, RoleRepository roleRepository, ILogger<UserService> logger, IMailService mailService,
+            ProfileRepository profileRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             this.userRepository = userRepository;
             this.roleRepository = roleRepository;
             this.passwordHasher = new PasswordHasher<User>();
             this.logger = logger;
             this.profileRepository = profileRepository;
-            //this.mailService = mailService;
+            this.mailService = mailService;
             this.mapper = mapper;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<UserCreationResponse> CreateUser(UserCreationRequest request)
@@ -62,9 +65,34 @@ namespace Cultural_Heritage_System.Services.Impl
 
           
 
-            //await mailService.SendEmailWelcome(user.Email, profile.FirstName + " " + profile.LastName, user.Phone, user.CreatedAt);
+            await mailService.SendEmailWelcome(user.Email, user.UserName, user.CreatedAt);
 
             return mapper.Map<UserCreationResponse>(user); 
+        }
+
+        public async Task ChangePassword(ChangePasswordRequest request)
+        {
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+
+            var accountId = int.Parse(accountIdClaim);
+            var existingUser = await userRepository.FindUserById(accountId);
+            if (existingUser == null)
+            {
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
+            }
+
+            var passwordVerificationResult = passwordHasher.VerifyHashedPassword(existingUser, existingUser.PasswordHash, request.OldPassword);
+            if (passwordVerificationResult == PasswordVerificationResult.Failed)
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+
+            existingUser.PasswordHash = passwordHasher.HashPassword(existingUser, request.NewPassword);
+            await userRepository.UpdateAsync(existingUser);
         }
     }
 }

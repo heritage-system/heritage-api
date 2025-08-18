@@ -31,5 +31,17 @@ namespace Cultural_Heritage_System.Controllers
                 result: users
             );
         }
+
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<ApiResponse<object>> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            await userService.ChangePassword(request);
+            return new ApiResponse<object>
+            {
+                code = 200,
+                message = "Change password successfully"
+            };
+        }
     }
 }

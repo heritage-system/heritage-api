@@ -51,7 +51,7 @@ namespace Cultural_Heritage_System.Services.Impl
         {
             logger.LogInformation("SignIn start ...");
 
-            var user = await userRepository.FindUserByEmail(request.PhoneOrEmail);
+            var user = await userRepository.FindUserByEmailOrUserName(request.EmailOrUsername);
 
             if (user == null)
             {
