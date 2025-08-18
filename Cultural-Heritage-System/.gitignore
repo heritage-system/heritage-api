@@ -42,9 +42,8 @@ medical-appointment-booking/vs/
 *.coveragerc
 
 # File cấu hình môi trường (có thể chứa thông tin nhạy cảm)
-appsettings.Development.json
-appsettings.Local.json
-appsettings.*.json
+
+
 
 # File cấu hình dự án
 project.lock.json
