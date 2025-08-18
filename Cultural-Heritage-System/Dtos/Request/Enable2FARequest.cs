@@ -2,6 +2,6 @@
 {
     public class Enable2FARequest
     {
-        public string PhoneOrEmail { get; set; }
+        public string EmailOrUserName { get; set; }
     }
 }

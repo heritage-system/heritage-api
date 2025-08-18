@@ -12,7 +12,8 @@ namespace Cultural_Heritage_System.Helpers
         public MappingProfile()
         {
             CreateMap<UserCreationRequest, User>();
-            CreateMap<User, UserCreationResponse>();               
+            CreateMap<User, UserCreationResponse>();
+            CreateMap<PasswordReset, ForgotPasswordResponse>();
         }
     }
 }
