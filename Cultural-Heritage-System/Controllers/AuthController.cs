@@ -1,11 +1,12 @@
-﻿using System.Net;
-using Cultural_Heritage_System.Dtos.Request;
+﻿using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace Cultural_Heritage_System.Controllers
 {
@@ -14,10 +15,12 @@ namespace Cultural_Heritage_System.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService authService;
+        private readonly IPasswordResetService resetService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IPasswordResetService resetService)
         {
             this.authService = authService;
+            this.resetService = resetService;
         }
 
         [HttpPost("sign-in")]
@@ -60,5 +63,31 @@ namespace Cultural_Heritage_System.Controllers
             };
         }
 
+        [HttpPost("forgot-password")]
+        public async Task<ApiResponse<ForgotPasswordResponse>> ForgotPassword([FromBody] Dtos.Request.ForgotPasswordRequest req)
+        {
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var result = await resetService.SendResetCodeAsync(req.Email, ip);
+
+            return new ApiResponse<ForgotPasswordResponse>
+            {
+                code = ((int)HttpStatusCode.OK),
+                message = "Send Mail OTP Reset Password Successfully",
+                result = result
+            };
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<ApiResponse<bool>> ResetPassword([FromBody] Dtos.Request.ResetPasswordRequest req)
+        {
+            var result = await resetService.ResetPasswordAsync(req.Email, req.Otp, req.NewPassword);
+
+            return new ApiResponse<bool>
+            {
+                code = ((int)HttpStatusCode.OK),
+                message = "Reset Password Successfully",
+                result = result
+            };
+        }
     }
 }

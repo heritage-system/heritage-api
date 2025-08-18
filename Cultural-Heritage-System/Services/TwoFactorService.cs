@@ -99,7 +99,7 @@ namespace Cultural_Heritage_System.Services
 
         public async Task<string> Enable2FA(Enable2FARequest request)
         {
-            var user = await userRepository.FindUserByEmail(request.PhoneOrEmail);
+            var user = await userRepository.FindUserByEmail(request.EmailOrUserName);
             if (user == null)
             {
                 throw new AppException(ErrorCode.USER_NOT_EXISTED);
