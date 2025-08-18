@@ -20,9 +20,6 @@ medical-appointment-booking/vs/
 ../vs
 .vsconfig
 
-# Ignore all appsettings
-appsettings.json
-appsettings.*.json
 
 
 # File cấu hình Visual Studio
