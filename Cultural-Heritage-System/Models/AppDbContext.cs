@@ -36,6 +36,7 @@ namespace Cultural_Heritage_System.Models
         public DbSet<RevenueShare> RevenueShares { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
+        public DbSet<HeritageMedia> HeritageMedias { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,6 +72,12 @@ namespace Cultural_Heritage_System.Models
                 .HasOne(h => h.Category)
                 .WithMany(c => c.Heritages)
                 .HasForeignKey(h => h.CategoryId);
+
+            modelBuilder.Entity<HeritageMedia>()
+               .HasOne(hm => hm.Heritage)
+               .WithMany(h => h.Media)
+               .HasForeignKey(hm => hm.HeritageId)
+               .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Contribution>()
                 .HasOne(c => c.Contributor)
