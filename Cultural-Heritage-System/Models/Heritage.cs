@@ -21,11 +21,9 @@ namespace Cultural_Heritage_System.Models
         [Column("map_url")]
         public string MapUrl { get; set; }
 
-        [Column("image_url")]
-        public string ImageUrl { get; set; }
-
         [Column("is_featured")]
         public bool IsFeatured { get; set; }
+        public ICollection<HeritageMedia> Media { get; set; } = new List<HeritageMedia>();
 
         public ICollection<HeritageTag> HeritageTags { get; set; } = new List<HeritageTag>();
    

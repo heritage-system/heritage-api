@@ -31,6 +31,12 @@ namespace Cultural_Heritage_System.Models
         public DbSet<SystemLog> SystemLogs { get; set; }
         public DbSet<Tag> Tags { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<ContributionPurchase> ContributionPurchases { get; set; }
+        public DbSet<Contributor> Contributors { get; set; }
+        public DbSet<RevenueShare> RevenueShares { get; set; }
+        public DbSet<Wallet> Wallets { get; set; }
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
+        public DbSet<HeritageMedia> HeritageMedias { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -67,10 +73,16 @@ namespace Cultural_Heritage_System.Models
                 .WithMany(c => c.Heritages)
                 .HasForeignKey(h => h.CategoryId);
 
+            modelBuilder.Entity<HeritageMedia>()
+               .HasOne(hm => hm.Heritage)
+               .WithMany(h => h.Media)
+               .HasForeignKey(hm => hm.HeritageId)
+               .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<Contribution>()
-                .HasOne(c => c.User)
+                .HasOne(c => c.Contributor)
                 .WithMany(u => u.Contributions)
-                .HasForeignKey(c => c.UserId)
+                .HasForeignKey(c => c.ContributorId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Contribution>()
@@ -84,6 +96,24 @@ namespace Cultural_Heritage_System.Models
                 .WithMany(u => u.QuizResults)
                 .HasForeignKey(q => q.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<RevenueShare>()
+                .HasOne(rs => rs.Contribution)
+                .WithMany()
+                .HasForeignKey(rs => rs.ContributionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RevenueShare>()
+                .HasOne(rs => rs.Contributor)
+                .WithMany()
+                .HasForeignKey(rs => rs.ContributorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RevenueShare>()
+                .HasOne(rs => rs.ContributionPurchase)
+                .WithMany()
+                .HasForeignKey(rs => rs.PurchaseId)
+                .OnDelete(DeleteBehavior.Restrict);
 
         }
     }
