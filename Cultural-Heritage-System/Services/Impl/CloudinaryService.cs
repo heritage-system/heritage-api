@@ -3,7 +3,7 @@ using CloudinaryDotNet.Actions;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
-    public class CloudinaryService
+    public class CloudinaryService : ICloudinaryService
     {
         private readonly Cloudinary _cloudinary;
 
@@ -30,5 +30,26 @@ namespace Cultural_Heritage_System.Services.Impl
             return uploadResult.SecureUrl.AbsoluteUri;
         }
 
+        public async Task<string> UploadDocumentAsync(Stream fileStream, string fileName)
+        {
+            var uploadParams = new RawUploadParams
+            {
+                File = new FileDescription(fileName, fileStream),
+            };
+
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+            return uploadResult.SecureUrl?.AbsoluteUri ?? uploadResult.Url?.AbsoluteUri ?? string.Empty;
+        }
+
+        public async Task<string> UploadVideoAsync(Stream fileStream, string fileName)
+        {
+            var uploadParams = new VideoUploadParams
+            {
+                File = new FileDescription(fileName, fileStream),
+            };
+
+            var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+            return uploadResult.SecureUrl?.AbsoluteUri ?? uploadResult.Url?.AbsoluteUri ?? string.Empty;
+        }
     }
 }

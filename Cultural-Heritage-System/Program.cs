@@ -55,6 +55,8 @@ namespace Cultural_Heritage_System
             CorsConfiguration.ConfigureServices(builder.Services); // CORS
             builder.Services.AddHttpContextAccessor(); // HttpContextAccessor
 
+
+
             builder.Services.AddScoped<UserRepository>();
             builder.Services.AddScoped<RoleRepository>();
             builder.Services.AddScoped<ProfileRepository>();
@@ -65,6 +67,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IMailService, MailService>();
             builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
+            builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+
             //builder.Services.AddScoped<IProfileService, ProfileService>();
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
