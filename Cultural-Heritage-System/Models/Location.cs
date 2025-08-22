@@ -9,12 +9,8 @@ namespace Cultural_Heritage_System.Models
         [Column("name")]
         public string Name { get; set; }
 
-        [Column("latitude")]
-        public decimal Latitude { get; set; }
-
-        [Column("longitude")]
-        public decimal Longitude { get; set; }
-
+        [Column("code")]
+        public string Code { get; set; }  //HN, HCM, DN...
         public ICollection<HeritageLocation> HeritageLocations { get; set; } = new List<HeritageLocation>();
     }
 }
