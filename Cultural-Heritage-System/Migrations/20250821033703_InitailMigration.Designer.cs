@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cultural_Heritage_System.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250820061830_InitailMigration")]
+    [Migration("20250821033703_InitailMigration")]
     partial class InitailMigration
     {
         /// <inheritdoc />
@@ -79,6 +79,10 @@ namespace Cultural_Heritage_System.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("content");
 
+                    b.Property<int>("ContributorId")
+                        .HasColumnType("int")
+                        .HasColumnName("contributor_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("create_at");
@@ -91,6 +95,10 @@ namespace Cultural_Heritage_System.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("media_url");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("price ");
 
                     b.Property<int>("ReviewedBy")
                         .HasColumnType("int")
@@ -114,17 +122,134 @@ namespace Cultural_Heritage_System.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
 
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContributorId");
+
+                    b.HasIndex("ReviewedBy");
+
+                    b.ToTable("Contributions");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.ContributionPurchase", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<int>("ContributionId")
+                        .HasColumnType("int")
+                        .HasColumnName("contribution_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("create_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("payment_method");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("payment_status");
+
+                    b.Property<DateTime>("PurchasedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("purchased_at");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("update_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
                     b.Property<int>("UserId")
                         .HasColumnType("int")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ReviewedBy");
+                    b.HasIndex("ContributionId");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Contributions");
+                    b.ToTable("ContributionPurchases");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.Contributor", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Bio")
+                        .HasColumnType("text")
+                        .HasColumnName("bio");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("create_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("DocumentsUrl")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("documents_url");
+
+                    b.Property<string>("Expertise")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("expertise");
+
+                    b.Property<decimal?>("Rating")
+                        .HasColumnType("decimal(3,2)")
+                        .HasColumnName("rating");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("update_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
+
+                    b.Property<bool>("Verified")
+                        .HasColumnType("bit")
+                        .HasColumnName("verified");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Contributors");
                 });
 
             modelBuilder.Entity("Cultural_Heritage_System.Models.ExportLog", b =>
@@ -291,11 +416,6 @@ namespace Cultural_Heritage_System.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("description");
 
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("image_url");
-
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("bit")
                         .HasColumnName("is_featured");
@@ -363,6 +483,56 @@ namespace Cultural_Heritage_System.Migrations
                     b.HasIndex("LocationId");
 
                     b.ToTable("HeritageLocations");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageMedia", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("create_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<long>("HeritageId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("heritage_id");
+
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("media_type");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("update_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("url");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HeritageId");
+
+                    b.ToTable("HeritageMedias");
                 });
 
             modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageTag", b =>
@@ -908,6 +1078,71 @@ namespace Cultural_Heritage_System.Migrations
                     b.ToTable("Reports");
                 });
 
+            modelBuilder.Entity("Cultural_Heritage_System.Models.RevenueShare", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ContributionId")
+                        .HasColumnType("int")
+                        .HasColumnName("contribution_id");
+
+                    b.Property<decimal>("ContributorAmount")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("contributor_amount");
+
+                    b.Property<int>("ContributorId")
+                        .HasColumnType("int")
+                        .HasColumnName("contributor_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("create_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("PayoutStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("payout_status");
+
+                    b.Property<int>("PurchaseId")
+                        .HasColumnType("int")
+                        .HasColumnName("purchase_id");
+
+                    b.Property<decimal>("SystemAmount")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("system_amount");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("total_amount");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("update_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContributionId");
+
+                    b.HasIndex("ContributorId");
+
+                    b.HasIndex("PurchaseId");
+
+                    b.ToTable("RevenueShares");
+                });
+
             modelBuilder.Entity("Cultural_Heritage_System.Models.Review", b =>
                 {
                     b.Property<long>("Id")
@@ -1149,21 +1384,146 @@ namespace Cultural_Heritage_System.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("Cultural_Heritage_System.Models.Wallet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("balance");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("create_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("update_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Wallets");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.WalletTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<int?>("RelatedPurchaseId")
+                        .HasColumnType("int")
+                        .HasColumnName("related_purchase_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("update_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<int>("WalletId")
+                        .HasColumnType("int")
+                        .HasColumnName("wallet_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RelatedPurchaseId");
+
+                    b.HasIndex("WalletId");
+
+                    b.ToTable("WalletTransactions");
+                });
+
             modelBuilder.Entity("Cultural_Heritage_System.Models.Contribution", b =>
                 {
+                    b.HasOne("Cultural_Heritage_System.Models.Contributor", "Contributor")
+                        .WithMany("Contributions")
+                        .HasForeignKey("ContributorId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
                     b.HasOne("Cultural_Heritage_System.Models.User", "Reviewer")
                         .WithMany("ReviewedContributions")
                         .HasForeignKey("ReviewedBy")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Cultural_Heritage_System.Models.User", "User")
-                        .WithMany("Contributions")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                    b.Navigation("Contributor");
 
                     b.Navigation("Reviewer");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.ContributionPurchase", b =>
+                {
+                    b.HasOne("Cultural_Heritage_System.Models.Contribution", "Contribution")
+                        .WithMany()
+                        .HasForeignKey("ContributionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Cultural_Heritage_System.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Contribution");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.Contributor", b =>
+                {
+                    b.HasOne("Cultural_Heritage_System.Models.User", "User")
+                        .WithMany("Contributors")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -1237,6 +1597,17 @@ namespace Cultural_Heritage_System.Migrations
                     b.Navigation("Heritage");
 
                     b.Navigation("Location");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageMedia", b =>
+                {
+                    b.HasOne("Cultural_Heritage_System.Models.Heritage", "Heritage")
+                        .WithMany("Media")
+                        .HasForeignKey("HeritageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Heritage");
                 });
 
             modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageTag", b =>
@@ -1367,6 +1738,33 @@ namespace Cultural_Heritage_System.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Cultural_Heritage_System.Models.RevenueShare", b =>
+                {
+                    b.HasOne("Cultural_Heritage_System.Models.Contribution", "Contribution")
+                        .WithMany()
+                        .HasForeignKey("ContributionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Cultural_Heritage_System.Models.Contributor", "Contributor")
+                        .WithMany()
+                        .HasForeignKey("ContributorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Cultural_Heritage_System.Models.ContributionPurchase", "ContributionPurchase")
+                        .WithMany()
+                        .HasForeignKey("PurchaseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Contribution");
+
+                    b.Navigation("ContributionPurchase");
+
+                    b.Navigation("Contributor");
+                });
+
             modelBuilder.Entity("Cultural_Heritage_System.Models.Review", b =>
                 {
                     b.HasOne("Cultural_Heritage_System.Models.Heritage", "Heritage")
@@ -1408,9 +1806,42 @@ namespace Cultural_Heritage_System.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("Cultural_Heritage_System.Models.Wallet", b =>
+                {
+                    b.HasOne("Cultural_Heritage_System.Models.User", "User")
+                        .WithMany("Wallets")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.WalletTransaction", b =>
+                {
+                    b.HasOne("Cultural_Heritage_System.Models.ContributionPurchase", "RelatedPurchase")
+                        .WithMany()
+                        .HasForeignKey("RelatedPurchaseId");
+
+                    b.HasOne("Cultural_Heritage_System.Models.Wallet", "Wallet")
+                        .WithMany("Transactions")
+                        .HasForeignKey("WalletId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RelatedPurchase");
+
+                    b.Navigation("Wallet");
+                });
+
             modelBuilder.Entity("Cultural_Heritage_System.Models.Category", b =>
                 {
                     b.Navigation("Heritages");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.Contributor", b =>
+                {
+                    b.Navigation("Contributions");
                 });
 
             modelBuilder.Entity("Cultural_Heritage_System.Models.Heritage", b =>
@@ -1418,6 +1849,8 @@ namespace Cultural_Heritage_System.Migrations
                     b.Navigation("HeritageLocations");
 
                     b.Navigation("HeritageTags");
+
+                    b.Navigation("Media");
                 });
 
             modelBuilder.Entity("Cultural_Heritage_System.Models.Location", b =>
@@ -1449,7 +1882,7 @@ namespace Cultural_Heritage_System.Migrations
 
             modelBuilder.Entity("Cultural_Heritage_System.Models.User", b =>
                 {
-                    b.Navigation("Contributions");
+                    b.Navigation("Contributors");
 
                     b.Navigation("Favorites");
 
@@ -1464,6 +1897,13 @@ namespace Cultural_Heritage_System.Migrations
                     b.Navigation("Reviews");
 
                     b.Navigation("SystemLogs");
+
+                    b.Navigation("Wallets");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.Wallet", b =>
+                {
+                    b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618
         }

@@ -38,9 +38,10 @@ namespace Cultural_Heritage_System.Models
         public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ICollection<Report> Reports { get; set; } = new List<Report>();
-        public ICollection<Contribution> Contributions { get; set; } = new List<Contribution>();
+        public ICollection<Contributor> Contributors { get; set; } = new List<Contributor>();
         public ICollection<Contribution> ReviewedContributions { get; set; } = new List<Contribution>();
 
+        public ICollection<Wallet> Wallets { get; set; } = new List<Wallet>();
         public ICollection<QuizResult> QuizResults { get; set; } = new List<QuizResult>();
         public ICollection<SystemLog> SystemLogs { get; set; } = new List<SystemLog>();
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
