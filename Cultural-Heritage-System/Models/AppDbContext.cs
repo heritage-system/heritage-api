@@ -38,6 +38,8 @@ namespace Cultural_Heritage_System.Models
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
         public DbSet<HeritageMedia> HeritageMedias { get; set; }
         public DbSet<HeritageCoordinate> HeritageCoordinates { get; set; }
+        public DbSet<HeritageOccurrence> HeritageOccurrences { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<HeritageTag>()
@@ -82,6 +84,12 @@ namespace Cultural_Heritage_System.Models
             modelBuilder.Entity<HeritageCoordinate>()
                .HasOne(hm => hm.Heritage)
                .WithMany(h => h.Coordinates)
+               .HasForeignKey(hm => hm.HeritageId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<HeritageOccurrence>()
+               .HasOne(hm => hm.Heritage)
+               .WithMany(h => h.HeritageOccurrences)
                .HasForeignKey(hm => hm.HeritageId)
                .OnDelete(DeleteBehavior.Cascade);
 

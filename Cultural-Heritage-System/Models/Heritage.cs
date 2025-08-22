@@ -24,15 +24,8 @@ namespace Cultural_Heritage_System.Models
         [Column("is_featured")]
         public bool IsFeatured { get; set; }
 
-        [Column("start_date")]
-        public DateTime? StartDate { get; set; }
 
-        [Column("end_date")]
-        public DateTime? EndDate { get; set; }
-
-        [Column("frequency")]
-        public FestivalFrequency Frequency { get; set; }
-
+        public ICollection<HeritageOccurrence> HeritageOccurrences { get; set; } = new List<HeritageOccurrence>();
 
         public ICollection<HeritageMedia> Media { get; set; } = new List<HeritageMedia>();
 
@@ -41,6 +34,7 @@ namespace Cultural_Heritage_System.Models
         public ICollection<HeritageLocation> HeritageLocations { get; set; } = new List<HeritageLocation>();
 
         public ICollection<HeritageCoordinate> Coordinates { get; set; } = new List<HeritageCoordinate>();
+
     }
 
 }
