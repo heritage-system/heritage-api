@@ -1,0 +1,91 @@
+﻿DELETE FROM HeritageCoordinates;
+DELETE FROM HeritageLocations;
+DELETE FROM Heritages;
+DELETE FROM Categories;
+DELETE FROM Locations;
+-- =====================
+-- 1. Categories
+-- =====================
+INSERT INTO Categories (name, description, created_by, create_at, update_at)
+VALUES (N'Lễ hội truyền thống', N'Di sản phi vật thể - lễ hội truyền thống', 'system', GETDATE(), GETDATE());
+GO
+
+-- =====================
+-- 2. Heritages
+-- =====================
+INSERT INTO Heritages (name, description, category_id, map_url, is_featured, created_by, create_at, update_at)
+VALUES
+( N'Lễ hội Miếu Bà Rá', N'Núi Bà Rá gắn với truyền thuyết Bà Rá và Bà Đen (Tây Ninh); lễ hội thu hút hàng nghìn người dân và du khách hành hương mỗi năm', 1, N'https://baobinhphuoc.com.vn/news/19/116116/le-hoi-mieu-ba-ra-giap-thin-dien-ra-tu-ngay-9-den-11-4-2024', 0, 'system', GETDATE(), GETDATE()),
+( N'Lễ hội Cầu ngư ở Vạn Thủy Tú', N'Lăng Vạn Thủy Tú được xây dựng từ năm 1762, hiện lưu giữ bộ xương cá voi lớn nhất Đông Nam Á. Lễ hội Cầu ngư phản ánh sinh hoạt văn hóa - tâm linh đặc trưng của cư dân ven biển Nam Trung Bộ.', 1, N'https://svhttdl.binhthuan.gov.vn/di-tich-danh-thang-le-hoi-van-hoa/le-hoi-cau-ngu-van-thuy-tu-thanh-pho-phan-thiet-tinh-binh-thuan-639496', 0, 'system', GETDATE(), GETDATE()),
+( N'Lễ hội Chùa Láng', N'Lễ hội Chùa Láng từng được tổ chức trong 10 ngày với sự tham gia của 9 làng, là hội lớn nhất phía Tây kinh thành Thăng Long xưa.', 1, N'https://vinpearl.com/vi/kham-pha-le-hoi-chua-lang', 0, 'system', GETDATE(), GETDATE()),
+( N'Lễ hội Chùa Đọi Sơn', N'Lễ hội được duy trì và phát triển, trở thành một trong những lễ hội tiêu biểu của tỉnh Hà Nam.', 1, N'https://baohanam.com.vn/van-hoa/le-hoi/le-hoi-truyen-thong-chua-long-doi-son-nam-2024-122101.html', 0, 'system', GETDATE(), GETDATE()),
+( N'Lễ hội Đền thờ Trạng Trình Nguyễn Bỉnh Khiêm', N'Lễ hội được tổ chức thường niên và đã được công nhận là Di sản văn hóa phi vật thể quốc gia vào năm 2019.', 1, N'https://vov.vn/multimedia/anh/ron-rang-le-hoi-den-trang-trinh-nguyen-binh-khiem-post1070110.vov', 0, 'system', GETDATE(), GETDATE()),
+( N'Lễ hội Đền Chu Hưng', N'Đền Chu Hưng từng là nơi diễn ra nhiều sự kiện lịch sử quan trọng, như nơi tuyên bố thành lập các đoàn thể cứu quốc sau Cách mạng Tháng Tám năm 1941.', 1, N'https://baophutho.vn/gia-tri-lich-su-cua-den-chu-hung-169132.htm', 0, 'system', GETDATE(), GETDATE()),
+( N'Lễ hội Đền Mưng', N'Lễ hội truyền thống tại Thanh Hóa, đang được bảo tồn.', 1, N'https://baothanhhoa.vn/le-hoi-den-mung-nbsp-net-dep-truyen-thong-dam-da-ban-sac-xu-thanh-140397.htm', 0, 'system', GETDATE(), GETDATE()),
+( N'Lễ hội mường Ca Da', N'Lễ hội của cộng đồng người Thái tại Thanh Hóa, thể hiện bản sắc truyền thống.', 1, N'https://truyenhinhthanhhoa.vn/le-hoi-muong-ca-da-noi-toa-sang-cac-gia-tri-van-hoa-truyen-thong-110230327111223007.htm', 0, 'system', GETDATE(), GETDATE()),
+(N'Lễ hội Đình Quan Lạn', N'Lễ hội truyền thống tại xã Quan Lạn, huyện Vân Đồn, Quảng Ninh.', 1, N'https://www.qdnd.vn/van-hoa/doi-song/doc-dao-le-hoi-truyen-thong-van-don-le-hoi-dinh-quan-lan-700140', 0, 'system', GETDATE(), GETDATE()),
+( N'Lễ hội Đình Trà Cổ', N'Lễ hội tại Đình Trà Cổ, di tích lịch sử văn hóa cấp quốc gia đặc biệt.', 1, N'https://mongcai.gov.vn/vi-vn/tin/le-hoi-dinh-tra-co--di-san-van-hoa-phi-vat-the-cap-quoc-gia-p16129-c76190-n249699', 0, 'system', GETDATE(), GETDATE()),
+( N'Lễ hội Ada Koohn (Mừng lúa mới) của người Pa Cô', N'Tết mừng lúa mới – dịp sum họp của người Pa Cô tại huyện A Lưới, Huế.', 1, N'https://www.vietnamplus.vn/doc-dao-le-cung-mung-lua-moi-cua-nguoi-dan-toc-pa-co-o-thua-thien-hue-post999111.vnp', 0, 'system', GETDATE(), GETDATE()),
+( N'Lễ hội Chùa Đại Bi', N'Chùa Đại Bi là ngôi chùa cổ, có lịch sử lâu đời, gắn liền với truyền thống Phật giáo.', 1, N'https://hoabinhtourist.com/cam-nang-du-lich/le-hoi-chua-bai-dinh', 0, 'system', GETDATE(), GETDATE()),
+( N'Lễ hội Đền, Chùa Linh Quang', N'Đền, Chùa Linh Quang là di tích lịch sử có giá trị văn hóa đặc biệt tại Nam Định.', 1, N'https://phuongdinh.namdinh.gov.vn/tin-hoat-dong/le-don-bang-chung-nhan-le-hoi-den-chua-linh-quang-xa-phuong-dinh-duoc-dua-vao-danh-muc-di-san-va-216744', 0, 'system', GETDATE(), GETDATE()),
+( N'Lễ hội làng Chử Xá', N'Lễ hội gắn với truyền thống văn hóa của cư dân làng Chử Xá, Hà Nội.', 1, N'https://nguoihanoi.vn/le-hoi-lang-chu-xa-la-di-san-van-hoa-phi-vat-the-quoc-gia-67479.html', 0, 'system', GETDATE(), GETDATE()),
+( N'Lễ hội Gầu tào của người Mông', N'Lễ hội mang đậm nét văn hóa dân tộc Mông tại Lai Châu.', 1, N'https://nhandan.vn/dac-sac-van-hoa-mong-qua-le-hoi-gau-tao-post796616.html', 0, 'system', GETDATE(), GETDATE()),
+(N'Lễ hội Lăng Ông Trà Ôn', N'Lễ hội tưởng nhớ công lao Đức Thánh Trần, Vĩnh Long.', 1, N'https://vinhlongtourist.vn/en/detailnews/?id=news_12010&t=dac-sac-le-hoi-lang-ong-tien-quan-thong-che-dieu-bat', 0, 'system', GETDATE(), GETDATE()),
+( N'Lễ hội Tranh đầu pháo', N'Lễ hội dân gian độc đáo tại Quảng Uyên, Cao Bằng.', 1, N'https://baove.congly.vn/cao-bang-doc-dao-net-dep-van-hoa-dan-toc-trong-le-hoi-tranh-dau-phao-tai-quang-uyen-420993.html', 0, 'system', GETDATE(), GETDATE());
+GO
+
+-- =====================
+-- 3. Locations + HeritageLocations
+-- =====================
+INSERT INTO Locations (name, code, created_by, create_at, update_at)
+VALUES (N'Thị xã Phước Long, Bình Phước', N'BP-PL', 'system', GETDATE(), GETDATE());
+DECLARE @loc1 INT = SCOPE_IDENTITY();
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at) 
+VALUES (1, @loc1, 'system', GETDATE(), GETDATE());
+
+INSERT INTO Locations (name, code, created_by, create_at, update_at)
+VALUES (N'Phường Đức Thắng, Phan Thiết, Bình Thuận', N'BT-PT', 'system', GETDATE(), GETDATE());
+DECLARE @loc2 INT = SCOPE_IDENTITY();
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at) 
+VALUES (3, @loc2, 'system', GETDATE(), GETDATE());
+
+-- (Tiếp tục cho các lễ hội khác…)
+
+-- =====================
+-- 4. HeritageCoordinates
+-- =====================
+INSERT INTO HeritageCoordinates (heritage_id, latitude, longitude, created_by, create_at, update_at)
+VALUES
+(1, 11.8416, 106.9871, 'system', GETDATE(), GETDATE()),
+(1, 10.9284, 108.1065, 'system', GETDATE(), GETDATE()),
+(3, 21.0210, 105.8160, 'system', GETDATE(), GETDATE()),
+(4, 20.5833, 105.9667, 'system', GETDATE(), GETDATE()),
+(4, 20.6667, 106.6667, 'system', GETDATE(), GETDATE()),
+(5, 21.2875, 106.1117, 'system', GETDATE(), GETDATE()),
+(6, 21.5454, 105.7692, 'system', GETDATE(), GETDATE())
+
+GO
+
+-- =====================
+-- 5. HeritageOccurrences
+-- =====================
+INSERT INTO HeritageOccurrences 
+(heritage_id, occurrence_type, calendar_type,
+ start_day, start_month, end_day, end_month,
+ frequency, description, created_by, create_at, update_at)
+VALUES
+
+-- Lễ hội Miếu Bà Rá (10/3 âm lịch hàng năm)
+(1, N'EXACTDATE', N'LUNAR',
+10, 3, NULL, NULL,
+N'ANNUAL',
+N'Được duy trì đều đặn hàng năm, có sự tham gia của chính quyền địa phương. Quyết định: 4600/QĐ-BVHTTDL ngày 20/12/2019. Hoạt động: Cúng tế, dâng hương, múa lân, trò chơi dân gian. Chủ thể: Các bô lão, Ban Quản lý Miếu. Cộng đồng: dân cư Thị xã Phước Long.',
+'system', GETDATE(), GETDATE()),
+
+-- Lễ hội Cầu ngư Vạn Thủy Tú (15–16/6 âm lịch hàng năm)
+(2, N'RANGE', N'LUNAR',
+15, 6, 16, 6,
+N'ANNUAL',
+N'Điểm nhấn văn hóa - du lịch của Phan Thiết. Quyết định: 4614/QĐ-BVHTTDL ngày 20/12/2019. Hoạt động: Lễ nghi dân gian, rước thần, hát bội, trò chơi dân gian. Chủ thể: Các bô lão, Ban nghi lễ lăng Vạn Thủy Tú. Cộng đồng: cư dân Đức Thắng, Phan Thiết.',
+'system', GETDATE(), GETDATE());
+GO
