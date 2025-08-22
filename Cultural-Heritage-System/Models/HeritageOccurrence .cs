@@ -14,28 +14,35 @@ namespace Cultural_Heritage_System.Models
         public Heritage Heritage { get; set; }
 
         //Occurrence Type(ExactDate, Range, RecurringRule, Approximate, Unknown)
-        [Column("occurrence_type")]
+        [Column("occurrence_type", TypeName = "nvarchar(20)")]
         public OccurrenceType OccurrenceType { get; set; }
 
-        [Column("calendar_type")]
+        [Column("calendar_type", TypeName = "nvarchar(20)")]
         public CalendarType? CalendarType { get; set; }
 
-        [Column("start_date")]
-        public DateTime? StartDate { get; set; }
+        [Column("start_day")]
+        public int? StartDay { get; set; }
 
-        [Column("end_date")]
-        public DateTime? EndDate { get; set; }
+        [Column("start_month")]
+        public int? StartMonth { get; set; }
 
-        [Column("frequency")]
+        [Column("end_day")]
+        public int? EndDay { get; set; }
+
+        [Column("end_month")]
+        public int? EndMonth { get; set; }
+
+
+        [Column("frequency", TypeName = "nvarchar(20)")]
         public FestivalFrequency? Frequency { get; set; }
 
         // For Recurring, example: "LastFridayOfOctober"
         [Column("recurrence_rule")]
-        public string RecurrenceRule { get; set; }
+        public string? RecurrenceRule { get; set; }
 
         //No information
         [Column("description")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         
     }
