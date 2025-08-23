@@ -2,7 +2,7 @@
 
 namespace Cultural_Heritage_System.Dtos.Request
 {
-    public class HeritageRequest
+    public class HeritageCreateRequest
     {
         [Required]
         public string Name { get; set; }
@@ -15,9 +15,6 @@ namespace Cultural_Heritage_System.Dtos.Request
         public string MapUrl { get; set; }
 
         public bool IsFeatured { get; set; }
-
-        public List<long>? MediaIds { get; set; } 
-        public List<int>? TagIds { get; set; }
-        public List<int>? LocationIds { get; set; }
     }
+
 }

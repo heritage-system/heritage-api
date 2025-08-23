@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Cultural_Heritage_System.Migrations
 {
     /// <inheritdoc />
-    public partial class InitailMigration : Migration
+    public partial class Initail : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -129,6 +129,8 @@ namespace Cultural_Heritage_System.Migrations
                     category_id = table.Column<int>(type: "int", nullable: false),
                     map_url = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     is_featured = table.Column<bool>(type: "bit", nullable: false),
+                    name_unsigned = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    description_unsigned = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -159,6 +161,7 @@ namespace Cultural_Heritage_System.Migrations
                     two_factor_secret = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     is_2fa_verified = table.Column<bool>(type: "bit", nullable: false),
                     role_id = table.Column<int>(type: "int", nullable: false),
+                    full_name_unsigned = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     create_at = table.Column<DateTime>(type: "datetime2", nullable: false),

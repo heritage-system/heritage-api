@@ -413,6 +413,11 @@ namespace Cultural_Heritage_System.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("description");
 
+                    b.Property<string>("DescriptionUnsigned")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description_unsigned");
+
                     b.Property<bool>("IsFeatured")
                         .HasColumnType("bit")
                         .HasColumnName("is_featured");
@@ -426,6 +431,11 @@ namespace Cultural_Heritage_System.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("name");
+
+                    b.Property<string>("NameUnsigned")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name_unsigned");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2")
@@ -1456,6 +1466,11 @@ namespace Cultural_Heritage_System.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("full_name");
+
+                    b.Property<string>("FullNameUnsigned")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("full_name_unsigned");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()

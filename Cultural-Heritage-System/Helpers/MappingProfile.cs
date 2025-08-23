@@ -14,6 +14,17 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<UserCreationRequest, User>();
             CreateMap<User, UserCreationResponse>();
             CreateMap<PasswordReset, ForgotPasswordResponse>();
+
+            //Heritage
+            CreateMap<HeritageCreateRequest, Heritage>();
+            CreateMap<HeritageUpdateRequest, Heritage>();
+            CreateMap<Heritage, HeritageResponse>();
+            CreateMap<HeritageMedia, MediaResponse>();
+            CreateMap<Tag, TagResponse>();
+            CreateMap<Location, LocationResponse>();
+            CreateMap<HeritageOccurrence, OccurrenceResponse>();
+            CreateMap<HeritageCoordinate, CoordinateResponse>();
+
         }
     }
 }

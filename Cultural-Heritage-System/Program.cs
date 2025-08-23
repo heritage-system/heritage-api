@@ -61,6 +61,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<RoleRepository>();
             builder.Services.AddScoped<ProfileRepository>();
             builder.Services.AddScoped<PasswordResetRepository>();
+            builder.Services.AddScoped<HeritageRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
@@ -68,6 +69,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IMailService, MailService>();
             builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
             builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+            builder.Services.AddScoped<IHeritageService, HeritageService>();
 
             //builder.Services.AddScoped<IProfileService, ProfileService>();
 
