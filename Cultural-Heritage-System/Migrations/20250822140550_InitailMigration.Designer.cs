@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cultural_Heritage_System.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250821033703_InitailMigration")]
+    [Migration("20250822140550_InitailMigration")]
     partial class InitailMigration
     {
         /// <inheritdoc />
@@ -445,6 +445,50 @@ namespace Cultural_Heritage_System.Migrations
                     b.ToTable("Heritages");
                 });
 
+            modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageCoordinate", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("create_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<long>("HeritageId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("heritage_id");
+
+                    b.Property<decimal>("Latitude")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("latitude");
+
+                    b.Property<decimal>("Longitude")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("longitude");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("update_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HeritageId");
+
+                    b.ToTable("HeritageCoordinates");
+                });
+
             modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageLocation", b =>
                 {
                     b.Property<long>("HeritageId")
@@ -535,6 +579,79 @@ namespace Cultural_Heritage_System.Migrations
                     b.ToTable("HeritageMedias");
                 });
 
+            modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageOccurrence", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("CalendarType")
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("calendar_type");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("create_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description");
+
+                    b.Property<int?>("EndDay")
+                        .HasColumnType("int")
+                        .HasColumnName("end_day");
+
+                    b.Property<int?>("EndMonth")
+                        .HasColumnType("int")
+                        .HasColumnName("end_month");
+
+                    b.Property<string>("Frequency")
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("frequency");
+
+                    b.Property<long>("HeritageId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("heritage_id");
+
+                    b.Property<string>("OccurrenceType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("occurrence_type");
+
+                    b.Property<string>("RecurrenceRule")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("recurrence_rule");
+
+                    b.Property<int?>("StartDay")
+                        .HasColumnType("int")
+                        .HasColumnName("start_day");
+
+                    b.Property<int?>("StartMonth")
+                        .HasColumnType("int")
+                        .HasColumnName("start_month");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("update_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HeritageId");
+
+                    b.ToTable("HeritageOccurrences");
+                });
+
             modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageTag", b =>
                 {
                     b.Property<long>("HeritageId")
@@ -584,6 +701,11 @@ namespace Cultural_Heritage_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("code");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("create_at");
@@ -591,14 +713,6 @@ namespace Cultural_Heritage_System.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
-
-                    b.Property<decimal>("Latitude")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("latitude");
-
-                    b.Property<decimal>("Longitude")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("longitude");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1439,7 +1553,7 @@ namespace Cultural_Heritage_System.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
-                        .HasColumnName("created_at");
+                        .HasColumnName("create_at");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)")
@@ -1580,6 +1694,17 @@ namespace Cultural_Heritage_System.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageCoordinate", b =>
+                {
+                    b.HasOne("Cultural_Heritage_System.Models.Heritage", "Heritage")
+                        .WithMany("Coordinates")
+                        .HasForeignKey("HeritageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Heritage");
+                });
+
             modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageLocation", b =>
                 {
                     b.HasOne("Cultural_Heritage_System.Models.Heritage", "Heritage")
@@ -1603,6 +1728,17 @@ namespace Cultural_Heritage_System.Migrations
                 {
                     b.HasOne("Cultural_Heritage_System.Models.Heritage", "Heritage")
                         .WithMany("Media")
+                        .HasForeignKey("HeritageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Heritage");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageOccurrence", b =>
+                {
+                    b.HasOne("Cultural_Heritage_System.Models.Heritage", "Heritage")
+                        .WithMany("HeritageOccurrences")
                         .HasForeignKey("HeritageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1846,7 +1982,11 @@ namespace Cultural_Heritage_System.Migrations
 
             modelBuilder.Entity("Cultural_Heritage_System.Models.Heritage", b =>
                 {
+                    b.Navigation("Coordinates");
+
                     b.Navigation("HeritageLocations");
+
+                    b.Navigation("HeritageOccurrences");
 
                     b.Navigation("HeritageTags");
 

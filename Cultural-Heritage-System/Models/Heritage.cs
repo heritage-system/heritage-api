@@ -14,7 +14,7 @@ namespace Cultural_Heritage_System.Models
 
         [Required]
         [Column("category_id")]
-        [ForeignKey("Category")]    
+        [ForeignKey("Category")]
         public int CategoryId { get; set; }
         public Category Category { get; set; }
 
@@ -23,11 +23,18 @@ namespace Cultural_Heritage_System.Models
 
         [Column("is_featured")]
         public bool IsFeatured { get; set; }
+
+
+        public ICollection<HeritageOccurrence> HeritageOccurrences { get; set; } = new List<HeritageOccurrence>();
+
         public ICollection<HeritageMedia> Media { get; set; } = new List<HeritageMedia>();
 
         public ICollection<HeritageTag> HeritageTags { get; set; } = new List<HeritageTag>();
-   
+
         public ICollection<HeritageLocation> HeritageLocations { get; set; } = new List<HeritageLocation>();
+
+        public ICollection<HeritageCoordinate> Coordinates { get; set; } = new List<HeritageCoordinate>();
+
     }
 
 }

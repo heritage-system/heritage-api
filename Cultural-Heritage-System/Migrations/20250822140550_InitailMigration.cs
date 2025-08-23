@@ -36,8 +36,7 @@ namespace Cultural_Heritage_System.Migrations
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    latitude = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    longitude = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    code = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -177,6 +176,31 @@ namespace Cultural_Heritage_System.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HeritageCoordinates",
+                columns: table => new
+                {
+                    id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
+                    latitude = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    longitude = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HeritageCoordinates", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_HeritageCoordinates_Heritages_heritage_id",
+                        column: x => x.heritage_id,
+                        principalTable: "Heritages",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "HeritageLocations",
                 columns: table => new
                 {
@@ -226,6 +250,38 @@ namespace Cultural_Heritage_System.Migrations
                     table.PrimaryKey("PK_HeritageMedias", x => x.id);
                     table.ForeignKey(
                         name: "FK_HeritageMedias_Heritages_heritage_id",
+                        column: x => x.heritage_id,
+                        principalTable: "Heritages",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HeritageOccurrences",
+                columns: table => new
+                {
+                    id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
+                    occurrence_type = table.Column<string>(type: "nvarchar(20)", nullable: false),
+                    calendar_type = table.Column<string>(type: "nvarchar(20)", nullable: true),
+                    start_day = table.Column<int>(type: "int", nullable: true),
+                    start_month = table.Column<int>(type: "int", nullable: true),
+                    end_day = table.Column<int>(type: "int", nullable: true),
+                    end_month = table.Column<int>(type: "int", nullable: true),
+                    frequency = table.Column<string>(type: "nvarchar(20)", nullable: true),
+                    recurrence_rule = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HeritageOccurrences", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_HeritageOccurrences_Heritages_heritage_id",
                         column: x => x.heritage_id,
                         principalTable: "Heritages",
                         principalColumn: "id",
@@ -782,10 +838,10 @@ namespace Cultural_Heritage_System.Migrations
                     type = table.Column<string>(type: "nvarchar(20)", nullable: false),
                     amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     description = table.Column<string>(type: "text", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     related_purchase_id = table.Column<int>(type: "int", nullable: true),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -850,6 +906,11 @@ namespace Cultural_Heritage_System.Migrations
                 column: "user_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_HeritageCoordinates_heritage_id",
+                table: "HeritageCoordinates",
+                column: "heritage_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_HeritageLocations_location_id",
                 table: "HeritageLocations",
                 column: "location_id");
@@ -857,6 +918,11 @@ namespace Cultural_Heritage_System.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_HeritageMedias_heritage_id",
                 table: "HeritageMedias",
+                column: "heritage_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HeritageOccurrences_heritage_id",
+                table: "HeritageOccurrences",
                 column: "heritage_id");
 
             migrationBuilder.CreateIndex(
@@ -988,10 +1054,16 @@ namespace Cultural_Heritage_System.Migrations
                 name: "Feedbacks");
 
             migrationBuilder.DropTable(
+                name: "HeritageCoordinates");
+
+            migrationBuilder.DropTable(
                 name: "HeritageLocations");
 
             migrationBuilder.DropTable(
                 name: "HeritageMedias");
+
+            migrationBuilder.DropTable(
+                name: "HeritageOccurrences");
 
             migrationBuilder.DropTable(
                 name: "HeritageTags");

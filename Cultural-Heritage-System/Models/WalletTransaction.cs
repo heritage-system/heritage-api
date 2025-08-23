@@ -21,9 +21,6 @@ namespace Cultural_Heritage_System.Models
         [Column("description", TypeName = "text")]
         public string? Description { get; set; }
 
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
         [ForeignKey("RelatedPurchase")]
         [Column("related_purchase_id")]
         public int? RelatedPurchaseId { get; set; }
