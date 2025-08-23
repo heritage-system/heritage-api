@@ -40,6 +40,30 @@ namespace Cultural_Heritage_System.Models
         public DbSet<HeritageCoordinate> HeritageCoordinates { get; set; }
         public DbSet<HeritageOccurrence> HeritageOccurrences { get; set; }
 
+        public override int SaveChanges()
+        {
+            ApplyUnsignedFields();
+            return base.SaveChanges();
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ApplyUnsignedFields();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void ApplyUnsignedFields()
+        {
+            foreach (var entry in ChangeTracker.Entries<IUnsignedEntity>())
+            {
+                if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+                {
+                    entry.Entity.GenerateUnsignedFields();
+                }
+            }
+        }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<HeritageTag>()
