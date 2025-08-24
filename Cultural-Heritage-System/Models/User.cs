@@ -1,10 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Helpers;
 using System.ComponentModel.DataAnnotations;
-using Cultural_Heritage_System.Common;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class User : BaseEntity<int>
+    public class User : BaseEntity<int>,IUnsignedEntity
     {
         [Column("username")]
         public string UserName { get; set; }
@@ -45,5 +46,12 @@ namespace Cultural_Heritage_System.Models
         public ICollection<QuizResult> QuizResults { get; set; } = new List<QuizResult>();
         public ICollection<SystemLog> SystemLogs { get; set; } = new List<SystemLog>();
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+
+        [Column("full_name_unsigned")]
+        public string FullNameUnsigned { get; set; }
+        public void GenerateUnsignedFields()
+        {
+            FullNameUnsigned = StringHelper.RemoveDiacritics(FullName).ToLower();        
+        }
     }
 }

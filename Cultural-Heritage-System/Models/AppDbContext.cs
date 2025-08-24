@@ -37,6 +37,32 @@ namespace Cultural_Heritage_System.Models
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
         public DbSet<HeritageMedia> HeritageMedias { get; set; }
+        public DbSet<HeritageCoordinate> HeritageCoordinates { get; set; }
+        public DbSet<HeritageOccurrence> HeritageOccurrences { get; set; }
+
+        public override int SaveChanges()
+        {
+            ApplyUnsignedFields();
+            return base.SaveChanges();
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ApplyUnsignedFields();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void ApplyUnsignedFields()
+        {
+            foreach (var entry in ChangeTracker.Entries<IUnsignedEntity>())
+            {
+                if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+                {
+                    entry.Entity.GenerateUnsignedFields();
+                }
+            }
+        }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -76,6 +102,18 @@ namespace Cultural_Heritage_System.Models
             modelBuilder.Entity<HeritageMedia>()
                .HasOne(hm => hm.Heritage)
                .WithMany(h => h.Media)
+               .HasForeignKey(hm => hm.HeritageId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<HeritageCoordinate>()
+               .HasOne(hm => hm.Heritage)
+               .WithMany(h => h.Coordinates)
+               .HasForeignKey(hm => hm.HeritageId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<HeritageOccurrence>()
+               .HasOne(hm => hm.Heritage)
+               .WithMany(h => h.HeritageOccurrences)
                .HasForeignKey(hm => hm.HeritageId)
                .OnDelete(DeleteBehavior.Cascade);
 

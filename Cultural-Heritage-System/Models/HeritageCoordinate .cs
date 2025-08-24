@@ -5,9 +5,8 @@ using System.Text.Json.Serialization;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class HeritageLocation: BaseEntity<int>
+    public class HeritageCoordinate : BaseEntity<long>
     {
-
         [Required]
         [Column("heritage_id")]
         [ForeignKey("Heritage")]
@@ -16,10 +15,11 @@ namespace Cultural_Heritage_System.Models
         public Heritage Heritage { get; set; }
 
 
-        [Required]
-        [Column("location_id")]
-        [ForeignKey("Location")]
-        public int LocationId { get; set; }
-        public Location Location { get; set; }
+        [Column("latitude")]
+        public decimal Latitude { get; set; }
+
+        [Column("longitude")]
+        public decimal Longitude { get; set; }
+
     }
 }
