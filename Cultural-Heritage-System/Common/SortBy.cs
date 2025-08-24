@@ -2,6 +2,6 @@
 {
     public enum SortBy
     {
-        NAMEASC,NAMEDESC,DATEASC,DATEDESC
+        NAMEASC,NAMEDESC,IDASC,IDDESC
     }
 }

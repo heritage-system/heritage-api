@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Cultural_Heritage_System.Dtos.Response;
+using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 
 namespace Cultural_Heritage_System.Services.Impl
@@ -24,17 +25,8 @@ namespace Cultural_Heritage_System.Services.Impl
                 HeritageId = h.Id,
                 Name = h.Name,
                 Description = h.Description,
-                Coordinates = h.Coordinates.Select(c => new CoordinateDto
-                {
-                    Latitude = c.Latitude,
-                    Longitude = c.Longitude
-                }).ToList(),
-                Locations = h.HeritageLocations.Select(l => new LocationDto
-                {
-                    LocationId = l.Location.Id,
-                    Name = l.Location.Name,
-                    Code = l.Location.Code
-                }).ToList()
+                Coordinates = mapper.Map<List<HeritageCoordinateDto>>(h.Coordinates),
+                Locations = mapper.Map<List<HeritageLocationDto>>(h.HeritageLocations),
             }).ToList();
         }
     }
