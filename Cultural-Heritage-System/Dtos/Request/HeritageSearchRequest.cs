@@ -22,7 +22,7 @@ namespace Cultural_Heritage_System.Dtos.Request
       
         public int? EndMonth { get; set; }
 
-        public CalendarType? CalendarType { get; set; }
+        public CalendarType CalendarType { get; set; } = CalendarType.SOLAR;
 
         public SortBy? SortBy { get; set; }
         public int Page { get; set; } = 1;
