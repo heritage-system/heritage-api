@@ -25,9 +25,8 @@ namespace Cultural_Heritage_System.Helpers
             .ForMember(dest => dest.Media,
                 opt => opt.MapFrom(src => src.Media))
             .ForMember(dest => dest.HeritageLocations,
-                opt => opt.MapFrom(src => src.HeritageLocations.Select(hl => hl.Location)))
-            .ForMember(dest => dest.Coordinates,
-                opt => opt.MapFrom(src => src.Coordinates));
+                opt => opt.MapFrom(src => src.HeritageLocations.Select(hl => hl.Location)));
+           
 
             // HeritageOccurrence → HeritageOccurrenceDto
             CreateMap<HeritageOccurrence, HeritageOccurrenceDto>()              
@@ -38,9 +37,6 @@ namespace Cultural_Heritage_System.Helpers
             // HeritageMedia → HeritageMediaDto
             CreateMap<HeritageMedia, HeritageMediaDto>()             
                 .ForMember(dest => dest.MediaTypeName, opt => opt.MapFrom(src => src.MediaType.ToString()));
-
-            // HeritageCoordinate → HeritageCoordinateDto
-            CreateMap<HeritageCoordinate, HeritageCoordinateDto>();
 
             // Location → HeritageLocationDto
             CreateMap<Location, HeritageLocationDto>();

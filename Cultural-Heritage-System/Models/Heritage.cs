@@ -32,9 +32,7 @@ namespace Cultural_Heritage_System.Models
 
         public ICollection<HeritageTag> HeritageTags { get; set; } = new List<HeritageTag>();
    
-        public ICollection<HeritageLocation> HeritageLocations { get; set; } = new List<HeritageLocation>();
-
-        public ICollection<HeritageCoordinate> Coordinates { get; set; } = new List<HeritageCoordinate>();
+        public ICollection<HeritageLocation> HeritageLocations { get; set; } = new List<HeritageLocation>();       
 
 
         [Column("name_unsigned")]

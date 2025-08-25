@@ -16,7 +16,7 @@ namespace Cultural_Heritage_System.Helpers
     public static class StringHelper
     {
 
-        public static string RemoveDiacritics(string text)
+        public static string RemoveDiacritics(string? text)
         {
             if (string.IsNullOrWhiteSpace(text)) return string.Empty;
         

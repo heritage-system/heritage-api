@@ -23,9 +23,6 @@ namespace Cultural_Heritage_System.Dtos.Request
         public List<HeritageMediaDto> Media { get; set; }
         public List<string> HeritageTags { get; set; }
         public List<HeritageLocationDto> HeritageLocations { get; set; }
-
-        public List<HeritageCoordinateDto> Coordinates { get; set; }
-
         public string NameUnsigned { get; set; }
 
         public string DescriptionUnsigned { get; set; }      
