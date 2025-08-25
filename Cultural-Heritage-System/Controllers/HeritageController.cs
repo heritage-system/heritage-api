@@ -35,29 +35,24 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("heritage/create")]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> Create([FromBody] HeritageCreateRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Lấy thông tin user hiện tại từ token (nếu có)
-            string createdBy = User?.Identity?.Name ?? "system";
-
-            var newHeritage = await _heritageService.CreateAsync(request, createdBy);
+            var newHeritage = await _heritageService.CreateAsync(request);
             return CreatedAtAction(nameof(GetById), new { id = newHeritage.Id }, newHeritage);
         }
 
         [HttpPut("heritage/Update")]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> Update([FromQuery]long id, [FromBody] HeritageUpdateRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            string updatedBy = User?.Identity?.Name ?? "system";
-
-            var updatedHeritage = await _heritageService.UpdateAsync(id, request, updatedBy);
+            var updatedHeritage = await _heritageService.UpdateAsync(id, request);
             if (updatedHeritage == null)
                 return NotFound(new { message = "Heritage not found" });
 
@@ -65,7 +60,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpDelete("heritage/delete")]
-        //[Authorize] 
+        [Authorize]
         public async Task<IActionResult> Delete([FromQuery] long id)
         {
             var result = await _heritageService.DeleteAsync(id);

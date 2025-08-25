@@ -63,6 +63,12 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<PasswordResetRepository>();
             builder.Services.AddScoped<HeritageRepository>();
 
+            builder.Services.AddScoped<HeritageOccurrenceRepository>();
+            builder.Services.AddScoped<HeritageTagRepository>();
+            builder.Services.AddScoped<HeritageCoordinateRepository>();
+            builder.Services.AddScoped<HeritageLocationRepository>();
+            builder.Services.AddScoped<HeritageMediaRepository>();
+
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IJwtService, JwtService>();

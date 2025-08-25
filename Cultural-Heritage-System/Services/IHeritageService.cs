@@ -7,8 +7,8 @@ namespace Cultural_Heritage_System.Services.Impl
     {
         Task<IEnumerable<HeritageResponse>> GetAllAsync();
         Task<HeritageResponse> GetByIdAsync(long id);
-        Task<HeritageResponse> CreateAsync(HeritageCreateRequest request, string createdBy);
-        Task<HeritageResponse> UpdateAsync(long id, HeritageUpdateRequest request, string updatedBy);
+        Task<HeritageResponse> CreateAsync(HeritageCreateRequest request);
+        Task<HeritageResponse> UpdateAsync(long id, HeritageUpdateRequest request);
         Task<bool> DeleteAsync(long id);
     }
 }

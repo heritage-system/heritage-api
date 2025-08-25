@@ -25,6 +25,13 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<HeritageOccurrence, OccurrenceResponse>();
             CreateMap<HeritageCoordinate, CoordinateResponse>();
 
+            CreateMap<LocationCreateRequest, HeritageLocation>();
+            CreateMap<MediaCreateRequest, HeritageMedia>();
+            CreateMap<OccurrenceCreateRequest, HeritageOccurrence>();
+            CreateMap<CoordinateCreateRequest, HeritageCoordinate>();
+            CreateMap<TagCreateRequest, HeritageTag>();
+
+
         }
     }
 }
