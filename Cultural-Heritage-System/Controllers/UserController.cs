@@ -43,5 +43,30 @@ namespace Cultural_Heritage_System.Controllers
                 message = "Change password successfully"
             };
         }
+
+        [HttpPut("profile")]
+        [Authorize]
+        public async Task<ApiResponse<UpdateProfileResponse>> UpdateProfile([FromBody] UpdateProfileRequest request)
+        {
+            var result = await userService.UpdateProfile(request);
+            return new ApiResponse<UpdateProfileResponse>(
+                code: 200,
+                message: "Profile updated successfully",
+                result: result
+            );
+        }
+
+        [HttpGet("profile")]
+        [Authorize]
+        public async Task<ApiResponse<UpdateProfileResponse>> GetProfile()
+        {
+            var result = await userService.GetProfile();
+            return new ApiResponse<UpdateProfileResponse>(
+                code: 200,
+                message: "Profile fetched successfully",
+                result: result
+            );
+        }
+
     }
 }

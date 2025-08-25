@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using Cultural_Heritage_System.Common;
+using System.Text.Json.Serialization;
 
 namespace Cultural_Heritage_System.Models
 {
@@ -11,6 +12,7 @@ namespace Cultural_Heritage_System.Models
         [Column("heritage_id")]
         [ForeignKey("Heritage")]
         public long HeritageId { get; set; }
+        [JsonIgnore]
         public Heritage Heritage { get; set; }
 
 
