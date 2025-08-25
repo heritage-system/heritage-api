@@ -40,6 +40,15 @@ namespace Cultural_Heritage_System.Helpers
 
             // Location → HeritageLocationDto
             CreateMap<Location, HeritageLocationDto>();
+
+            // MappingProfile.cs
+            CreateMap<UpdateProfileRequest, User>()
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+            CreateMap<UpdateProfileRequest, Cultural_Heritage_System.Models.Profile>()
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+            CreateMap<User, UpdateProfileResponse>();
+            CreateMap<Cultural_Heritage_System.Models.Profile, UpdateProfileResponse>();
+
         }
     }
 }
