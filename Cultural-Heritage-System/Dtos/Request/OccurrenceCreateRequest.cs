@@ -5,8 +5,20 @@ namespace Cultural_Heritage_System.Dtos.Request
     public class OccurrenceCreateRequest
     {
         [Required]
-        public DateTime Date { get; set; }
-        public string Description { get; set; }
+        public string OccurrenceType { get; set; } // ExactDate, Range, RecurringRule, Approximate, Unknown
+
+        public string? CalendarType { get; set; } // Gregorian, Lunar, etc.
+
+        public int? StartDay { get; set; }
+        public int? StartMonth { get; set; }
+        public int? EndDay { get; set; }
+        public int? EndMonth { get; set; }
+
+        public string? Frequency { get; set; } // Yearly, Monthly, etc.
+
+        public string? RecurrenceRule { get; set; } // e.g. "LastFridayOfOctober"
+
+        public string? Description { get; set; }
     }
 
 }

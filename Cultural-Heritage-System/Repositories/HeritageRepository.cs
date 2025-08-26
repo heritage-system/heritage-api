@@ -24,7 +24,6 @@ namespace Cultural_Heritage_System.Repositories
                 .Include(h => h.HeritageLocations)
                     .ThenInclude(hl => hl.Location)
                 .Include(h => h.HeritageOccurrences)
-                .Include(h => h.Coordinates)
                 .ToListAsync();
         }
 
@@ -40,7 +39,6 @@ namespace Cultural_Heritage_System.Repositories
                 .Include(h => h.HeritageLocations)
                     .ThenInclude(hl => hl.Location)
                 .Include(h => h.HeritageOccurrences)
-                .Include(h => h.Coordinates)
                 .FirstOrDefaultAsync();
         }
     }

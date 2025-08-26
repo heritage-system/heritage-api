@@ -12,5 +12,11 @@ namespace Cultural_Heritage_System.Repositories
         {
             _logger = logger;
         }
+
+        public async Task AddRangeAsync(IEnumerable<HeritageOccurrence> entities)
+        {
+            await _dbSet.AddRangeAsync(entities);
+            await SaveChangesAsync();
+        }
     }
 }

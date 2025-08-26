@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Cultural_Heritage_System.Migrations
 {
     /// <inheritdoc />
-    public partial class Initail : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -35,8 +35,16 @@ namespace Cultural_Heritage_System.Migrations
                 {
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    code = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    province = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    district = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ward = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    addressDetail = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    latitude = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    longitude = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    province_unsigned = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    district_unsigned = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ward_unsigned = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    address_detail_unsigned = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -174,31 +182,6 @@ namespace Cultural_Heritage_System.Migrations
                         name: "FK_Users_roles_role_id",
                         column: x => x.role_id,
                         principalTable: "roles",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "HeritageCoordinates",
-                columns: table => new
-                {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
-                    latitude = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    longitude = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_HeritageCoordinates", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_HeritageCoordinates_Heritages_heritage_id",
-                        column: x => x.heritage_id,
-                        principalTable: "Heritages",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -909,11 +892,6 @@ namespace Cultural_Heritage_System.Migrations
                 column: "user_id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_HeritageCoordinates_heritage_id",
-                table: "HeritageCoordinates",
-                column: "heritage_id");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_HeritageLocations_location_id",
                 table: "HeritageLocations",
                 column: "location_id");
@@ -1055,9 +1033,6 @@ namespace Cultural_Heritage_System.Migrations
 
             migrationBuilder.DropTable(
                 name: "Feedbacks");
-
-            migrationBuilder.DropTable(
-                name: "HeritageCoordinates");
 
             migrationBuilder.DropTable(
                 name: "HeritageLocations");

@@ -452,50 +452,6 @@ namespace Cultural_Heritage_System.Migrations
                     b.ToTable("Heritages");
                 });
 
-            modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageCoordinate", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("create_at");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("created_by");
-
-                    b.Property<long>("HeritageId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("heritage_id");
-
-                    b.Property<decimal>("Latitude")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("latitude");
-
-                    b.Property<decimal>("Longitude")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("longitude");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("update_at");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("updated_by");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("HeritageId");
-
-                    b.ToTable("HeritageCoordinates");
-                });
-
             modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageLocation", b =>
                 {
                     b.Property<long>("HeritageId")
@@ -708,10 +664,13 @@ namespace Cultural_Heritage_System.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Code")
-                        .IsRequired()
+                    b.Property<string>("AddressDetail")
                         .HasColumnType("nvarchar(max)")
-                        .HasColumnName("code");
+                        .HasColumnName("addressDetail");
+
+                    b.Property<string>("AddressDetailUnsigned")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("address_detail_unsigned");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
@@ -721,10 +680,29 @@ namespace Cultural_Heritage_System.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("created_by");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
+                    b.Property<string>("District")
                         .HasColumnType("nvarchar(max)")
-                        .HasColumnName("name");
+                        .HasColumnName("district");
+
+                    b.Property<string>("DistrictUnsigned")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("district_unsigned");
+
+                    b.Property<decimal>("Latitude")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("latitude");
+
+                    b.Property<decimal>("Longitude")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("longitude");
+
+                    b.Property<string>("Province")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("province");
+
+                    b.Property<string>("ProvinceUnsigned")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("province_unsigned");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2")
@@ -733,6 +711,14 @@ namespace Cultural_Heritage_System.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("updated_by");
+
+                    b.Property<string>("Ward")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ward");
+
+                    b.Property<string>("WardUnsigned")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ward_unsigned");
 
                     b.HasKey("Id");
 
@@ -1706,17 +1692,6 @@ namespace Cultural_Heritage_System.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageCoordinate", b =>
-                {
-                    b.HasOne("Cultural_Heritage_System.Models.Heritage", "Heritage")
-                        .WithMany("Coordinates")
-                        .HasForeignKey("HeritageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Heritage");
-                });
-
             modelBuilder.Entity("Cultural_Heritage_System.Models.HeritageLocation", b =>
                 {
                     b.HasOne("Cultural_Heritage_System.Models.Heritage", "Heritage")
@@ -1994,8 +1969,6 @@ namespace Cultural_Heritage_System.Migrations
 
             modelBuilder.Entity("Cultural_Heritage_System.Models.Heritage", b =>
                 {
-                    b.Navigation("Coordinates");
-
                     b.Navigation("HeritageLocations");
 
                     b.Navigation("HeritageOccurrences");

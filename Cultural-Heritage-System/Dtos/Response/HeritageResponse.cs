@@ -22,7 +22,6 @@
         public List<TagResponse> Tags { get; set; } = new List<TagResponse>();
         public List<LocationResponse> Locations { get; set; } = new List<LocationResponse>();
         public List<OccurrenceResponse> Occurrences { get; set; } = new List<OccurrenceResponse>();
-        public List<CoordinateResponse> Coordinates { get; set; } = new List<CoordinateResponse>();
     }
 
 }

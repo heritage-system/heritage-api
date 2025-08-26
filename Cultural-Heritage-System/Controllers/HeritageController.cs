@@ -35,8 +35,8 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("heritage/create")]
-        [Authorize]
-        public async Task<IActionResult> Create([FromBody] HeritageCreateRequest request)
+        //[Authorize]
+        public async Task<IActionResult> Create([FromForm] HeritageCreateRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -44,6 +44,7 @@ namespace Cultural_Heritage_System.Controllers
             var newHeritage = await _heritageService.CreateAsync(request);
             return CreatedAtAction(nameof(GetById), new { id = newHeritage.Id }, newHeritage);
         }
+
 
         [HttpPut("heritage/Update")]
         [Authorize]
