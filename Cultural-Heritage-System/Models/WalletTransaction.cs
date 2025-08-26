@@ -19,10 +19,7 @@ namespace Cultural_Heritage_System.Models
         public decimal Amount { get; set; }
 
         [Column("description", TypeName = "text")]
-        public string? Description { get; set; }
-
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string? Description { get; set; }    
 
         [ForeignKey("RelatedPurchase")]
         [Column("related_purchase_id")]
