@@ -46,11 +46,11 @@ namespace Cultural_Heritage_System.Services.Impl
             User user = mapper.Map<User>(request);          
             user.PasswordHash = passwordHasher.HashPassword(user, request.Password.Trim());
              
-            var role = await roleRepository.FindByRoleName(DefinitionRole.ADMIN);
+            var role = await roleRepository.FindByRoleName(DefinitionRole.MEMBER);
             if (role == null)
             {
                 role = new Role();
-                role.Name = DefinitionRole.ADMIN;
+                role.Name = DefinitionRole.MEMBER;
                 await roleRepository.CreateRole(role);
             }
             user.RoleId = role.Id;
@@ -93,6 +93,68 @@ namespace Cultural_Heritage_System.Services.Impl
 
             existingUser.PasswordHash = passwordHasher.HashPassword(existingUser, request.NewPassword);
             await userRepository.UpdateAsync(existingUser);
+        }
+
+        public async Task<UpdateProfileResponse> UpdateProfile(UpdateProfileRequest request)
+        {
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+
+            var accountId = int.Parse(accountIdClaim);
+
+            var existingUser = await userRepository.FindUserById(accountId);
+            if (existingUser == null)
+            {
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
+            }
+            var existingProfile = await profileRepository.GetProfileByUserIdAsync(accountId);
+            if (existingProfile == null)
+            {
+                existingProfile = new Cultural_Heritage_System.Models.Profile { UserId = accountId };
+                await profileRepository.AddAsync(existingProfile);
+            }
+
+            mapper.Map(request, existingUser);
+            existingUser.GenerateUnsignedFields();
+            await userRepository.UpdateAsync(existingUser);
+
+            mapper.Map(request, existingProfile);
+            await profileRepository.UpdateAsync(existingProfile);
+
+            var response = mapper.Map<UpdateProfileResponse>(existingUser);
+            mapper.Map(existingProfile, response);
+
+            return response;
+        }
+
+        public async Task<UpdateProfileResponse> GetProfile()
+        {
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+
+            var accountId = int.Parse(accountIdClaim);
+
+            var existingUser = await userRepository.FindUserById(accountId);
+            if (existingUser == null)
+            {
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
+            }
+
+            var existingProfile = await profileRepository.GetProfileByUserIdAsync(accountId);
+
+            var response = mapper.Map<UpdateProfileResponse>(existingUser);
+            if (existingProfile != null)
+            {
+                mapper.Map(existingProfile, response);
+            }
+
+            return response;
         }
     }
 }
