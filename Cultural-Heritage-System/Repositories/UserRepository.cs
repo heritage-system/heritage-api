@@ -1,6 +1,6 @@
 ﻿using CloudinaryDotNet.Core;
 using Cultural_Heritage_System.Models;
-using medical_appointment_booking.Repositories;
+using Cultural_Heritage_System.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;

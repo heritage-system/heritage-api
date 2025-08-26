@@ -59,12 +59,16 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<RoleRepository>();
             builder.Services.AddScoped<ProfileRepository>();
             builder.Services.AddScoped<PasswordResetRepository>();
+            builder.Services.AddScoped<FavoriteRepository>();
+            builder.Services.AddScoped<HeritageRepository>();
+
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IMailService, MailService>();
             builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
+            builder.Services.AddScoped<IFavoriteService, FavoriteService>();
             //builder.Services.AddScoped<IProfileService, ProfileService>();
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
