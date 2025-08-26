@@ -26,12 +26,18 @@ namespace Cultural_Heritage_System.Middlewares
         public static readonly ErrorCode LICENSENUMBER_EXISTED = new ErrorCode(400, "License number already exists", HttpStatusCode.BadRequest);
         public static readonly ErrorCode SPECIALTY_NOT_FOUND = new ErrorCode(404, "Specialty not found", HttpStatusCode.NotFound);
         public static readonly ErrorCode SPECIALTY_EXISTED = new ErrorCode(400, "Specialty existed", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode TWO_FACTOR_SECRET_NOT_SET = new ErrorCode(400,"Two-factor authentication is not configured for this account.",HttpStatusCode.BadRequest);
+        public static readonly ErrorCode TWO_FACTOR_SECRET_NOT_SET = new ErrorCode(400, "Two-factor authentication is not configured for this account.", HttpStatusCode.BadRequest);
         public static readonly ErrorCode INVALID_2FA_CODE = new ErrorCode(401, "The verification code is invalid or has expired.", HttpStatusCode.Unauthorized);
         public static readonly ErrorCode FILE_INVALID = new ErrorCode(400, "File invalid", HttpStatusCode.BadRequest);
         public static readonly ErrorCode OTP_NOT_TRUE = new ErrorCode(400, "Otp not true", HttpStatusCode.BadRequest);
         public static readonly ErrorCode ATTEMPTS_OVER_LIMIT = new ErrorCode(400, "Attempts was over limit", HttpStatusCode.BadRequest);
         public static readonly ErrorCode EXPIRED_OTP = new ErrorCode(400, "Expired otp", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode TAG_EXISTED = new ErrorCode(400, "Tag already exists", HttpStatusCode.BadRequest);
+        public static readonly ErrorCode TAG_NOT_EXISTED = new ErrorCode(404, "Tag not existed", HttpStatusCode.NotFound);
+        public static readonly ErrorCode INVALID_TAG_NAME = new ErrorCode(400, "Invalid tag name", HttpStatusCode.BadRequest);
+
+
     }
 
 }

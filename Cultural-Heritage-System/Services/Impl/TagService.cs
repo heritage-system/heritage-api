@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using Cultural_Heritage_System.Dtos.Request.Tag;
 using Cultural_Heritage_System.Dtos.Response.Tag;
+using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
@@ -26,7 +28,21 @@ namespace Cultural_Heritage_System.Services.Impl
 
         public async Task<CreateTagResponse> CreateTag(CreateTagRequest request)
         {
+            // Validate tag name
+            if (string.IsNullOrWhiteSpace(request.Name))
+            {
+                logger.LogError("Invalid Tag Name");
+                throw new AppException(ErrorCode.INVALID_TAG_NAME);
+            }
 
+            var existingTag = tagRepository
+       .GetTagsQueryable()
+       .FirstOrDefault(t => t.Name == request.Name);
+            if (existingTag != null)
+            {
+                logger.LogError("Tag Existed");
+                throw new AppException(ErrorCode.TAG_EXISTED);
+            }
             Tag tag = mapper.Map<Tag>(request);
             await tagRepository.AddAsync(tag);
             return mapper.Map<CreateTagResponse>(tag);
@@ -34,20 +50,39 @@ namespace Cultural_Heritage_System.Services.Impl
 
         public async Task<DeleteTagResponse> DeleteTag(DeleteTagRequest request)
         {
-            Tag tag = mapper.Map<Tag>(request);
+            // Fetch from DB
+            var tag = await tagRepository.GetTagsQueryable()
+                                         .FirstOrDefaultAsync(t => t.Id == request.id);
 
-            await tagRepository.DeleteAsync(tag);
+            if (tag == null)
+            {
+                logger.LogError("Tag Not Existed");
+                throw new AppException(ErrorCode.TAG_NOT_EXISTED);
+            }
 
-            return mapper.Map<DeleteTagResponse>(tag);
+            Tag deletag = mapper.Map<Tag>(request);
+
+            await tagRepository.DeleteAsync(deletag);
+
+            return mapper.Map<DeleteTagResponse>(deletag);
 
         }
         public async Task<UpdateTagResponse> UpdateTag(UpdateTagRequest request)
         {
-            Tag tag = mapper.Map<Tag>(request);
+            var tag = await tagRepository.GetTagsQueryable()
+                              .FirstOrDefaultAsync(t => t.Id == request.id);
 
-            await tagRepository.UpdateAsync(tag);
+            if (tag == null)
+            {
+                logger.LogError("Tag Not Existed");
+                throw new AppException(ErrorCode.TAG_NOT_EXISTED);
+            }
 
-            return mapper.Map<UpdateTagResponse>(tag);
+            Tag Updatetag = mapper.Map<Tag>(request);
+
+            await tagRepository.UpdateAsync(Updatetag);
+
+            return mapper.Map<UpdateTagResponse>(Updatetag);
         }
         public IQueryable<Tag> GetTagsQueryable()
         {
