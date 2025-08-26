@@ -1,4 +1,4 @@
-﻿DELETE FROM HeritageCoordinates;
+﻿
 DELETE FROM HeritageLocations;
 DELETE FROM Heritages;
 DELETE FROM Categories;
@@ -157,32 +157,105 @@ GO
 -- =====================
 -- 3. Locations + HeritageLocations
 -- =====================
-INSERT INTO Locations (name, code, created_by, create_at, update_at)
-VALUES (N'Thị xã Phước Long, Bình Phước', N'BP-PL', 'system', GETDATE(), GETDATE());
-DECLARE @loc1 INT = SCOPE_IDENTITY();
-INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at) 
-VALUES (1, @loc1, 'system', GETDATE(), GETDATE());
-
-INSERT INTO Locations (name, code, created_by, create_at, update_at)
-VALUES (N'Phường Đức Thắng, Phan Thiết, Bình Thuận', N'BT-PT', 'system', GETDATE(), GETDATE());
-DECLARE @loc2 INT = SCOPE_IDENTITY();
-INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at) 
-VALUES (3, @loc2, 'system', GETDATE(), GETDATE());
-
--- (Tiếp tục cho các lễ hội khác…)
-
--- =====================
--- 4. HeritageCoordinates
--- =====================
-INSERT INTO HeritageCoordinates (heritage_id, latitude, longitude, created_by, create_at, update_at)
+ --  Lễ hội 2: Thị xã Phước Long, Bình Phước
+INSERT INTO Locations
+    (province, district, ward, addressDetail, latitude, longitude, province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned, created_by, updated_by, create_at, update_at)
 VALUES
-(1, 11.8416, 106.9871, 'system', GETDATE(), GETDATE()),
-(1, 10.9284, 108.1065, 'system', GETDATE(), GETDATE()),
-(3, 21.0210, 105.8160, 'system', GETDATE(), GETDATE()),
-(4, 20.5833, 105.9667, 'system', GETDATE(), GETDATE()),
-(4, 20.6667, 106.6667, 'system', GETDATE(), GETDATE()),
-(5, 21.2875, 106.1117, 'system', GETDATE(), GETDATE()),
-(6, 21.5454, 105.7692, 'system', GETDATE(), GETDATE())
+    (N'Bình Phước', N'Thị xã Phước Long', NULL, NULL, 11.8012, 106.7745,
+     N'binh phuoc', N'thi xa phuoc long', NULL, NULL,
+     'system', 'system', GETDATE(), GETDATE());
+
+DECLARE @loc1 INT = SCOPE_IDENTITY();
+
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at) 
+VALUES (2, @loc1, 'system', GETDATE(), GETDATE());
+
+ --  Lễ hội 3: Phường Đức Thắng, Phan Thiết, Bình Thuận
+INSERT INTO Locations
+    (province, district, ward, addressDetail, latitude, longitude, province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned, created_by, updated_by, create_at, update_at)
+VALUES
+    (N'Bình Thuận', N'Phan Thiết', N'Phường Đức Thắng', NULL, 10.9453, 108.0836,
+     N'binh thuan', N'phan thiet', N'phuong duc thang', NULL,
+     'system', 'system', GETDATE(), GETDATE());
+
+DECLARE @loc2 INT = SCOPE_IDENTITY();
+
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at) 
+VALUES (2, @loc2, 'system', GETDATE(), GETDATE());
+
+ --  Lễ hội 4: Lễ hội Lim, Bắc Ninh
+INSERT INTO Locations
+    (province, district, ward, addressDetail, latitude, longitude, province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned, created_by, updated_by, create_at, update_at)
+VALUES
+    (N'Bắc Ninh', N'Từ Sơn', N'Xã Lim', NULL, 21.1234, 106.1234,
+     N'bac ninh', N'tu son', N'xa lim', NULL,
+     'system', 'system', GETDATE(), GETDATE());
+
+DECLARE @loc3 INT = SCOPE_IDENTITY();
+
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at)
+VALUES (4, @loc3, 'system', GETDATE(), GETDATE());
+
+ --  Lễ hội 5: Lễ hội Cốm Vòng, Hà Nội
+INSERT INTO Locations
+    (province, district, ward, addressDetail, latitude, longitude, province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned, created_by, updated_by, create_at, update_at)
+VALUES
+    (N'Hà Nội', N'Thạch Thất', N'Xã Vân Cốc', 'Làng Cốm Vòng', 21.0356, 105.6243,
+     N'ha noi', N'thach that', N'xa van coc', N'lang com vong',
+     'system', 'system', GETDATE(), GETDATE());
+
+DECLARE @loc4 INT = SCOPE_IDENTITY();
+
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at)
+VALUES (6, @loc4, 'system', GETDATE(), GETDATE());
+
+  -- Lễ hội 6: Lễ hội Chọi Trâu, Hải Phòng
+INSERT INTO Locations
+    (province, district, ward, addressDetail, latitude, longitude, province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned, created_by, updated_by, create_at, update_at)
+VALUES
+    (N'Hải Phòng', N'Hồng Bàng', NULL, 'Sân đấu Chọi Trâu', 20.8501, 106.6804,
+     N'hai phong', N'hong bang', NULL, N'san dau choi trau',
+     'system', 'system', GETDATE(), GETDATE());
+
+DECLARE @loc5 INT = SCOPE_IDENTITY();
+
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at)
+VALUES (6, @loc5, 'system', GETDATE(), GETDATE());
+
+
+INSERT INTO Tags (name, created_by, create_at, update_at)
+VALUES
+(N'Lễ hội truyền thống', 'system', GETDATE(), GETDATE()),
+(N'Lễ hội mùa xuân', 'system', GETDATE(), GETDATE()),
+(N'Lễ hội mùa thu', 'system', GETDATE(), GETDATE()),
+(N'Lễ hội làng', 'system', GETDATE(), GETDATE()),
+(N'Lễ hội dân gian', 'system', GETDATE(), GETDATE()),
+(N'Lễ hội tôn giáo', 'system', GETDATE(), GETDATE()),
+(N'Lễ hội văn hóa', 'system', GETDATE(), GETDATE());
+
+INSERT INTO HeritageTags (heritage_id,tag_id, created_by, create_at, update_at)
+VALUES
+(1,1, 'system', GETDATE(), GETDATE()),
+(1,2, 'system', GETDATE(), GETDATE()),
+(2,2, 'system', GETDATE(), GETDATE()),
+(3,4, 'system', GETDATE(), GETDATE()),
+(2,4, 'system', GETDATE(), GETDATE()),
+(5,3, 'system', GETDATE(), GETDATE()),
+(7,1, 'system', GETDATE(), GETDATE());
+
+INSERT INTO HeritageMedias
+    (heritage_id, media_type, url, description, created_by, updated_by, create_at, update_at)
+VALUES
+    (1, N'IMAGE', N'https://example.com/IMAGEs/giong.jpg', N'Hình ảnh Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
+    (1, N'VIDEO', N'https://example.com/VIDEOs/giong.mp4', N'VIDEO Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
+    (2, N'IMAGE', N'https://example.com/IMAGEs/huong.jpg', N'Hình ảnh Lễ hội Chùa Hương', 'system', 'system', GETDATE(), GETDATE()),
+    (3, N'IMAGE', N'https://example.com/IMAGEs/hung.jpg', N'Hình ảnh Lễ hội Đền Hùng', 'system', 'system', GETDATE(), GETDATE()),
+    (3, N'VIDEO', N'https://example.com/VIDEOs/hung.mp4', N'VIDEO Lễ hội Đền Hùng', 'system', 'system', GETDATE(), GETDATE()),
+    (4, N'IMAGE', N'https://example.com/IMAGEs/lim.jpg', N'Hình ảnh Lễ hội Lim', 'system', 'system', GETDATE(), GETDATE()),
+    (5, N'IMAGE', N'https://example.com/IMAGEs/com.jpg', N'Hình ảnh Lễ hội Cốm Vòng', 'system', 'system', GETDATE(), GETDATE()),
+    (6, N'IMAGE', N'https://example.com/IMAGEs/trau.jpg', N'Hình ảnh Lễ hội Chọi Trâu', 'system', 'system', GETDATE(), GETDATE());
+
+
 
 GO
 

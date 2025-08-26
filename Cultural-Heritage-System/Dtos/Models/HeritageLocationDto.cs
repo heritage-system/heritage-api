@@ -5,21 +5,14 @@ using System.Text.Json.Serialization;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class HeritageCoordinate : BaseEntity<long>
+    public class HeritageLocationDto
     {
-        [Required]
-        [Column("heritage_id")]
-        [ForeignKey("Heritage")]
-        public long HeritageId { get; set; }
-        [JsonIgnore]
-        public Heritage Heritage { get; set; }
-
-
-        [Column("latitude")]
+        public int Id { get; set; }    
+        public string? Province { get; set; }
+        public string? District { get; set; }       
+        public string? Ward { get; set; }     
+        public string? AddressDetail { get; set; }
         public decimal Latitude { get; set; }
-
-        [Column("longitude")]
         public decimal Longitude { get; set; }
-
     }
 }
