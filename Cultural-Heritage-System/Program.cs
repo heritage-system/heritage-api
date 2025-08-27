@@ -6,7 +6,6 @@ using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 using Cultural_Heritage_System.Services;
 using Cultural_Heritage_System.Services.Impl;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cultural_Heritage_System
@@ -56,12 +55,16 @@ namespace Cultural_Heritage_System
             builder.Services.AddHttpContextAccessor(); // HttpContextAccessor
 
             builder.Services.AddScoped<UserRepository>();
+            builder.Services.AddScoped<TagRepository>();
+            builder.Services.AddScoped<CategoryRepository>();
             builder.Services.AddScoped<RoleRepository>();
             builder.Services.AddScoped<ProfileRepository>();
             builder.Services.AddScoped<PasswordResetRepository>();
             builder.Services.AddScoped<TestSearchRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<ITagService, TagService>();
+            builder.Services.AddScoped<ICategoryService, CategoryService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IMailService, MailService>();
