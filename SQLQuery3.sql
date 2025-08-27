@@ -200,7 +200,7 @@ VALUES (4, @loc3, 'system', GETDATE(), GETDATE());
 INSERT INTO Locations
     (province, district, ward, addressDetail, latitude, longitude, province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned, created_by, updated_by, create_at, update_at)
 VALUES
-    (N'Hà Nội', N'Thạch Thất', N'Xã Vân Cốc', 'Làng Cốm Vòng', 21.0356, 105.6243,
+    (N'Hà Nội', N'Thạch Thất', N'Xã Vân Cốc', N'Làng Cốm Vòng', 21.0356, 105.6243,
      N'ha noi', N'thach that', N'xa van coc', N'lang com vong',
      'system', 'system', GETDATE(), GETDATE());
 
@@ -213,7 +213,7 @@ VALUES (6, @loc4, 'system', GETDATE(), GETDATE());
 INSERT INTO Locations
     (province, district, ward, addressDetail, latitude, longitude, province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned, created_by, updated_by, create_at, update_at)
 VALUES
-    (N'Hải Phòng', N'Hồng Bàng', NULL, 'Sân đấu Chọi Trâu', 20.8501, 106.6804,
+    (N'Hải Phòng', N'Hồng Bàng', NULL, N'Sân đấu Chọi Trâu', 20.8501, 106.6804,
      N'hai phong', N'hong bang', NULL, N'san dau choi trau',
      'system', 'system', GETDATE(), GETDATE());
 
@@ -221,6 +221,71 @@ DECLARE @loc5 INT = SCOPE_IDENTITY();
 
 INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at)
 VALUES (6, @loc5, 'system', GETDATE(), GETDATE());
+
+-- Lễ hội 17: Các địa điểm gần Đà Nẵng
+
+-- 1. Đà Nẵng, Quận Hải Châu
+INSERT INTO Locations
+    (province, district, ward, addressDetail, latitude, longitude,
+     province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned,
+     created_by, updated_by, create_at, update_at)
+VALUES
+    (N'Đà Nẵng', N'Hải Châu', N'Phường Thạch Thang', N'Quảng trường 2/9', 16.0678, 108.2221,
+     N'da nang', N'hai chau', N'phuong thach thang', N'quang truong 2/9',
+     'system', 'system', GETDATE(), GETDATE());
+
+DECLARE @loc17_1 INT = SCOPE_IDENTITY();
+
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at)
+VALUES (17, @loc17_1, 'system', GETDATE(), GETDATE());
+
+
+-- 2. Hội An, Quảng Nam (~30 km từ Đà Nẵng)
+INSERT INTO Locations
+    (province, district, ward, addressDetail, latitude, longitude,
+     province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned,
+     created_by, updated_by, create_at, update_at)
+VALUES
+    (N'Quảng Nam', N'Hội An', N'Phường Minh An', N'Phố Cổ Hội An', 15.8800, 108.3380,
+     N'quang nam', N'hoi an', N'phuong minh an', N'pho co hoi an',
+     'system', 'system', GETDATE(), GETDATE());
+
+DECLARE @loc17_2 INT = SCOPE_IDENTITY();
+
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at)
+VALUES (7, @loc17_2, 'system', GETDATE(), GETDATE());
+
+
+-- 3. Sơn Trà, Đà Nẵng (~10 km từ trung tâm)
+INSERT INTO Locations
+    (province, district, ward, addressDetail, latitude, longitude,
+     province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned,
+     created_by, updated_by, create_at, update_at)
+VALUES
+    (N'Đà Nẵng', N'Sơn Trà', N'Phường Thọ Quang', N'Bãi biển Mỹ Khê', 16.0598, 108.2317,
+     N'da nang', N'son tra', N'phuong tho quang', N'bai bien my khe',
+     'system', 'system', GETDATE(), GETDATE());
+
+DECLARE @loc17_3 INT = SCOPE_IDENTITY();
+
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at)
+VALUES (7, @loc17_3, 'system', GETDATE(), GETDATE());
+
+
+-- 4. Hòa Vang, Đà Nẵng (~20 km từ trung tâm)
+INSERT INTO Locations
+    (province, district, ward, addressDetail, latitude, longitude,
+     province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned,
+     created_by, updated_by, create_at, update_at)
+VALUES
+    (N'Đà Nẵng', N'Hòa Vang', N'Xã Hòa Nhơn', N'Khu du lịch sinh thái', 15.9912, 108.1413,
+     N'da nang', N'hoa vang', N'xa hoa nhon', N'khu du lich sinh thai',
+     'system', 'system', GETDATE(), GETDATE());
+
+DECLARE @loc17_4 INT = SCOPE_IDENTITY();
+
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at)
+VALUES (17, @loc17_4, 'system', GETDATE(), GETDATE());
 
 
 INSERT INTO Tags (name, created_by, create_at, update_at)
