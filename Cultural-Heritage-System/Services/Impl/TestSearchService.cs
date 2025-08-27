@@ -10,6 +10,7 @@ using Cultural_Heritage_System.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
+using System.Linq;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
@@ -53,13 +54,20 @@ namespace Cultural_Heritage_System.Services.Impl
                         h.DescriptionUnsigned.Contains(unsignedTerm));
                 }
 
-                // Location filter
-                if (request.LocationIds != null && request.LocationIds.Any())
-                {
-                    query = query.Where(h => h.HeritageLocations
-                                               .Any(hl => request.LocationIds.Contains(hl.LocationId)));
-                }
 
+
+
+
+                // Location filter
+                if (request.Locations != null && request.Locations.Any())
+                {                  
+                    request.Locations = request.Locations
+                                               .Select(loc => StringHelper.RemoveDiacritics(loc))
+                                               .ToList();
+
+                    query = query.Where(h => h.HeritageLocations
+                                               .Any(hl => request.Locations.Contains(hl.Location.ProvinceUnsigned)));
+                }
 
                 // Category filter
                 if (request.CategoryIds != null && request.CategoryIds.Any())

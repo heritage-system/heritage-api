@@ -77,7 +77,7 @@ namespace Cultural_Heritage_System.Controllers
            [FromQuery] HeritageSearchRequest request)
 
         {
-             return new ApiResponse<PageResponse<HeritageSearchResponse>>
+            return new ApiResponse<PageResponse<HeritageSearchResponse>>
             {
                 code = 200,
                 result = await testSearchService.SearchHeritagesAsync(request)
