@@ -71,8 +71,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 heritage.CreatedAt = DateTime.UtcNow;
                 heritage.GenerateUnsignedFields();
 
-                await _heritageRepository.AddAsync(heritage);
-                await _dbContext.SaveChangesAsync(); // Cần lưu để có Heritage.Id
+               
 
                 // 2. Xử lý Media (Upload Cloudinary + Lưu DB)
                 var mediaEntities = new List<HeritageMedia>();
@@ -98,14 +97,18 @@ namespace Cultural_Heritage_System.Services.Impl
 
                         mediaEntities.Add(new HeritageMedia
                         {
-                            HeritageId = heritage.Id,
+                            //HeritageId = heritage.Id,
                             Url = uploadedUrl,
                             MediaType = typeEnum
                         });
                     }
 
-                    await _heritageMediaRepository.AddRangeAsync(mediaEntities);
+                    //await _heritageMediaRepository.AddRangeAsync(mediaEntities);
+                    heritage.Media = mediaEntities;
                 }
+
+                await _heritageRepository.AddAsync(heritage);
+                await _dbContext.SaveChangesAsync(); // Cần lưu để có Heritage.Id
 
 
 

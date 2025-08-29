@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cultural_Heritage_System.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250825065435_Initial")]
+    [Migration("20250826145242_Initial")]
     partial class Initial
     {
         /// <inheritdoc />

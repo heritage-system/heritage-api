@@ -7,5 +7,8 @@ namespace Cultural_Heritage_System.Services
     {
         Task<UserCreationResponse> CreateUser(UserCreationRequest request);
         Task ChangePassword(ChangePasswordRequest request);
+        Task<UpdateProfileResponse> UpdateProfile(UpdateProfileRequest request);
+        Task<UpdateProfileResponse> GetProfile();
+
     }
 }
