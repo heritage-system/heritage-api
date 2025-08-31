@@ -30,8 +30,8 @@ namespace Cultural_Heritage_System.Models
 
         [Column("reviewed_by")]
         [ForeignKey(nameof(Reviewer))]
-        public int ReviewedBy { get; set; }
-        public User Reviewer { get; set; }
+        public int? ReviewedBy { get; set; }
+        public User? Reviewer { get; set; }
     }
 
 }

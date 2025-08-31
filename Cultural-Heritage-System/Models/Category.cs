@@ -21,6 +21,7 @@ namespace Cultural_Heritage_System.Models
             DescriptionUnsigned = StringHelper.RemoveDiacritics(Description).ToLower();
         }
 
+        [JsonIgnore]
         public ICollection<Heritage> Heritages { get; set; } = new List<Heritage>();
     }
 

@@ -37,7 +37,7 @@ namespace Cultural_Heritage_System.Middlewares
         public static readonly ErrorCode TAG_NOT_EXISTED = new ErrorCode(404, "Tag not existed", HttpStatusCode.NotFound);
         public static readonly ErrorCode INVALID_TAG_NAME = new ErrorCode(400, "Invalid tag name", HttpStatusCode.BadRequest);
 
-
+        public static readonly ErrorCode HERITAGE_NOT_EXISTED = new ErrorCode(404, "Heritage not existed", HttpStatusCode.NotFound);
     }
 
 }

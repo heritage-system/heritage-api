@@ -17,7 +17,54 @@ INSERT INTO Heritages
 (name, description, name_unsigned, description_unsigned, category_id, map_url, is_featured, created_by, create_at, update_at)
 VALUES
 (N'Lễ hội Miếu Bà Rá', 
- N'Núi Bà Rá gắn với truyền thuyết Bà Rá và Bà Đen (Tây Ninh); lễ hội thu hút hàng nghìn người dân và du khách hành hương mỗi năm', 
+ N'{
+  "history": [
+    {
+      "type": "paragraph",
+      "content": "Lễ hội Miếu Bà Rá diễn ra tại núi Bà Rá, thị xã Phước Long, tỉnh Bình Phước. Miếu thờ Bà Rá – vị thần được người dân tôn kính với truyền thuyết gắn liền với nàng Thị Thiên Hương."
+    },
+    {
+      "type": "paragraph",
+      "content": "Theo dân gian, Bà là người con gái xinh đẹp, tiết hạnh, sau khi mất hiển linh phù hộ cho dân làng. Để tưởng nhớ công đức, người dân đã lập miếu thờ và tổ chức lễ hội hằng năm."
+    }
+  ],
+  "rituals": [
+    {
+      "type": "paragraph",
+      "content": "Lễ hội Miếu Bà Rá được tổ chức từ ngày mùng 1 đến mùng 3 tháng Giêng âm lịch, thu hút đông đảo khách thập phương."
+    },
+    {
+      "type": "list",
+      "items": [
+        "Lễ dâng hương tại miếu Bà",
+        "Lễ rước sắc phong và tế lễ trang nghiêm",
+        "Các hoạt động múa lân, biểu diễn văn nghệ dân gian",
+        "Hội chợ xuân và trò chơi dân gian"
+      ]
+    }
+  ],
+  "values": [
+    {
+      "type": "paragraph",
+      "content": "Lễ hội Miếu Bà Rá là dịp để cộng đồng bày tỏ lòng tri ân đối với thần linh bảo hộ, đồng thời gửi gắm ước vọng bình an, mùa màng bội thu."
+    },
+    {
+      "type": "paragraph",
+      "content": "Lễ hội còn góp phần gìn giữ bản sắc tín ngưỡng dân gian của cư dân Bình Phước và là điểm đến du lịch tâm linh hấp dẫn trong dịp đầu năm."
+    }
+  ],
+  "preservation": [
+    {
+      "type": "paragraph",
+      "content": "Chính quyền địa phương đã đưa lễ hội vào danh mục lễ hội truyền thống tiêu biểu, thường xuyên tu bổ miếu Bà và khu di tích núi Bà Rá."
+    },
+    {
+      "type": "paragraph",
+      "content": "Công tác bảo tồn được thực hiện thông qua việc tổ chức lễ hội đúng nghi thức truyền thống, đồng thời kết hợp quảng bá du lịch để thu hút du khách."
+    }
+  ]
+}
+', 
  N'le hoi mieu ba ra', 
  N'nui ba ra gan voi truyen thuyet ba ra va ba den tay ninh; le hoi thu hut hang nghin nguoi dan va du khach hanh huong moi nam', 
  1, 
@@ -200,7 +247,7 @@ VALUES (4, @loc3, 'system', GETDATE(), GETDATE());
 INSERT INTO Locations
     (province, district, ward, addressDetail, latitude, longitude, province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned, created_by, updated_by, create_at, update_at)
 VALUES
-    (N'Hà Nội', N'Thạch Thất', N'Xã Vân Cốc', 'Làng Cốm Vòng', 21.0356, 105.6243,
+    (N'Hà Nội', N'Thạch Thất', N'Xã Vân Cốc', N'Làng Cốm Vòng', 21.0356, 105.6243,
      N'ha noi', N'thach that', N'xa van coc', N'lang com vong',
      'system', 'system', GETDATE(), GETDATE());
 
@@ -213,7 +260,7 @@ VALUES (6, @loc4, 'system', GETDATE(), GETDATE());
 INSERT INTO Locations
     (province, district, ward, addressDetail, latitude, longitude, province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned, created_by, updated_by, create_at, update_at)
 VALUES
-    (N'Hải Phòng', N'Hồng Bàng', NULL, 'Sân đấu Chọi Trâu', 20.8501, 106.6804,
+    (N'Hải Phòng', N'Hồng Bàng', NULL, N'Sân đấu Chọi Trâu', 20.8501, 106.6804,
      N'hai phong', N'hong bang', NULL, N'san dau choi trau',
      'system', 'system', GETDATE(), GETDATE());
 
@@ -221,6 +268,71 @@ DECLARE @loc5 INT = SCOPE_IDENTITY();
 
 INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at)
 VALUES (6, @loc5, 'system', GETDATE(), GETDATE());
+
+-- Lễ hội 17: Các địa điểm gần Đà Nẵng
+
+-- 1. Đà Nẵng, Quận Hải Châu
+INSERT INTO Locations
+    (province, district, ward, addressDetail, latitude, longitude,
+     province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned,
+     created_by, updated_by, create_at, update_at)
+VALUES
+    (N'Đà Nẵng', N'Hải Châu', N'Phường Thạch Thang', N'Quảng trường 2/9', 16.0678, 108.2221,
+     N'da nang', N'hai chau', N'phuong thach thang', N'quang truong 2/9',
+     'system', 'system', GETDATE(), GETDATE());
+
+DECLARE @loc17_1 INT = SCOPE_IDENTITY();
+
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at)
+VALUES (17, @loc17_1, 'system', GETDATE(), GETDATE());
+
+
+-- 2. Hội An, Quảng Nam (~30 km từ Đà Nẵng)
+INSERT INTO Locations
+    (province, district, ward, addressDetail, latitude, longitude,
+     province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned,
+     created_by, updated_by, create_at, update_at)
+VALUES
+    (N'Quảng Nam', N'Hội An', N'Phường Minh An', N'Phố Cổ Hội An', 15.8800, 108.3380,
+     N'quang nam', N'hoi an', N'phuong minh an', N'pho co hoi an',
+     'system', 'system', GETDATE(), GETDATE());
+
+DECLARE @loc17_2 INT = SCOPE_IDENTITY();
+
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at)
+VALUES (7, @loc17_2, 'system', GETDATE(), GETDATE());
+
+
+-- 3. Sơn Trà, Đà Nẵng (~10 km từ trung tâm)
+INSERT INTO Locations
+    (province, district, ward, addressDetail, latitude, longitude,
+     province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned,
+     created_by, updated_by, create_at, update_at)
+VALUES
+    (N'Đà Nẵng', N'Sơn Trà', N'Phường Thọ Quang', N'Bãi biển Mỹ Khê', 16.0598, 108.2317,
+     N'da nang', N'son tra', N'phuong tho quang', N'bai bien my khe',
+     'system', 'system', GETDATE(), GETDATE());
+
+DECLARE @loc17_3 INT = SCOPE_IDENTITY();
+
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at)
+VALUES (7, @loc17_3, 'system', GETDATE(), GETDATE());
+
+
+-- 4. Hòa Vang, Đà Nẵng (~20 km từ trung tâm)
+INSERT INTO Locations
+    (province, district, ward, addressDetail, latitude, longitude,
+     province_unsigned, district_unsigned, ward_unsigned, address_detail_unsigned,
+     created_by, updated_by, create_at, update_at)
+VALUES
+    (N'Đà Nẵng', N'Hòa Vang', N'Xã Hòa Nhơn', N'Khu du lịch sinh thái', 15.9912, 108.1413,
+     N'da nang', N'hoa vang', N'xa hoa nhon', N'khu du lich sinh thai',
+     'system', 'system', GETDATE(), GETDATE());
+
+DECLARE @loc17_4 INT = SCOPE_IDENTITY();
+
+INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at)
+VALUES (17, @loc17_4, 'system', GETDATE(), GETDATE());
 
 
 INSERT INTO Tags (name, created_by, create_at, update_at)
@@ -246,8 +358,8 @@ VALUES
 INSERT INTO HeritageMedias
     (heritage_id, media_type, url, description, created_by, updated_by, create_at, update_at)
 VALUES
-    (1, N'IMAGE', N'https://example.com/IMAGEs/giong.jpg', N'Hình ảnh Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
-    (1, N'VIDEO', N'https://example.com/VIDEOs/giong.mp4', N'VIDEO Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
+    (1, N'IMAGE', N'https://media.baobinhphuoc.com.vn/upload/news/4_2024/le_hoi_mieu_ba_ra_2021_00_46_28_19_11134705042024.jpg', N'Hình ảnh Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
+    (1, N'IMAGE', N'https://www.youtube.com/watch?v=UQDrCmWO-4I&list=RDUQDrCmWO-4I&start_radio=1', N'VIDEO Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
     (2, N'IMAGE', N'https://example.com/IMAGEs/huong.jpg', N'Hình ảnh Lễ hội Chùa Hương', 'system', 'system', GETDATE(), GETDATE()),
     (3, N'IMAGE', N'https://example.com/IMAGEs/hung.jpg', N'Hình ảnh Lễ hội Đền Hùng', 'system', 'system', GETDATE(), GETDATE()),
     (3, N'VIDEO', N'https://example.com/VIDEOs/hung.mp4', N'VIDEO Lễ hội Đền Hùng', 'system', 'system', GETDATE(), GETDATE()),

@@ -47,6 +47,10 @@ namespace Cultural_Heritage_System.Models
         public ICollection<SystemLog> SystemLogs { get; set; } = new List<SystemLog>();
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
+        public ICollection<ReviewLike> ReviewLikes { get; set; } = new List<ReviewLike>();
+
+        public ICollection<ReviewReport> ReviewReports { get; set; } = new List<ReviewReport>();
+
         [Column("full_name_unsigned")]
         public string FullNameUnsigned { get; set; }
         public void GenerateUnsignedFields()

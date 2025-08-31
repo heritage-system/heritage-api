@@ -3,6 +3,7 @@ using Cultural_Heritage_System.Dtos.Request.Category;
 using Cultural_Heritage_System.Dtos.Request.Tag;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Category;
+using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Tag;
 using Cultural_Heritage_System.Models;
 
