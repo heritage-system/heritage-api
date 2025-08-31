@@ -1,5 +1,6 @@
 ﻿using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Response;
+using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Services;
 using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.Authorization;
@@ -82,6 +83,17 @@ namespace Cultural_Heritage_System.Controllers
                 code = 200,
                 result = await testSearchService.SearchHeritagesAsync(request)
             };
+        }
+
+        [HttpGet("heritageDetail")]     
+        public async Task<ApiResponse<HeritageSearchResponse>> GetHeritageDetail(long id)
+        {
+            var result = await testSearchService.GetHeritageDetail(id);
+            return new ApiResponse<HeritageSearchResponse>(
+                code: 200,
+                message: "Get heritage details successfully",
+                result: result
+            );
         }
 
     }

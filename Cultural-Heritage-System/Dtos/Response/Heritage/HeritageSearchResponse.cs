@@ -4,7 +4,7 @@ using Cultural_Heritage_System.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Cultural_Heritage_System.Dtos.Request
+namespace Cultural_Heritage_System.Dtos.Response.Heritage
 {
     public class HeritageSearchResponse
     {
@@ -22,10 +22,7 @@ namespace Cultural_Heritage_System.Dtos.Request
         public List<HeritageOccurrenceDto> HeritageOccurrences { get; set; }
         public List<HeritageMediaDto> Media { get; set; }
         public List<string> HeritageTags { get; set; }
-        public List<HeritageLocationDto> HeritageLocations { get; set; }
-        public string NameUnsigned { get; set; }
-
-        public string DescriptionUnsigned { get; set; }      
+        public List<HeritageLocationDto> HeritageLocations { get; set; }       
 
     }
 }
