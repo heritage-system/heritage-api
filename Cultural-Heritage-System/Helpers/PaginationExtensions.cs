@@ -35,19 +35,21 @@ namespace Cultural_Heritage_System.Helpers
             int pageSize)
         {
             var totalCount = query.Count();
-
-            var items = query
+            var items = query;
+            if(page > 0)
+            {
+                items = items
                 .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToList();
-
+                .Take(pageSize);
+           
+            }          
             return new PageResponse<T>
             {
                 CurrentPages = page,
                 PageSizes = pageSize,
                 TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
                 TotalElements = totalCount,
-                Items = items
+                Items = items.ToList()
             };
         }
     }

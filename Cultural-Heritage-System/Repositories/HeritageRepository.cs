@@ -41,5 +41,18 @@ namespace Cultural_Heritage_System.Repositories
                 .Include(h => h.HeritageOccurrences)
                 .FirstOrDefaultAsync();
         }
+
+        public IQueryable<Heritage> GetAllQuery()
+        {
+            return _dbSet
+                .Include(h => h.Category)
+                .Include(h => h.Media)
+                .Include(h => h.HeritageTags)
+                    .ThenInclude(ht => ht.Tag)
+                .Include(h => h.HeritageLocations)
+                    .ThenInclude(hl => hl.Location)
+                .Include(h => h.HeritageOccurrences);
+        }
+
     }
 }

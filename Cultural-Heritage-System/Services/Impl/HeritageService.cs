@@ -2,11 +2,13 @@
 using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Response;
+using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System.Drawing.Printing;
 using System.IO;
 
 namespace Cultural_Heritage_System.Services.Impl
@@ -45,11 +47,46 @@ namespace Cultural_Heritage_System.Services.Impl
 
         }
 
-        public async Task<IEnumerable<HeritageResponse>> GetAllAsync()
+        public async Task<PageResponse<HeritageResponse>> GetAllAsync(
+    int page,
+    int pageSize,
+    string? keyword = null,
+    int? categoryId = null,
+    int? tagId = null)
         {
-            var heritages = await _heritageRepository.GetAllAsync();
-            return _mapper.Map<IEnumerable<HeritageResponse>>(heritages);
+            var query = _heritageRepository.GetAllQuery();
+
+            // Search theo tên (không bắt buộc)
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                var lowerKeyword = keyword.ToLower();
+                query = query.Where(h => h.NameUnsigned.ToLower().Contains(lowerKeyword)
+                                       || h.Name.ToLower().Contains(lowerKeyword));
+            }
+
+
+
+            // Lọc theo Category (không bắt buộc)
+            if (categoryId.HasValue)
+            {
+                query = query.Where(h => h.CategoryId == categoryId.Value);
+            }
+
+            // Lọc theo Tag (không bắt buộc)
+            if (tagId.HasValue)
+            {
+                query = query.Where(h => h.HeritageTags.Any(ht => ht.TagId == tagId.Value));
+            }
+
+            // Phân trang
+            var pagedResult = await query.ToPagedResponseAsync(page, pageSize);
+
+            // Map sang DTO
+            return _mapper.Map<PageResponse<HeritageResponse>>(pagedResult);
         }
+
+
+
 
         public async Task<HeritageResponse> GetByIdAsync(long id)
         {

@@ -5,7 +5,12 @@ namespace Cultural_Heritage_System.Services.Impl
 {
     public interface IHeritageService
     {
-        Task<IEnumerable<HeritageResponse>> GetAllAsync();
+        Task<PageResponse<HeritageResponse>> GetAllAsync(
+    int page,
+    int pageSize,
+    string? keyword = null,
+    int? categoryId = null,
+    int? tagId = null);
         Task<HeritageResponse> GetByIdAsync(long id);
         Task<HeritageResponse> CreateAsync(HeritageCreateRequest request);
         Task<HeritageResponse> UpdateAsync(long id, HeritageUpdateRequest request);

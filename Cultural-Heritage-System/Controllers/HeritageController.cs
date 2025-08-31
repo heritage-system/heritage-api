@@ -17,14 +17,23 @@ namespace Cultural_Heritage_System.Controllers
             _heritageService = heritageService;
         }
 
-        [HttpGet("heritage/all")]
-        public async Task<IActionResult> GetAll()
+        [HttpGet("heritage")]
+        [Authorize(Roles = "MEMBER")]
+        public async Task<IActionResult> GetAll(
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 5,
+    [FromQuery] string? keyword = null,
+    [FromQuery] int? categoryId = null,
+    [FromQuery] int? tagId = null)
         {
-            var heritages = await _heritageService.GetAllAsync();
+            var heritages = await _heritageService.GetAllAsync(page, pageSize, keyword, categoryId, tagId);
             return Ok(heritages);
         }
 
+
+
         [HttpGet("heritage/id")]
+        [Authorize]
         public async Task<IActionResult> GetById([FromQuery] long id)
         {
             var heritage = await _heritageService.GetByIdAsync(id);
@@ -61,7 +70,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpDelete("heritage/delete")]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> Delete([FromQuery] long id)
         {
             var result = await _heritageService.DeleteAsync(id);

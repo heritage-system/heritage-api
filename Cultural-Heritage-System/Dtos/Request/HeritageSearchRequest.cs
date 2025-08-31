@@ -9,7 +9,7 @@ namespace Cultural_Heritage_System.Dtos.Request
 
         public List<int>? CategoryIds { get; set; }
         public List<int>? TagIds { get; set; }
-        public List<int>? LocationIds { get; set; }
+        public List<string>? Locations { get; set; }
 
         public double? Lat { get; set; }
         public double? Lng { get; set; }
