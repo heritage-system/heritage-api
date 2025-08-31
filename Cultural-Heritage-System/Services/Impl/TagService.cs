@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Cultural_Heritage_System.Dtos.Request.Tag;
+using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Tag;
+using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
@@ -44,6 +46,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.TAG_EXISTED);
             }
             Tag tag = mapper.Map<Tag>(request);
+            tag.GenerateUnsignedFields();
             await tagRepository.AddAsync(tag);
             return mapper.Map<CreateTagResponse>(tag);
         }
@@ -60,11 +63,11 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.TAG_NOT_EXISTED);
             }
 
-            Tag deletag = mapper.Map<Tag>(request);
+            mapper.Map(request, tag);
 
-            await tagRepository.DeleteAsync(deletag);
+            await tagRepository.DeleteAsync(tag);
 
-            return mapper.Map<DeleteTagResponse>(deletag);
+            return mapper.Map<DeleteTagResponse>(tag);
 
         }
         public async Task<UpdateTagResponse> UpdateTag(UpdateTagRequest request)
@@ -78,17 +81,41 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.TAG_NOT_EXISTED);
             }
 
-            Tag Updatetag = mapper.Map<Tag>(request);
 
-            await tagRepository.UpdateAsync(Updatetag);
+            mapper.Map(request, tag);
 
-            return mapper.Map<UpdateTagResponse>(Updatetag);
+
+            tag.GenerateUnsignedFields();
+
+            await tagRepository.UpdateAsync(tag);
+
+            return mapper.Map<UpdateTagResponse>(tag);
         }
+
         public IQueryable<Tag> GetTagsQueryable()
         {
             return tagRepository.GetTagsQueryable();
         }
 
+        public async Task<PageResponse<TagSearchResponse>> SearchTagsAsync(TagSearchRequest request)
+        {
+            var query = GetTagsQueryable();
 
+            if (!string.IsNullOrEmpty(request.Keyword))
+            {
+                var searchTerm = request.Keyword.Trim().ToLower();
+                var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
+
+                query = query.Where(h => h.Name.ToLower().Contains(searchTerm) || h.NameUnsigned.Contains(unsignedTerm));
+
+            }
+
+            var paged = await query
+                .OrderBy(t => t.Name)
+                .Select(t => mapper.Map<TagSearchResponse>(t))
+                .ToPagedResponseAsync(request.Page, request.PageSize);
+
+            return paged;
+        }
     }
 }

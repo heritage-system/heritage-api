@@ -21,7 +21,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost]
-        [AllowAnonymous]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ApiResponse<CreateCategoryResponse>> CreateCategory([FromBody] CreateCategoryRequest request)
         {
             var Categories = await CateService.CreateCategory(request);
@@ -33,7 +33,7 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
         [HttpPut]
-        [AllowAnonymous]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ApiResponse<UpdateCategoryResponse>> UpdateCategory([FromBody] UpdateCategoryRequest request)
         {
             var Categories = await CateService.UpdateCategory(request);
@@ -45,11 +45,11 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
         [HttpDelete]
-        [AllowAnonymous]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ApiResponse<DeleteCategoryResponse>> DeleteCategory([FromBody] DeleteCategoryRequest request)
         {
-            var Categories = await CateService.DeleteCategory(request);
 
+            var Categories = await CateService.DeleteCategory(request);
             return new ApiResponse<DeleteCategoryResponse>(
                 code: 200,
                 message: "Delete Category"
@@ -66,6 +66,18 @@ namespace Cultural_Heritage_System.Controllers
                 message: "get Categoris",
                 result: Categories
             );
+        }
+        [HttpGet("search_categories")]
+        //[Authorize(Roles = "ADMIN")]
+        public async Task<ApiResponse<PageResponse<CategorySearchResponse>>> GetAllWithSearch(
+         [FromQuery] CategorySearchRequest request)
+
+        {
+            return new ApiResponse<PageResponse<CategorySearchResponse>>
+            {
+                code = 200,
+                result = await CateService.SearchCategoriesAsync(request)
+            };
         }
 
     }

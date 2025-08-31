@@ -1,6 +1,9 @@
 ﻿using AutoMapper;
+using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Request.Category;
+using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Category;
+using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 
@@ -49,6 +52,40 @@ namespace Cultural_Heritage_System.Services.Impl
             return cateRepository.GetCategoriesQueryable();
         }
 
+
+
+        public async Task<PageResponse<CategorySearchResponse>> SearchCategoriesAsync(CategorySearchRequest request)
+        {
+            var query = GetCategoriesQueryable();
+
+            // Filter by keyword (both name + unsigned)
+            if (!string.IsNullOrWhiteSpace(request.Keyword))
+            {
+                var keyword = request.Keyword.ToLower();
+                query = query.Where(c =>
+                    c.Name.ToLower().Contains(keyword) ||
+                    c.NameUnsigned.Contains(keyword));
+            }
+
+            // Sorting
+            if (request.SortBy.HasValue)
+            {
+                switch (request.SortBy.Value)
+                {
+                    case SortBy.NAMEASC:
+                        query = query.OrderBy(c => c.Name);
+                        break;
+                    case SortBy.NAMEDESC:
+                        query = query.OrderByDescending(c => c.Name);
+                        break;
+                }
+            }
+
+            // Apply pagination and mapping
+            return await query
+                .Select(c => mapper.Map<CategorySearchResponse>(c))
+                .ToPagedResponseAsync(request.Page, request.PageSize);
+        }
 
     }
 }

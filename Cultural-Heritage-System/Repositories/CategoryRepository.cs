@@ -1,6 +1,5 @@
 ﻿using Cultural_Heritage_System.Models;
 using medical_appointment_booking.Repositories;
-using Microsoft.EntityFrameworkCore;
 
 namespace Cultural_Heritage_System.Repositories
 {
@@ -16,7 +15,7 @@ namespace Cultural_Heritage_System.Repositories
 
         public IQueryable<Category> GetCategoriesQueryable()
         {
-            return _context.Categories.Include(h => h.Heritages).AsQueryable();
+            return _context.Categories.AsQueryable();
         }
 
     }
