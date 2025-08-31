@@ -4,7 +4,9 @@ using CloudinaryDotNet.Actions;
 using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Response;
+using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Helpers;
+using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 using Microsoft.AspNetCore.Http;
@@ -179,6 +181,21 @@ namespace Cultural_Heritage_System.Services.Impl
                 logger.LogError(ex, "Error searching heritages");
                 throw;
             }
+        }
+
+        public async Task<HeritageSearchResponse> GetHeritageDetail(long id)
+        {                       
+
+            var existingHeritage = await heritageRepository.GetHeritageById(id);
+
+            if (existingHeritage == null)
+            {
+                throw new AppException(ErrorCode.HERITAGE_NOT_EXISTED);
+            }
+
+            var response = mapper.Map<HeritageSearchResponse>(existingHeritage);
+           
+            return response;
         }
 
         private const double EarthRadiusKm = 6371.0;
