@@ -8,6 +8,19 @@
 
         public string Description { get; set; }
 
+        public int Count { get; set; }
+
+        // New fields
+        public string NameUnsigned { get; set; }
+
+        public string DescriptionUnsigned { get; set; }
+
+        public string CreatedBy { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+
+        public DateTime UpdatedAt { get; set; }
+
 
     }
 }

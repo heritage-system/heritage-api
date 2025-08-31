@@ -21,7 +21,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost]
-        //[Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ApiResponse<CreateTagResponse>> CreateTag([FromBody] CreateTagRequest request)
         {
             var Tags = await TagService.CreateTag(request);
@@ -33,7 +33,7 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
         [HttpPut]
-        //[Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ApiResponse<UpdateTagResponse>> UpdateTag([FromBody] UpdateTagRequest request)
         {
             var Tags = await TagService.UpdateTag(request);
@@ -45,7 +45,7 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
         [HttpDelete]
-        //[Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ApiResponse<DeleteTagResponse>> DeleteTag([FromBody] DeleteTagRequest request)
         {
             var Tags = await TagService.DeleteTag(request);
@@ -68,6 +68,7 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
         [HttpGet("search_tag")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ApiResponse<PageResponse<TagSearchResponse>>> GetAllWithSearch(
           [FromQuery] TagSearchRequest request)
 

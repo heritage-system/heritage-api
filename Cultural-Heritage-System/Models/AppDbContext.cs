@@ -98,7 +98,8 @@ namespace Cultural_Heritage_System.Models
             modelBuilder.Entity<Heritage>()
                 .HasOne(h => h.Category)
                 .WithMany(c => c.Heritages)
-                .HasForeignKey(h => h.CategoryId);
+                .HasForeignKey(h => h.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevents heritage deletion;
 
             modelBuilder.Entity<HeritageMedia>()
                .HasOne(hm => hm.Heritage)
@@ -170,7 +171,7 @@ namespace Cultural_Heritage_System.Models
 
 
             modelBuilder.Entity<ReviewLike>()
-        .HasKey(rl => new { rl.ReviewId, rl.UserId }); 
+        .HasKey(rl => new { rl.ReviewId, rl.UserId });
 
             modelBuilder.Entity<ReviewLike>()
                 .HasOne(rl => rl.Review)

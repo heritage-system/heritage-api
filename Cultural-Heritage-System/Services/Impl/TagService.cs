@@ -14,15 +14,16 @@ namespace Cultural_Heritage_System.Services.Impl
     {
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly TagRepository tagRepository;
-
+        private readonly UserRepository userRepository;
         private readonly IMapper mapper;
 
         private readonly ILogger<TagService> logger;
 
-        public TagService(TagRepository tagRepository, ILogger<TagService> logger, IMailService mailService,
+        public TagService(TagRepository tagRepository, UserRepository userRepository, ILogger<TagService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             this.tagRepository = tagRepository;
+            this.userRepository = userRepository;
             this.logger = logger;
             this.mapper = mapper;
             this.httpContextAccessor = httpContextAccessor;
@@ -30,6 +31,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
         public async Task<CreateTagResponse> CreateTag(CreateTagRequest request)
         {
+
             // Validate tag name
             if (string.IsNullOrWhiteSpace(request.Name))
             {
@@ -46,6 +48,12 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.TAG_EXISTED);
             }
             Tag tag = mapper.Map<Tag>(request);
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            tag.CreatedBy = accountIdClaim;
             tag.GenerateUnsignedFields();
             await tagRepository.AddAsync(tag);
             return mapper.Map<CreateTagResponse>(tag);
@@ -86,7 +94,13 @@ namespace Cultural_Heritage_System.Services.Impl
 
 
             tag.GenerateUnsignedFields();
-
+            tag.UpdatedAt = DateTime.UtcNow;
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            tag.UpdatedBy = accountIdClaim;
             await tagRepository.UpdateAsync(tag);
 
             return mapper.Map<UpdateTagResponse>(tag);
@@ -101,21 +115,33 @@ namespace Cultural_Heritage_System.Services.Impl
         {
             var query = GetTagsQueryable();
 
+            // Filter by keyword
             if (!string.IsNullOrEmpty(request.Keyword))
             {
                 var searchTerm = request.Keyword.Trim().ToLower();
                 var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
-
-                query = query.Where(h => h.Name.ToLower().Contains(searchTerm) || h.NameUnsigned.Contains(unsignedTerm));
-
+                query = query.Where(t => t.Name.ToLower().Contains(searchTerm)
+                                      || t.NameUnsigned.Contains(unsignedTerm));
             }
 
+            // Project with all fields + count of related heritages
             var paged = await query
-                .OrderBy(t => t.Name)
-                .Select(t => mapper.Map<TagSearchResponse>(t))
+                .OrderBy(t => t.Id)
+                .Select(t => new TagSearchResponse
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    NameUnsigned = t.NameUnsigned,
+                    CreatedBy = t.CreatedBy,
+                    CreatedAt = t.CreatedAt,
+                    UpdatedAt = t.UpdatedAt,
+                    Count = t.HeritageTags.Count()
+                })
                 .ToPagedResponseAsync(request.Page, request.PageSize);
 
             return paged;
         }
+
+
     }
 }

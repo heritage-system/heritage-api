@@ -1,5 +1,6 @@
 ﻿using Cultural_Heritage_System.Helpers;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Cultural_Heritage_System.Models
 {

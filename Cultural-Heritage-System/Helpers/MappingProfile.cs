@@ -74,6 +74,7 @@ namespace Cultural_Heritage_System.Helpers
 
             CreateMap<DeleteCategoryRequest, Category>();
             CreateMap<Category, DeleteCategoryResponse>();
+
             CreateMap<Category, CategorySearchResponse>();
 
         }
