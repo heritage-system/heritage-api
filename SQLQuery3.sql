@@ -6,8 +6,8 @@ DELETE FROM Locations;
 -- =====================
 -- 1. Categories
 -- =====================
-INSERT INTO Categories (name, description, created_by, create_at, update_at)
-VALUES (N'Lễ hội truyền thống', N'Di sản phi vật thể - lễ hội truyền thống', 'system', GETDATE(), GETDATE());
+INSERT INTO Categories (name, description,name_unsigned,description_unsigned , created_by, create_at, update_at)
+VALUES (N'Lễ hội truyền thống', N'Di sản phi vật thể - lễ hội truyền thống','le hoi truyen thong','di san phi vat the le hoi truyen thong', 'system', GETDATE(), GETDATE());
 GO
 
 -- =====================
@@ -335,15 +335,15 @@ INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, 
 VALUES (17, @loc17_4, 'system', GETDATE(), GETDATE());
 
 
-INSERT INTO Tags (name, created_by, create_at, update_at)
+INSERT INTO Tags (name,name_unsigned, created_by, create_at, update_at)
 VALUES
-(N'Lễ hội truyền thống', 'system', GETDATE(), GETDATE()),
-(N'Lễ hội mùa xuân', 'system', GETDATE(), GETDATE()),
-(N'Lễ hội mùa thu', 'system', GETDATE(), GETDATE()),
-(N'Lễ hội làng', 'system', GETDATE(), GETDATE()),
-(N'Lễ hội dân gian', 'system', GETDATE(), GETDATE()),
-(N'Lễ hội tôn giáo', 'system', GETDATE(), GETDATE()),
-(N'Lễ hội văn hóa', 'system', GETDATE(), GETDATE());
+(N'Lễ hội truyền thống','le hoi truyen thong', 'system', GETDATE(), GETDATE()),
+(N'Lễ hội mùa xuân','le hoi mua xuan', 'system', GETDATE(), GETDATE()),
+(N'Lễ hội mùa thu','le hoi mua thu', 'system', GETDATE(), GETDATE()),
+(N'Lễ hội làng','le hoi lang', 'system', GETDATE(), GETDATE()),
+(N'Lễ hội dân gian','le hoi dan gian', 'system', GETDATE(), GETDATE()),
+(N'Lễ hội tôn giáo','le hoi ton giao', 'system', GETDATE(), GETDATE()),
+(N'Lễ hội văn hóa','le hoi van hoa', 'system', GETDATE(), GETDATE());
 
 INSERT INTO HeritageTags (heritage_id,tag_id, created_by, create_at, update_at)
 VALUES
@@ -359,7 +359,7 @@ INSERT INTO HeritageMedias
     (heritage_id, media_type, url, description, created_by, updated_by, create_at, update_at)
 VALUES
     (1, N'IMAGE', N'https://media.baobinhphuoc.com.vn/upload/news/4_2024/le_hoi_mieu_ba_ra_2021_00_46_28_19_11134705042024.jpg', N'Hình ảnh Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
-    (1, N'IMAGE', N'https://www.youtube.com/watch?v=UQDrCmWO-4I&list=RDUQDrCmWO-4I&start_radio=1', N'VIDEO Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
+    (1, N'VIDEO', N'https://www.youtube.com/watch?v=UQDrCmWO-4I&list=RDUQDrCmWO-4I&start_radio=1', N'VIDEO Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
     (2, N'IMAGE', N'https://phanthiet.binhthuan.dcs.vn/uploads/News/images/Phan%20Thiet/caungu.jpg', N'Hình ảnh Lễ hội Chùa Hương', 'system', 'system', GETDATE(), GETDATE()),
     (3, N'IMAGE', N'https://example.com/IMAGEs/hung.jpg', N'Hình ảnh Lễ hội Đền Hùng', 'system', 'system', GETDATE(), GETDATE()),
     (3, N'VIDEO', N'https://example.com/VIDEOs/hung.mp4', N'VIDEO Lễ hội Đền Hùng', 'system', 'system', GETDATE(), GETDATE()),
