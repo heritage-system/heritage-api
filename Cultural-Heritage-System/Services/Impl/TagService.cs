@@ -124,7 +124,7 @@ namespace Cultural_Heritage_System.Services.Impl
                                       || t.NameUnsigned.Contains(unsignedTerm));
             }
 
-            // Project with all fields + count of related heritages
+            // Fetch paginated results without CreatedByName
             var paged = await query
                 .OrderBy(t => t.Id)
                 .Select(t => new TagSearchResponse
@@ -134,11 +134,31 @@ namespace Cultural_Heritage_System.Services.Impl
                     NameUnsigned = t.NameUnsigned,
                     CreatedBy = t.CreatedBy,
                     CreatedAt = t.CreatedAt,
+                    UpdatedBy = t.UpdatedBy,
                     UpdatedAt = t.UpdatedAt,
                     Count = t.HeritageTags.Count()
                 })
                 .ToPagedResponseAsync(request.Page, request.PageSize);
 
+            foreach (var item in paged.Items)
+            {
+                if (!string.IsNullOrEmpty(item.CreatedBy))
+                {
+                    item.CreateByName = item.CreatedBy == "system"
+    ? "System"
+    : (await userRepository.GetByIdAsync(int.Parse(item.CreatedBy)))?.FullName;
+
+
+                }
+
+                if (!string.IsNullOrEmpty(item.UpdatedBy))
+                {
+                    item.UpdatedByName = item.UpdatedBy == "system"
+        ? "System"
+        : (await userRepository.GetByIdAsync(int.Parse(item.UpdatedBy)))?.FullName;
+
+                }
+            }
             return paged;
         }
 

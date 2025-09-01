@@ -16,6 +16,9 @@
         public string DescriptionUnsigned { get; set; }
 
         public string CreatedBy { get; set; }
+        public string? CreateByName { get; set; }
+        public string? UpdatedBy { get; set; }
+        public string? UpdatedByName { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

@@ -15,15 +15,16 @@ namespace Cultural_Heritage_System.Services.Impl
     {
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly CategoryRepository cateRepository;
-
+        private readonly UserRepository userRepository;
         private readonly IMapper mapper;
 
         private readonly ILogger<CategoryService> logger;
 
-        public CategoryService(CategoryRepository cateRepository, ILogger<CategoryService> logger, IMailService mailService,
+        public CategoryService(CategoryRepository cateRepository, UserRepository userRepository, ILogger<CategoryService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             this.cateRepository = cateRepository;
+            this.userRepository = userRepository;
             this.logger = logger;
             this.mapper = mapper;
             this.httpContextAccessor = httpContextAccessor;
@@ -100,6 +101,7 @@ namespace Cultural_Heritage_System.Services.Impl
         {
             return cateRepository.GetCategoriesQueryable();
         }
+
         public async Task<PageResponse<CategorySearchResponse>> SearchCategoriesAsync(CategorySearchRequest request)
         {
             var query = GetCategoriesQueryable();
@@ -132,7 +134,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 }
             }
 
-            // Apply pagination and map to DTO
+            // Apply pagination and map to DTO (without CreateByName / UpdatedByName yet)
             var paged = await query
                 .Select(c => new CategorySearchResponse
                 {
@@ -142,14 +144,37 @@ namespace Cultural_Heritage_System.Services.Impl
                     NameUnsigned = c.NameUnsigned,
                     DescriptionUnsigned = c.DescriptionUnsigned,
                     CreatedBy = c.CreatedBy,
+                    UpdatedBy = c.UpdatedBy,
                     CreatedAt = c.CreatedAt,
                     UpdatedAt = c.UpdatedAt,
-                    Count = c.Heritages.Count() // or whatever related count you have
+                    Count = c.Heritages.Count()
                 })
                 .ToPagedResponseAsync(request.Page, request.PageSize);
 
+            // Fill in CreateByName and UpdatedByName
+
+            foreach (var item in paged.Items)
+            {
+                if (!string.IsNullOrEmpty(item.CreatedBy))
+                {
+                    item.CreateByName = item.CreatedBy == "system"
+    ? "System"
+    : (await userRepository.GetByIdAsync(int.Parse(item.CreatedBy)))?.FullName;
+
+
+                }
+
+                if (!string.IsNullOrEmpty(item.UpdatedBy))
+                {
+                    item.UpdatedByName = item.UpdatedBy == "system"
+        ? "System"
+        : (await userRepository.GetByIdAsync(int.Parse(item.UpdatedBy)))?.FullName;
+
+                }
+            }
             return paged;
         }
+
 
 
     }
