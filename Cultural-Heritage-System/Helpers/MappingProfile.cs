@@ -25,6 +25,8 @@ namespace Cultural_Heritage_System.Helpers
                 opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : string.Empty))
             .ForMember(dest => dest.HeritageTags,
                 opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag.Name)))
+            .ForMember(dest => dest.HeritageTagIds,
+                opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag.Id)))
             .ForMember(dest => dest.HeritageOccurrences,
                 opt => opt.MapFrom(src => src.HeritageOccurrences))
             .ForMember(dest => dest.Media,

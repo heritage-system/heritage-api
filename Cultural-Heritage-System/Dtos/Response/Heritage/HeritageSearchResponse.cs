@@ -8,11 +8,11 @@ namespace Cultural_Heritage_System.Dtos.Response.Heritage
 {
     public class HeritageSearchResponse
     {
-        public long Id { get; set; }
-        public string Name { get; set; }
-      
+        public long Id { get; set; }      
+        public string Name { get; set; }      
         public string Description { get; set; }
 
+        public int CategoryId { get; set; }
         public string CategoryName { get; set; }
             
         public string MapUrl { get; set; }
@@ -22,6 +22,7 @@ namespace Cultural_Heritage_System.Dtos.Response.Heritage
         public List<HeritageOccurrenceDto> HeritageOccurrences { get; set; }
         public List<HeritageMediaDto> Media { get; set; }
         public List<string> HeritageTags { get; set; }
+        public List<int> HeritageTagIds { get; set; }
         public List<HeritageLocationDto> HeritageLocations { get; set; }       
 
     }
