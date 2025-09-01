@@ -17,7 +17,54 @@ INSERT INTO Heritages
 (name, description, name_unsigned, description_unsigned, category_id, map_url, is_featured, created_by, create_at, update_at)
 VALUES
 (N'Lễ hội Miếu Bà Rá', 
- N'Núi Bà Rá gắn với truyền thuyết Bà Rá và Bà Đen (Tây Ninh); lễ hội thu hút hàng nghìn người dân và du khách hành hương mỗi năm', 
+ N'{
+  "history": [
+    {
+      "type": "paragraph",
+      "content": "Lễ hội Miếu Bà Rá diễn ra tại núi Bà Rá, thị xã Phước Long, tỉnh Bình Phước. Miếu thờ Bà Rá – vị thần được người dân tôn kính với truyền thuyết gắn liền với nàng Thị Thiên Hương."
+    },
+    {
+      "type": "paragraph",
+      "content": "Theo dân gian, Bà là người con gái xinh đẹp, tiết hạnh, sau khi mất hiển linh phù hộ cho dân làng. Để tưởng nhớ công đức, người dân đã lập miếu thờ và tổ chức lễ hội hằng năm."
+    }
+  ],
+  "rituals": [
+    {
+      "type": "paragraph",
+      "content": "Lễ hội Miếu Bà Rá được tổ chức từ ngày mùng 1 đến mùng 3 tháng Giêng âm lịch, thu hút đông đảo khách thập phương."
+    },
+    {
+      "type": "list",
+      "items": [
+        "Lễ dâng hương tại miếu Bà",
+        "Lễ rước sắc phong và tế lễ trang nghiêm",
+        "Các hoạt động múa lân, biểu diễn văn nghệ dân gian",
+        "Hội chợ xuân và trò chơi dân gian"
+      ]
+    }
+  ],
+  "values": [
+    {
+      "type": "paragraph",
+      "content": "Lễ hội Miếu Bà Rá là dịp để cộng đồng bày tỏ lòng tri ân đối với thần linh bảo hộ, đồng thời gửi gắm ước vọng bình an, mùa màng bội thu."
+    },
+    {
+      "type": "paragraph",
+      "content": "Lễ hội còn góp phần gìn giữ bản sắc tín ngưỡng dân gian của cư dân Bình Phước và là điểm đến du lịch tâm linh hấp dẫn trong dịp đầu năm."
+    }
+  ],
+  "preservation": [
+    {
+      "type": "paragraph",
+      "content": "Chính quyền địa phương đã đưa lễ hội vào danh mục lễ hội truyền thống tiêu biểu, thường xuyên tu bổ miếu Bà và khu di tích núi Bà Rá."
+    },
+    {
+      "type": "paragraph",
+      "content": "Công tác bảo tồn được thực hiện thông qua việc tổ chức lễ hội đúng nghi thức truyền thống, đồng thời kết hợp quảng bá du lịch để thu hút du khách."
+    }
+  ]
+}
+', 
  N'le hoi mieu ba ra', 
  N'nui ba ra gan voi truyen thuyet ba ra va ba den tay ninh; le hoi thu hut hang nghin nguoi dan va du khach hanh huong moi nam', 
  1, 
@@ -311,8 +358,8 @@ VALUES
 INSERT INTO HeritageMedias
     (heritage_id, media_type, url, description, created_by, updated_by, create_at, update_at)
 VALUES
-    (1, N'IMAGE', N'https://example.com/IMAGEs/giong.jpg', N'Hình ảnh Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
-    (1, N'VIDEO', N'https://example.com/VIDEOs/giong.mp4', N'VIDEO Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
+    (1, N'IMAGE', N'https://media.baobinhphuoc.com.vn/upload/news/4_2024/le_hoi_mieu_ba_ra_2021_00_46_28_19_11134705042024.jpg', N'Hình ảnh Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
+    (1, N'IMAGE', N'https://www.youtube.com/watch?v=UQDrCmWO-4I&list=RDUQDrCmWO-4I&start_radio=1', N'VIDEO Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
     (2, N'IMAGE', N'https://example.com/IMAGEs/huong.jpg', N'Hình ảnh Lễ hội Chùa Hương', 'system', 'system', GETDATE(), GETDATE()),
     (3, N'IMAGE', N'https://example.com/IMAGEs/hung.jpg', N'Hình ảnh Lễ hội Đền Hùng', 'system', 'system', GETDATE(), GETDATE()),
     (3, N'VIDEO', N'https://example.com/VIDEOs/hung.mp4', N'VIDEO Lễ hội Đền Hùng', 'system', 'system', GETDATE(), GETDATE()),

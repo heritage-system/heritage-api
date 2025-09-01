@@ -3,6 +3,7 @@ using Cultural_Heritage_System.Dtos.Request.Category;
 using Cultural_Heritage_System.Dtos.Request.Tag;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Category;
+using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Tag;
 using Cultural_Heritage_System.Models;
 
@@ -71,7 +72,14 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<DeleteCategoryRequest, Category>();
             CreateMap<Category, DeleteCategoryResponse>();
 
+            // Contributor
+            CreateMap<ContributorCreateRequest, Contributor>();
+            CreateMap<ContributorUpdateRequest, Contributor>()
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
+            CreateMap<Contributor, ContributorResponse>()
+                .ForMember(dest => dest.UserFullName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : null))
+                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : null));
         }
     }
 }

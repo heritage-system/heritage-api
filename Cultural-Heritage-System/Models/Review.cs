@@ -17,15 +17,19 @@ namespace Cultural_Heritage_System.Models
         [ForeignKey("Heritage")]      
         public long HeritageId { get; set; }
         public Heritage Heritage { get; set; }
-
-        [Required]
-        [Column("rating")]
-        public int Rating { get; set; }
-
+  
         [Required]
         [Column("comment")]
         public string Comment { get; set; }
 
+        [Column("parent_review_id")]
+        public long? ParentReviewId { get; set; }
+        public Review? ParentReview { get; set; }
+
+        public ICollection<Review>? Replies { get; set; }  
+        public ICollection<ReviewLike>? Likes { get; set; } 
+        public ICollection<ReviewReport>? Reports { get; set; }
+        public ICollection<ReviewMedia>? ReviewMedias { get; set; }
     }
 
 }

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Helpers;
 
 namespace Cultural_Heritage_System.Models
 {
@@ -31,6 +32,13 @@ namespace Cultural_Heritage_System.Models
         public ContributorStatus Status { get; set; } = ContributorStatus.APPLIED;
       
         public ICollection<Contribution> Contributions { get; set; } = new List<Contribution>();
-       
+
+        [Column("expertise_unsigned")]
+        public string ExpertiseUnsigned { get; set; }
+        public void GenerateUnsignedFields()
+        {
+            ExpertiseUnsigned = StringHelper.RemoveDiacritics(Expertise).ToLower();
+        }
+
     }
 }
