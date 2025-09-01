@@ -1,6 +1,5 @@
 ﻿using Cultural_Heritage_System.Models;
 using medical_appointment_booking.Repositories;
-using Microsoft.EntityFrameworkCore;
 
 namespace Cultural_Heritage_System.Repositories
 {
@@ -13,9 +12,10 @@ namespace Cultural_Heritage_System.Repositories
         {
             _logger = logger;
         }
+        // Tạm thời 
         public IQueryable<Tag> GetTagsQueryable()
         {
-            return _context.Tags.Include(h => h.HeritageTags).AsQueryable();
+            return _context.Tags.AsQueryable();
         }
     }
 }
