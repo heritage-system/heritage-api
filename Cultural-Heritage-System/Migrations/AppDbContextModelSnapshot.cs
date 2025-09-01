@@ -44,10 +44,20 @@ namespace Cultural_Heritage_System.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("description");
 
+                    b.Property<string>("DescriptionUnsigned")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("description_unsigned");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("name");
+
+                    b.Property<string>("NameUnsigned")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name_unsigned");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2")
@@ -1544,6 +1554,11 @@ namespace Cultural_Heritage_System.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("name");
 
+                    b.Property<string>("NameUnsigned")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("name_unsigned");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("update_at");
@@ -1820,7 +1835,7 @@ namespace Cultural_Heritage_System.Migrations
                     b.HasOne("Cultural_Heritage_System.Models.Category", "Category")
                         .WithMany("Heritages")
                         .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Category");

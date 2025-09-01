@@ -19,6 +19,8 @@ namespace Cultural_Heritage_System.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    name_unsigned = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    description_unsigned = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -116,6 +118,7 @@ namespace Cultural_Heritage_System.Migrations
                     id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    name_unsigned = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -152,7 +155,7 @@ namespace Cultural_Heritage_System.Migrations
                         column: x => x.category_id,
                         principalTable: "Categories",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
