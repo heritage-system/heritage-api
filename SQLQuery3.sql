@@ -360,7 +360,7 @@ INSERT INTO HeritageMedias
 VALUES
     (1, N'IMAGE', N'https://media.baobinhphuoc.com.vn/upload/news/4_2024/le_hoi_mieu_ba_ra_2021_00_46_28_19_11134705042024.jpg', N'Hình ảnh Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
     (1, N'IMAGE', N'https://www.youtube.com/watch?v=UQDrCmWO-4I&list=RDUQDrCmWO-4I&start_radio=1', N'VIDEO Lễ hội Gióng', 'system', 'system', GETDATE(), GETDATE()),
-    (2, N'IMAGE', N'https://example.com/IMAGEs/huong.jpg', N'Hình ảnh Lễ hội Chùa Hương', 'system', 'system', GETDATE(), GETDATE()),
+    (2, N'IMAGE', N'https://phanthiet.binhthuan.dcs.vn/uploads/News/images/Phan%20Thiet/caungu.jpg', N'Hình ảnh Lễ hội Chùa Hương', 'system', 'system', GETDATE(), GETDATE()),
     (3, N'IMAGE', N'https://example.com/IMAGEs/hung.jpg', N'Hình ảnh Lễ hội Đền Hùng', 'system', 'system', GETDATE(), GETDATE()),
     (3, N'VIDEO', N'https://example.com/VIDEOs/hung.mp4', N'VIDEO Lễ hội Đền Hùng', 'system', 'system', GETDATE(), GETDATE()),
     (4, N'IMAGE', N'https://example.com/IMAGEs/lim.jpg', N'Hình ảnh Lễ hội Lim', 'system', 'system', GETDATE(), GETDATE()),
