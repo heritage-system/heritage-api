@@ -51,14 +51,66 @@ namespace Cultural_Heritage_System.Services.Impl
                         h.Name.ToLower().Contains(searchTerm) ||
                         h.Description.ToLower().Contains(searchTerm) ||
 
+//                // Tag filter
+//                if (request.TagIds != null && request.TagIds.Any())
+//                {
+//                    query = query.Where(h => h.HeritageTags.Any(t => request.TagIds.Contains(t.TagId)));
+//                }
                      
                         h.NameUnsigned.Contains(unsignedTerm) ||
                         h.DescriptionUnsigned.Contains(unsignedTerm));
                 }
 
 
+//                // Date filter
+//                if (request.StartDate.HasValue && request.EndDate.HasValue)
+//                {
+//                    query = query.Where(h =>
+//                        h.HeritageOccurrences.Any(o =>
+//                            o.StartDate.HasValue &&
+//                            o.EndDate.HasValue &&
+//                            o.StartDate.Value >= request.StartDate.Value &&
+//                            o.EndDate.Value <= request.EndDate.Value
+//                        ));
+//                }
+//                else if (request.StartDate.HasValue)
+//                {
+//                    query = query.Where(h =>
+//                        h.HeritageOccurrences.Any(o =>
+//                            o.StartDate.HasValue &&
+//                            o.StartDate.Value.Date == request.StartDate.Value.Date
+//                        ));
+//                }
 
+//                switch (request.SortBy)
+//                {
+//                    case SortBy.NAMEASC:
+//                        query = query.OrderBy(h => h.Name);
+//                        break;
+//                    case SortBy.NAMEDESC:
+//                        query = query.OrderByDescending(h => h.Name);
+//                        break;
+//                    case SortBy.DATEASC:
+//                        query = query.OrderBy(h => h.HeritageOccurrences.Min(o => o.StartDate));
+//                        break;
+//                    case SortBy.DATEDESC:
+//                        query = query.OrderByDescending(h => h.HeritageOccurrences.Min(o => o.StartDate));
+//                        break;
+//                    default:
+//                        query = query.OrderBy(h => h.Name);
+//                        break;
+//                }
 
+//                // Pagination
+//                var response = await query.ToPagedResponseAsync(request.Page, request.PageSize);
+//                return response;
+//            }
+//            catch (Exception ex)
+//            {
+//                logger.LogError(ex, "Error searching heritages");
+//                throw;
+//            }
+//        }
 
                 // Location filter
                 if (request.Locations != null && request.Locations.Any())
