@@ -144,21 +144,35 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 if (!string.IsNullOrEmpty(item.CreatedBy))
                 {
-                    item.CreateByName = item.CreatedBy == "system"
-    ? "System"
-    : (await userRepository.GetByIdAsync(int.Parse(item.CreatedBy)))?.FullName;
-
-
+                    if (item.CreatedBy == "system")
+                    {
+                        item.CreateByName = "System";
+                        item.CreateByEmail = "system"; // 👈 set email as "system"
+                    }
+                    else
+                    {
+                        var user = await userRepository.GetByIdAsync(int.Parse(item.CreatedBy));
+                        item.CreateByName = user?.FullName;
+                        item.CreateByEmail = user?.Email;
+                    }
                 }
 
                 if (!string.IsNullOrEmpty(item.UpdatedBy))
                 {
-                    item.UpdatedByName = item.UpdatedBy == "system"
-        ? "System"
-        : (await userRepository.GetByIdAsync(int.Parse(item.UpdatedBy)))?.FullName;
-
+                    if (item.UpdatedBy == "system")
+                    {
+                        item.UpdatedByName = "System";
+                        item.UpdatedByEmail = "system"; // 👈 set email as "system"
+                    }
+                    else
+                    {
+                        var user = await userRepository.GetByIdAsync(int.Parse(item.UpdatedBy));
+                        item.UpdatedByName = user?.FullName;
+                        item.UpdatedByEmail = user?.Email;
+                    }
                 }
             }
+
             return paged;
         }
 

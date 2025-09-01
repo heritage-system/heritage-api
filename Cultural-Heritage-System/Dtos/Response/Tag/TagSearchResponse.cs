@@ -8,8 +8,11 @@
 
         public string CreatedBy { get; set; }
         public string? CreateByName { get; set; }
+
+        public string? CreateByEmail { get; set; }
         public string? UpdatedBy { get; set; }
         public string? UpdatedByName { get; set; }
+        public string? UpdatedByEmail { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 
