@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cultural_Heritage_System.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250829131813_Initial")]
+    [Migration("20250831140505_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -100,7 +100,7 @@ namespace Cultural_Heritage_System.Migrations
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("price ");
 
-                    b.Property<int>("ReviewedBy")
+                    b.Property<int?>("ReviewedBy")
                         .HasColumnType("int")
                         .HasColumnName("reviewed_by");
 
@@ -1279,9 +1279,9 @@ namespace Cultural_Heritage_System.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("heritage_id");
 
-                    b.Property<int>("Rating")
-                        .HasColumnType("int")
-                        .HasColumnName("rating");
+                    b.Property<long?>("ParentReviewId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("parent_review_id");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2")
@@ -1299,9 +1299,144 @@ namespace Cultural_Heritage_System.Migrations
 
                     b.HasIndex("HeritageId");
 
+                    b.HasIndex("ParentReviewId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Reviews");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.ReviewLike", b =>
+                {
+                    b.Property<long>("ReviewId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("review_id");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("create_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("update_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("ReviewId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ReviewLikes");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.ReviewMedia", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("create_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("media_type");
+
+                    b.Property<long>("ReviewId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("review_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("update_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("url");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewId");
+
+                    b.ToTable("ReviewMedias");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.ReviewReport", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("create_at");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("reason");
+
+                    b.Property<long>("ReviewId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("review_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("update_at");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("updated_by");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ReviewReports");
                 });
 
             modelBuilder.Entity("Cultural_Heritage_System.Models.Role", b =>
@@ -1605,8 +1740,7 @@ namespace Cultural_Heritage_System.Migrations
                     b.HasOne("Cultural_Heritage_System.Models.User", "Reviewer")
                         .WithMany("ReviewedContributions")
                         .HasForeignKey("ReviewedBy")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Contributor");
 
@@ -1894,10 +2028,15 @@ namespace Cultural_Heritage_System.Migrations
             modelBuilder.Entity("Cultural_Heritage_System.Models.Review", b =>
                 {
                     b.HasOne("Cultural_Heritage_System.Models.Heritage", "Heritage")
-                        .WithMany()
+                        .WithMany("Reviews")
                         .HasForeignKey("HeritageId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Cultural_Heritage_System.Models.Review", "ParentReview")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentReviewId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Cultural_Heritage_System.Models.User", "User")
                         .WithMany("Reviews")
@@ -1906,6 +2045,57 @@ namespace Cultural_Heritage_System.Migrations
                         .IsRequired();
 
                     b.Navigation("Heritage");
+
+                    b.Navigation("ParentReview");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.ReviewLike", b =>
+                {
+                    b.HasOne("Cultural_Heritage_System.Models.Review", "Review")
+                        .WithMany("Likes")
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Cultural_Heritage_System.Models.User", "User")
+                        .WithMany("ReviewLikes")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Review");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.ReviewMedia", b =>
+                {
+                    b.HasOne("Cultural_Heritage_System.Models.Review", "Review")
+                        .WithMany("ReviewMedias")
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Review");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.ReviewReport", b =>
+                {
+                    b.HasOne("Cultural_Heritage_System.Models.Review", "Review")
+                        .WithMany("Reports")
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Cultural_Heritage_System.Models.User", "User")
+                        .WithMany("ReviewReports")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Review");
 
                     b.Navigation("User");
                 });
@@ -1979,6 +2169,8 @@ namespace Cultural_Heritage_System.Migrations
                     b.Navigation("HeritageTags");
 
                     b.Navigation("Media");
+
+                    b.Navigation("Reviews");
                 });
 
             modelBuilder.Entity("Cultural_Heritage_System.Models.Location", b =>
@@ -1996,6 +2188,17 @@ namespace Cultural_Heritage_System.Migrations
             modelBuilder.Entity("Cultural_Heritage_System.Models.QuizRank", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Cultural_Heritage_System.Models.Review", b =>
+                {
+                    b.Navigation("Likes");
+
+                    b.Navigation("Replies");
+
+                    b.Navigation("Reports");
+
+                    b.Navigation("ReviewMedias");
                 });
 
             modelBuilder.Entity("Cultural_Heritage_System.Models.Role", b =>
@@ -2019,6 +2222,10 @@ namespace Cultural_Heritage_System.Migrations
                     b.Navigation("QuizResults");
 
                     b.Navigation("Reports");
+
+                    b.Navigation("ReviewLikes");
+
+                    b.Navigation("ReviewReports");
 
                     b.Navigation("ReviewedContributions");
 

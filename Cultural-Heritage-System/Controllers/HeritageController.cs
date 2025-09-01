@@ -1,4 +1,5 @@
 ﻿using Cultural_Heritage_System.Dtos.Request;
+using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -17,67 +18,117 @@ namespace Cultural_Heritage_System.Controllers
             _heritageService = heritageService;
         }
 
-        [HttpGet("heritage")]
+        [HttpGet("all")]
         [Authorize(Roles = "MEMBER")]
-        public async Task<IActionResult> GetAll(
-    [FromQuery] int page = 1,
-    [FromQuery] int pageSize = 5,
-    [FromQuery] string? keyword = null,
-    [FromQuery] int? categoryId = null,
-    [FromQuery] int? tagId = null)
+        public async Task<ApiResponse<PageResponse<HeritageResponse>>> GetAll([FromQuery] int page = 1,[FromQuery] int pageSize = 5,[FromQuery] string? keyword = null,
+                                                                                [FromQuery] int? categoryId = null,[FromQuery] int? tagId = null)
         {
             var heritages = await _heritageService.GetAllAsync(page, pageSize, keyword, categoryId, tagId);
-            return Ok(heritages);
+
+            return new ApiResponse<PageResponse<HeritageResponse>>(
+                code: 200,
+                message: "Get the heritage list successfully",
+                result: heritages
+            );
         }
 
-
-
-        [HttpGet("heritage/id")]
-        [Authorize]
-        public async Task<IActionResult> GetById([FromQuery] long id)
+        [HttpGet("id")]
+        //[Authorize(Roles ="ADMIN")]
+        public async Task<ApiResponse<HeritageResponse>> GetById([FromQuery] long id)
         {
             var heritage = await _heritageService.GetByIdAsync(id);
-            if (heritage == null)
-                return NotFound(new { message = "Heritage not found" });
 
-            return Ok(heritage);
+            if (heritage == null)
+            {
+                return new ApiResponse<HeritageResponse>(
+                    code: 404,
+                    message: "Heritage not found"
+                );
+            }
+
+            return new ApiResponse<HeritageResponse>(
+                code: 200,
+                message: "Heritage fetched successfully",
+                result: heritage
+            );
         }
 
-        [HttpPost("heritage/create")]
-        //[Authorize]
-        public async Task<IActionResult> Create([FromForm] HeritageCreateRequest request)
+
+        [HttpPost("create")]
+        //[Authorize(Roles ="ADMIN")]
+        public async Task<ApiResponse<HeritageResponse>> Create([FromForm] HeritageCreateRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return new ApiResponse<HeritageResponse>(
+                    code: 400,
+                    message: "Invalid model state",
+                    result: null
+                );
+            }
 
             var newHeritage = await _heritageService.CreateAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = newHeritage.Id }, newHeritage);
+
+            return new ApiResponse<HeritageResponse>(
+                code: 201,
+                message: "Heritage created successfully",
+                result: newHeritage
+            );
         }
 
 
-        [HttpPut("heritage/Update")]
-        [Authorize]
-        public async Task<IActionResult> Update([FromQuery]long id, [FromBody] HeritageUpdateRequest request)
+
+        [HttpPut("update")]
+        //[Authorize(Roles ="ADMIN")]
+        public async Task<ApiResponse<HeritageResponse>> Update([FromQuery] long id, [FromBody] HeritageUpdateRequest request)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                return new ApiResponse<HeritageResponse>(
+                    code: 400,
+                    message: "Invalid model state",
+                    result: null
+                );
+            }
 
             var updatedHeritage = await _heritageService.UpdateAsync(id, request);
-            if (updatedHeritage == null)
-                return NotFound(new { message = "Heritage not found" });
 
-            return Ok(updatedHeritage);
+            if (updatedHeritage == null)
+            {
+                return new ApiResponse<HeritageResponse>(
+                    code: 404,
+                    message: "Heritage not found",
+                    result: null
+                );
+            }
+
+            return new ApiResponse<HeritageResponse>(
+                code: 200,
+                message: "Heritage updated successfully",
+                result: updatedHeritage
+            );
         }
 
-        [HttpDelete("heritage/delete")]
-        //[Authorize]
-        public async Task<IActionResult> Delete([FromQuery] long id)
+
+        [HttpDelete("delete")]
+        //[Authorize(Roles ="ADMIN")]
+        public async Task<ApiResponse<string>> Delete([FromQuery] long id)
         {
             var result = await _heritageService.DeleteAsync(id);
-            if (!result)
-                return NotFound(new { message = "Heritage not found" });
 
-            return NoContent();
+            if (!result)
+            {
+                return new ApiResponse<string>(
+                    code: 404,
+                    message: "Heritage not found"
+                );
+            }
+
+            return new ApiResponse<string>(
+                code: 200,
+                message: "Delete heritage successfully"
+            );
         }
+
     }
 }

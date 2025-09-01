@@ -47,12 +47,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
         }
 
-        public async Task<PageResponse<HeritageResponse>> GetAllAsync(
-    int page,
-    int pageSize,
-    string? keyword = null,
-    int? categoryId = null,
-    int? tagId = null)
+        public async Task<PageResponse<HeritageResponse>> GetAllAsync(int page,int pageSize, string? keyword = null,int? categoryId = null,int? tagId = null)
         {
             var query = _heritageRepository.GetAllQuery();
 
@@ -66,22 +61,18 @@ namespace Cultural_Heritage_System.Services.Impl
 
 
 
-            // Lọc theo Category (không bắt buộc)
             if (categoryId.HasValue)
             {
                 query = query.Where(h => h.CategoryId == categoryId.Value);
             }
 
-            // Lọc theo Tag (không bắt buộc)
             if (tagId.HasValue)
             {
                 query = query.Where(h => h.HeritageTags.Any(ht => ht.TagId == tagId.Value));
             }
 
-            // Phân trang
             var pagedResult = await query.ToPagedResponseAsync(page, pageSize);
 
-            // Map sang DTO
             return _mapper.Map<PageResponse<HeritageResponse>>(pagedResult);
         }
 

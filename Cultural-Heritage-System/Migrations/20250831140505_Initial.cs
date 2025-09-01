@@ -559,8 +559,8 @@ namespace Cultural_Heritage_System.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     user_id = table.Column<int>(type: "int", nullable: false),
                     heritage_id = table.Column<long>(type: "bigint", nullable: false),
-                    rating = table.Column<int>(type: "int", nullable: false),
                     comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    parent_review_id = table.Column<long>(type: "bigint", nullable: true),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -575,6 +575,12 @@ namespace Cultural_Heritage_System.Migrations
                         principalTable: "Heritages",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Reviews_Reviews_parent_review_id",
+                        column: x => x.parent_review_id,
+                        principalTable: "Reviews",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Reviews_Users_user_id",
                         column: x => x.user_id,
@@ -644,7 +650,7 @@ namespace Cultural_Heritage_System.Migrations
                     price = table.Column<decimal>(name: "price ", type: "decimal(18,2)", nullable: false),
                     media_url = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    reviewed_by = table.Column<int>(type: "int", nullable: false),
+                    reviewed_by = table.Column<int>(type: "int", nullable: true),
                     created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -734,6 +740,90 @@ namespace Cultural_Heritage_System.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_QuizResults_Users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "Users",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ReviewLikes",
+                columns: table => new
+                {
+                    review_id = table.Column<long>(type: "bigint", nullable: false),
+                    user_id = table.Column<int>(type: "int", nullable: false),
+                    id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ReviewLikes", x => new { x.review_id, x.user_id });
+                    table.ForeignKey(
+                        name: "FK_ReviewLikes_Reviews_review_id",
+                        column: x => x.review_id,
+                        principalTable: "Reviews",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ReviewLikes_Users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "Users",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ReviewMedias",
+                columns: table => new
+                {
+                    id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    review_id = table.Column<long>(type: "bigint", nullable: false),
+                    media_type = table.Column<string>(type: "nvarchar(20)", nullable: false),
+                    url = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ReviewMedias", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_ReviewMedias_Reviews_review_id",
+                        column: x => x.review_id,
+                        principalTable: "Reviews",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ReviewReports",
+                columns: table => new
+                {
+                    id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    user_id = table.Column<int>(type: "int", nullable: false),
+                    review_id = table.Column<long>(type: "bigint", nullable: false),
+                    reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ReviewReports", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_ReviewReports_Reviews_review_id",
+                        column: x => x.review_id,
+                        principalTable: "Reviews",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ReviewReports_Users_user_id",
                         column: x => x.user_id,
                         principalTable: "Users",
                         principalColumn: "id");
@@ -987,9 +1077,34 @@ namespace Cultural_Heritage_System.Migrations
                 column: "purchase_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ReviewLikes_user_id",
+                table: "ReviewLikes",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReviewMedias_review_id",
+                table: "ReviewMedias",
+                column: "review_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReviewReports_review_id",
+                table: "ReviewReports",
+                column: "review_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReviewReports_user_id",
+                table: "ReviewReports",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Reviews_heritage_id",
                 table: "Reviews",
                 column: "heritage_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Reviews_parent_review_id",
+                table: "Reviews",
+                column: "parent_review_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reviews_user_id",
@@ -1068,7 +1183,13 @@ namespace Cultural_Heritage_System.Migrations
                 name: "RevenueShares");
 
             migrationBuilder.DropTable(
-                name: "Reviews");
+                name: "ReviewLikes");
+
+            migrationBuilder.DropTable(
+                name: "ReviewMedias");
+
+            migrationBuilder.DropTable(
+                name: "ReviewReports");
 
             migrationBuilder.DropTable(
                 name: "SystemLogs");
@@ -1092,7 +1213,7 @@ namespace Cultural_Heritage_System.Migrations
                 name: "Quiz");
 
             migrationBuilder.DropTable(
-                name: "Heritages");
+                name: "Reviews");
 
             migrationBuilder.DropTable(
                 name: "ContributionPurchases");
@@ -1101,10 +1222,13 @@ namespace Cultural_Heritage_System.Migrations
                 name: "Wallets");
 
             migrationBuilder.DropTable(
-                name: "Categories");
+                name: "Heritages");
 
             migrationBuilder.DropTable(
                 name: "Contributions");
+
+            migrationBuilder.DropTable(
+                name: "Categories");
 
             migrationBuilder.DropTable(
                 name: "Contributors");
