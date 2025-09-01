@@ -5,7 +5,6 @@ using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 
 namespace Cultural_Heritage_System.Services.Impl
@@ -43,9 +42,9 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.USER_EXISTED);
             }
 
-            User user = mapper.Map<User>(request);          
+            User user = mapper.Map<User>(request);
             user.PasswordHash = passwordHasher.HashPassword(user, request.Password.Trim());
-             
+
             var role = await roleRepository.FindByRoleName(DefinitionRole.ADMIN);
             if (role == null)
             {
@@ -58,16 +57,16 @@ namespace Cultural_Heritage_System.Services.Impl
 
             var profile = new Models.Profile
             {
-                UserId = user.Id,                            
+                UserId = user.Id,
             };
 
             await profileRepository.AddAsync(profile);
 
-          
+
 
             await mailService.SendEmailWelcome(user.Email, user.UserName, user.CreatedAt);
 
-            return mapper.Map<UserCreationResponse>(user); 
+            return mapper.Map<UserCreationResponse>(user);
         }
 
         public async Task ChangePassword(ChangePasswordRequest request)

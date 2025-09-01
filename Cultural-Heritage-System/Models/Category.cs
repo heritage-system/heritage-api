@@ -1,17 +1,26 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
-using Cultural_Heritage_System.Common;
+﻿using Cultural_Heritage_System.Helpers;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class Category: BaseEntity<int>
+    public class Category : BaseEntity<int>
     {
         [Column("name")]
         public string Name { get; set; }
 
         [Column("description")]
         public string Description { get; set; }
+        [Column("name_unsigned")]
+        public string NameUnsigned { get; set; }
+
+        [Column("description_unsigned")]
+        public string DescriptionUnsigned { get; set; }
+        public void GenerateUnsignedFields()
+        {
+            NameUnsigned = StringHelper.RemoveDiacritics(Name).ToLower();
+            DescriptionUnsigned = StringHelper.RemoveDiacritics(Description).ToLower();
+        }
 
         [JsonIgnore]
         public ICollection<Heritage> Heritages { get; set; } = new List<Heritage>();

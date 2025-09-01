@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Cultural_Heritage_System.Helpers;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Cultural_Heritage_System.Models
@@ -7,6 +8,15 @@ namespace Cultural_Heritage_System.Models
     {
         [Column("name")]
         public string Name { get; set; }
+        [Column("name_unsigned")]
+        public string NameUnsigned { get; set; }
+
+
+        public void GenerateUnsignedFields()
+        {
+            NameUnsigned = StringHelper.RemoveDiacritics(Name).ToLower();
+
+        }
 
         [JsonIgnore]
         public ICollection<HeritageTag> HeritageTags { get; set; } = new List<HeritageTag>();
