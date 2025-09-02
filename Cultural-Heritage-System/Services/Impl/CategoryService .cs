@@ -14,16 +14,16 @@ namespace Cultural_Heritage_System.Services.Impl
     public class CategoryService : ICategoryService
     {
         private readonly IHttpContextAccessor httpContextAccessor;
-        private readonly CategoryRepository cateRepository;
+        private readonly CategoryRepository categoryRepository;
         private readonly UserRepository userRepository;
         private readonly IMapper mapper;
 
         private readonly ILogger<CategoryService> logger;
 
-        public CategoryService(CategoryRepository cateRepository, UserRepository userRepository, ILogger<CategoryService> logger, IMailService mailService,
+        public CategoryService(CategoryRepository categoryRepository, UserRepository userRepository, ILogger<CategoryService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
-            this.cateRepository = cateRepository;
+            this.categoryRepository = categoryRepository;
             this.userRepository = userRepository;
             this.logger = logger;
             this.mapper = mapper;
@@ -39,7 +39,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 logger.LogError("Invalid  Name");
                 throw new AppException(ErrorCode.INVALID_CATEGORY_NAME);
             }
-            var existingCategory = cateRepository
+            var existingCategory = categoryRepository
      .GetCategoriesQueryable()
      .FirstOrDefault(t => t.Name == request.Name);
             if (existingCategory != null)
@@ -54,15 +54,15 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
             Category.CreatedBy = accountIdClaim;
-            Category.GenerateUnsignedFields();
-            await cateRepository.AddAsync(Category);
+            //Category.GenerateUnsignedFields();
+            await categoryRepository.AddAsync(Category);
             return mapper.Map<CreateCategoryResponse>(Category);
         }
 
         public async Task<DeleteCategoryResponse> DeleteCategory(DeleteCategoryRequest request)
         {
             // Fetch from DB
-            var Category = await cateRepository.GetCategoriesQueryable()
+            var Category = await categoryRepository.GetCategoriesQueryable()
                                          .FirstOrDefaultAsync(t => t.Id == request.id);
 
             if (Category == null)
@@ -71,13 +71,20 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.CATEGORY_NOT_EXISTED);
             }
             mapper.Map(request, Category);
-            await cateRepository.DeleteAsync(Category);
+            try
+            {
+                await categoryRepository.DeleteAsync(Category);
+            }
+            catch(Exception e)
+            {
+                throw new AppException(ErrorCode.CATEGORY_ALREADY_USED);
+            }
             return mapper.Map<DeleteCategoryResponse>(Category);
         }
         public async Task<UpdateCategoryResponse> UpdateCategory(UpdateCategoryRequest request)
         {
             // Fetch from DB
-            var Category = await cateRepository.GetCategoriesQueryable()
+            var Category = await categoryRepository.GetCategoriesQueryable()
                                          .FirstOrDefaultAsync(t => t.Id == request.id);
 
             if (Category == null)
@@ -86,7 +93,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.CATEGORY_NOT_EXISTED);
             }
             mapper.Map(request, Category);
-            Category.GenerateUnsignedFields();
+            //Category.GenerateUnsignedFields();
             Category.UpdatedAt = DateTime.UtcNow;
             var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
             if (string.IsNullOrEmpty(accountIdClaim))
@@ -94,12 +101,12 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
             Category.UpdatedBy = accountIdClaim;
-            await cateRepository.UpdateAsync(Category);
+            await categoryRepository.UpdateAsync(Category);
             return mapper.Map<UpdateCategoryResponse>(Category);
         }
         public IQueryable<Category> GetCategoriesQueryable()
         {
-            return cateRepository.GetCategoriesQueryable();
+            return categoryRepository.GetCategoriesQueryable();
         }
 
         public async Task<PageResponse<CategorySearchResponse>> SearchCategoriesAsync(CategorySearchRequest request)
@@ -164,7 +171,7 @@ namespace Cultural_Heritage_System.Services.Impl
                     else
                     {
                         var user = await userRepository.GetByIdAsync(int.Parse(item.CreatedBy));
-                        item.CreateByName = user?.FullName;
+                        item.CreateByName = user?.UserName;
                         item.CreateByEmail = user?.Email;
                     }
                 }
@@ -179,7 +186,7 @@ namespace Cultural_Heritage_System.Services.Impl
                     else
                     {
                         var user = await userRepository.GetByIdAsync(int.Parse(item.UpdatedBy));
-                        item.UpdatedByName = user?.FullName;
+                        item.UpdatedByName = user?.UserName;
                         item.UpdatedByEmail = user?.Email;
                     }
                 }

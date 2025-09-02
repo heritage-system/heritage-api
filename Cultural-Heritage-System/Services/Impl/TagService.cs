@@ -53,8 +53,7 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
-            tag.CreatedBy = accountIdClaim;
-            tag.GenerateUnsignedFields();
+            tag.CreatedBy = accountIdClaim;        
             await tagRepository.AddAsync(tag);
             return mapper.Map<CreateTagResponse>(tag);
         }
@@ -93,7 +92,7 @@ namespace Cultural_Heritage_System.Services.Impl
             mapper.Map(request, tag);
 
 
-            tag.GenerateUnsignedFields();
+            //tag.GenerateUnsignedFields();
             tag.UpdatedAt = DateTime.UtcNow;
             var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
             if (string.IsNullOrEmpty(accountIdClaim))
@@ -152,7 +151,7 @@ namespace Cultural_Heritage_System.Services.Impl
                     else
                     {
                         var user = await userRepository.GetByIdAsync(int.Parse(item.CreatedBy));
-                        item.CreateByName = user?.FullName;
+                        item.CreateByName = user?.UserName;
                         item.CreateByEmail = user?.Email;
                     }
                 }
@@ -167,7 +166,7 @@ namespace Cultural_Heritage_System.Services.Impl
                     else
                     {
                         var user = await userRepository.GetByIdAsync(int.Parse(item.UpdatedBy));
-                        item.UpdatedByName = user?.FullName;
+                        item.UpdatedByName = user?.UserName;
                         item.UpdatedByEmail = user?.Email;
                     }
                 }
