@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class Location: BaseEntity<int>
+    public class Location: BaseEntity<int>, IUnsignedEntity
     {
         [Column("province")]
         public string? Province { get; set; }

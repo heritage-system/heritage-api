@@ -68,7 +68,7 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
         [HttpGet("search_categories")]
-        //[Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<ApiResponse<PageResponse<CategorySearchResponse>>> GetAllWithSearch(
          [FromQuery] CategorySearchRequest request)
 
