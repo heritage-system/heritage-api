@@ -37,6 +37,10 @@ namespace Cultural_Heritage_System.Middlewares
         public static readonly ErrorCode TAG_NOT_EXISTED = new ErrorCode(404, "Tag not existed", HttpStatusCode.NotFound);
         public static readonly ErrorCode INVALID_TAG_NAME = new ErrorCode(400, "Invalid tag name", HttpStatusCode.BadRequest);
 
+        public static readonly ErrorCode CATEGORY_EXISTED = new ErrorCode(400, "Category already exists", HttpStatusCode.BadRequest);
+        public static readonly ErrorCode CATEGORY_NOT_EXISTED = new ErrorCode(404, "Category not existed", HttpStatusCode.NotFound);
+        public static readonly ErrorCode INVALID_CATEGORY_NAME = new ErrorCode(400, "Invalid CATEGORY name", HttpStatusCode.BadRequest);
+        public static readonly ErrorCode CATEGORY_ALREADY_USED = new ErrorCode(404, "Category already used cannot delete", HttpStatusCode.NotFound);
 
         public static readonly ErrorCode HERITAGE_NOT_FOUND = new ErrorCode(404, "Heritage not found", HttpStatusCode.NotFound);
         public static readonly ErrorCode FAVORITE_ALREADY_EXISTS = new ErrorCode(400, "Heritage is already in favorite", HttpStatusCode.BadRequest);

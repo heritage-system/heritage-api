@@ -15,10 +15,6 @@ namespace Cultural_Heritage_System.Models
 
         [Column("password_hash")]
         public string PasswordHash { get; set; }
-
-        [Column("full_name")]
-        public string FullName { get; set; }
-
      
         [Column("user_status", TypeName = "nvarchar(20)")]
         public UserStatus UserStatus { get; set; } = UserStatus.ACTIVE;
@@ -28,7 +24,6 @@ namespace Cultural_Heritage_System.Models
 
         [Column("is_2fa_verified")]
         public bool Enable2FA { get; set; } = false;
-
 
         [Required]
         [ForeignKey("Role")]
@@ -47,11 +42,15 @@ namespace Cultural_Heritage_System.Models
         public ICollection<SystemLog> SystemLogs { get; set; } = new List<SystemLog>();
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
-        [Column("full_name_unsigned")]
-        public string FullNameUnsigned { get; set; }
+        public ICollection<ReviewLike> ReviewLikes { get; set; } = new List<ReviewLike>();
+
+        public ICollection<ReviewReport> ReviewReports { get; set; } = new List<ReviewReport>();
+
+        [Column("user_name_unsigned")]
+        public string UserNameUnsigned { get; set; }
         public void GenerateUnsignedFields()
         {
-            FullNameUnsigned = StringHelper.RemoveDiacritics(FullName).ToLower();        
+            UserNameUnsigned = StringHelper.RemoveDiacritics(UserName).ToLower();        
         }
     }
 }

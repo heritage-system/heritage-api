@@ -16,7 +16,7 @@ namespace Cultural_Heritage_System.Repositories
 
         public IQueryable<Category> GetCategoriesQueryable()
         {
-            return _context.Categories.Include(h => h.Heritages).AsQueryable();
+            return _context.Categories.AsQueryable();
         }
 
     }

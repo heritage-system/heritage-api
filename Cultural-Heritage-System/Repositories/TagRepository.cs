@@ -13,9 +13,10 @@ namespace Cultural_Heritage_System.Repositories
         {
             _logger = logger;
         }
+        // Tạm thời 
         public IQueryable<Tag> GetTagsQueryable()
         {
-            return _context.Tags.Include(h => h.HeritageTags).AsQueryable();
+            return _context.Tags.AsQueryable();
         }
     }
 }

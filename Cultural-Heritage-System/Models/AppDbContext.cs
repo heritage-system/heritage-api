@@ -36,9 +36,11 @@ namespace Cultural_Heritage_System.Models
         public DbSet<RevenueShare> RevenueShares { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
-        public DbSet<HeritageMedia> HeritageMedias { get; set; }      
+        public DbSet<HeritageMedia> HeritageMedias { get; set; }
         public DbSet<HeritageOccurrence> HeritageOccurrences { get; set; }
-
+        public DbSet<ReviewLike> ReviewLikes { get; set; }
+        public DbSet<ReviewReport> ReviewReports { get; set; }
+        public DbSet<ReviewMedia> ReviewMedias { get; set; }
         public override int SaveChanges()
         {
             ApplyUnsignedFields();
@@ -96,13 +98,14 @@ namespace Cultural_Heritage_System.Models
             modelBuilder.Entity<Heritage>()
                 .HasOne(h => h.Category)
                 .WithMany(c => c.Heritages)
-                .HasForeignKey(h => h.CategoryId);
+                .HasForeignKey(h => h.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevents heritage deletion;
 
             modelBuilder.Entity<HeritageMedia>()
                .HasOne(hm => hm.Heritage)
                .WithMany(h => h.Media)
                .HasForeignKey(hm => hm.HeritageId)
-               .OnDelete(DeleteBehavior.Cascade);          
+               .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<HeritageOccurrence>()
                .HasOne(hm => hm.Heritage)
@@ -145,6 +148,54 @@ namespace Cultural_Heritage_System.Models
                 .WithMany()
                 .HasForeignKey(rs => rs.PurchaseId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.User)
+                .WithMany(u => u.Reviews)
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Relation: Review → Heritage
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Heritage)
+                .WithMany(h => h.Reviews)
+                .HasForeignKey(r => r.HeritageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Self-reference: Parent Review
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.ParentReview)
+                .WithMany(r => r.Replies)
+                .HasForeignKey(r => r.ParentReviewId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+            modelBuilder.Entity<ReviewLike>()
+        .HasKey(rl => new { rl.ReviewId, rl.UserId });
+
+            modelBuilder.Entity<ReviewLike>()
+                .HasOne(rl => rl.Review)
+                .WithMany(r => r.Likes)
+                .HasForeignKey(rl => rl.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ReviewLike>()
+                .HasOne(rl => rl.User)
+                .WithMany(u => u.ReviewLikes)
+                .HasForeignKey(rl => rl.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<ReviewReport>()
+                    .HasOne(rp => rp.Review)
+                    .WithMany(r => r.Reports)
+                    .HasForeignKey(rp => rp.ReviewId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ReviewReport>()
+                    .HasOne(rp => rp.User)
+                    .WithMany(u => u.ReviewReports)
+                    .HasForeignKey(rp => rp.UserId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Favorite>()
                 .HasOne(f => f.User)

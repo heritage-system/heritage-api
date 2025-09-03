@@ -3,6 +3,7 @@ using Cultural_Heritage_System.Dtos.Request.Category;
 using Cultural_Heritage_System.Dtos.Request.Tag;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Category;
+using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Tag;
 using Cultural_Heritage_System.Models;
 
@@ -24,22 +25,24 @@ namespace Cultural_Heritage_System.Helpers
                 opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : string.Empty))
             .ForMember(dest => dest.HeritageTags,
                 opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag.Name)))
+            .ForMember(dest => dest.HeritageTagIds,
+                opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag.Id)))
             .ForMember(dest => dest.HeritageOccurrences,
                 opt => opt.MapFrom(src => src.HeritageOccurrences))
             .ForMember(dest => dest.Media,
                 opt => opt.MapFrom(src => src.Media))
             .ForMember(dest => dest.HeritageLocations,
                 opt => opt.MapFrom(src => src.HeritageLocations.Select(hl => hl.Location)));
-           
+
 
             // HeritageOccurrence → HeritageOccurrenceDto
-            CreateMap<HeritageOccurrence, HeritageOccurrenceDto>()              
-                .ForMember(dest => dest.OccurrenceTypeName, opt => opt.MapFrom(src => src.OccurrenceType.ToString()))               
-                .ForMember(dest => dest.CalendarTypeName, opt => opt.MapFrom(src => src.CalendarType.HasValue ? src.CalendarType.Value.ToString() : null))               
+            CreateMap<HeritageOccurrence, HeritageOccurrenceDto>()
+                .ForMember(dest => dest.OccurrenceTypeName, opt => opt.MapFrom(src => src.OccurrenceType.ToString()))
+                .ForMember(dest => dest.CalendarTypeName, opt => opt.MapFrom(src => src.CalendarType.HasValue ? src.CalendarType.Value.ToString() : null))
                 .ForMember(dest => dest.FrequencyName, opt => opt.MapFrom(src => src.Frequency.HasValue ? src.Frequency.Value.ToString() : null));
 
             // HeritageMedia → HeritageMediaDto
-            CreateMap<HeritageMedia, HeritageMediaDto>()             
+            CreateMap<HeritageMedia, HeritageMediaDto>()
                 .ForMember(dest => dest.MediaTypeName, opt => opt.MapFrom(src => src.MediaType.ToString()));
 
             // Location → HeritageLocationDto
@@ -62,6 +65,9 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<DeleteTagRequest, Tag>();
             CreateMap<Tag, DeleteTagResponse>();
 
+            CreateMap<Tag, TagSearchResponse>();
+
+
             CreateMap<CreateCategoryRequest, Category>();
             CreateMap<Category, CreateCategoryResponse>();
 
@@ -71,6 +77,7 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<DeleteCategoryRequest, Category>();
             CreateMap<Category, DeleteCategoryResponse>();
 
+            CreateMap<Category, CategorySearchResponse>();
 
 
             CreateMap<Favorite, FavoriteHeritageResponse>()
