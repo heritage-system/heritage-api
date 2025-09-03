@@ -1,10 +1,19 @@
 ﻿using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.Category;
+using Cultural_Heritage_System.Dtos.Request.Heritage;
+using Cultural_Heritage_System.Dtos.Request.Location;
+using Cultural_Heritage_System.Dtos.Request.Media;
+using Cultural_Heritage_System.Dtos.Request.Occurrence;
 using Cultural_Heritage_System.Dtos.Request.Tag;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Category;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
+using Cultural_Heritage_System.Dtos.Response.Location;
+using Cultural_Heritage_System.Dtos.Response.Media;
+using Cultural_Heritage_System.Dtos.Response.Occurence;
 using Cultural_Heritage_System.Dtos.Response.Tag;
+using Cultural_Heritage_System.Dtos.Request.Report;
+using Cultural_Heritage_System.Dtos.Response.Report;
 using Cultural_Heritage_System.Models;
 
 
@@ -78,6 +87,38 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<Category, DeleteCategoryResponse>();
 
             CreateMap<Category, CategorySearchResponse>();
+
+
+            //Heritage
+            CreateMap<HeritageCreateRequest, Heritage>();
+            //.ForMember(dest => dest.HeritageLocations, opt => opt.MapFrom(src => src.Locations))
+            //.ForMember(dest => dest.Media, opt => opt.MapFrom(src => src.Media))
+            //.ForMember(dest => dest.HeritageOccurrences, opt => opt.MapFrom(src => src.Occurrences))
+            //.ForMember(dest => dest.HeritageTags, opt => opt.MapFrom(src => src.TagIds));
+            CreateMap<HeritageUpdateRequest, Heritage>();
+            CreateMap<Heritage, HeritageResponse>()
+            .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : null))
+            .ForMember(dest => dest.Media, opt => opt.MapFrom(src => src.Media))
+            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag)))
+            .ForMember(dest => dest.Locations, opt => opt.MapFrom(src => src.HeritageLocations.Select(hl => hl.Location)))
+            .ForMember(dest => dest.Occurrences, opt => opt.MapFrom(src => src.HeritageOccurrences));
+
+            CreateMap<HeritageMedia, MediaResponse>();
+            CreateMap<Tag, TagResponse>();
+            CreateMap<Location, LocationResponse>();
+            CreateMap<HeritageOccurrence, OccurrenceResponse>();
+
+            CreateMap<LocationRequest, HeritageLocation>();
+            CreateMap<MediaRequest, HeritageMedia>();
+            CreateMap<OccurrenceRequest, HeritageOccurrence>();
+
+            CreateMap(typeof(PageResponse<>), typeof(PageResponse<>));
+
+            CreateMap<CreateReportRequest, Report>();
+            CreateMap<Report, ReportResponse>();
+            CreateMap<UpdateReportRequest, Report>()
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+
 
         }
     }
