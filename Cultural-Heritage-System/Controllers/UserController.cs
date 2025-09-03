@@ -1,4 +1,5 @@
 ﻿using Cultural_Heritage_System.Dtos.Request;
+using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Services;

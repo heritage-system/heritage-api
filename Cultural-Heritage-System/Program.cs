@@ -54,12 +54,22 @@ namespace Cultural_Heritage_System
             CorsConfiguration.ConfigureServices(builder.Services); // CORS
             builder.Services.AddHttpContextAccessor(); // HttpContextAccessor
 
+
+
             builder.Services.AddScoped<UserRepository>();
             builder.Services.AddScoped<TagRepository>();
             builder.Services.AddScoped<CategoryRepository>();
             builder.Services.AddScoped<RoleRepository>();
             builder.Services.AddScoped<ProfileRepository>();
             builder.Services.AddScoped<PasswordResetRepository>();
+            builder.Services.AddScoped<HeritageRepository>();
+            builder.Services.AddScoped<ReportRepository>();
+
+            builder.Services.AddScoped<HeritageOccurrenceRepository>();
+            builder.Services.AddScoped<HeritageTagRepository>();
+            builder.Services.AddScoped<HeritageLocationRepository>();
+            builder.Services.AddScoped<HeritageMediaRepository>();
+            builder.Services.AddScoped<LocationRepository>();
             builder.Services.AddScoped<TestSearchRepository>();
             builder.Services.AddScoped<ContributorRepository>();
 
@@ -72,6 +82,9 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
             builder.Services.AddScoped<ITestSearchService, TestSearchService>();
             //builder.Services.AddScoped<IProfileService, ProfileService>();
+            builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+            builder.Services.AddScoped<IHeritageService, HeritageService>();
+            builder.Services.AddScoped<IReportService, ReportService>();
             builder.Services.AddScoped<IContributorService, ContributorService>();
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));

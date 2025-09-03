@@ -19,7 +19,7 @@ namespace Cultural_Heritage_System.Models
         public decimal Amount { get; set; }
 
         [Column("description", TypeName = "text")]
-        public string? Description { get; set; }    
+        public string? Description { get; set; }
 
         [ForeignKey("RelatedPurchase")]
         [Column("related_purchase_id")]

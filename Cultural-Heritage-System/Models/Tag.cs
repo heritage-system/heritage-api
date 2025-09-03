@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class Tag : BaseEntity<int>
+    public class Tag : BaseEntity<int>, IUnsignedEntity
     {
         [Column("name")]
         public string Name { get; set; }

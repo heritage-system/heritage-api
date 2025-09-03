@@ -58,6 +58,7 @@ namespace Cultural_Heritage_System.Services.Impl
             var profile = new Models.Profile
             {
                 UserId = user.Id,
+                FullName = request.FullName,
             };
 
             await profileRepository.AddAsync(profile);
@@ -117,10 +118,11 @@ namespace Cultural_Heritage_System.Services.Impl
             }
 
             mapper.Map(request, existingUser);
-            existingUser.GenerateUnsignedFields();
+            //existingUser.GenerateUnsignedFields();
             await userRepository.UpdateAsync(existingUser);
 
             mapper.Map(request, existingProfile);
+            //existingProfile.GenerateUnsignedFields();
             await profileRepository.UpdateAsync(existingProfile);
 
             var response = mapper.Map<UpdateProfileResponse>(existingUser);
