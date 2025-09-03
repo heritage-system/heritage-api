@@ -15,7 +15,7 @@ namespace Cultural_Heritage_System.Models
 
         [Required]
         [Column("category_id")]
-        [ForeignKey("Category")]    
+        [ForeignKey("Category")]
         public int CategoryId { get; set; }
         public Category Category { get; set; }
 

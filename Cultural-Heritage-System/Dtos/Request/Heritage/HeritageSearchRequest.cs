@@ -1,7 +1,7 @@
 ﻿using Cultural_Heritage_System.Common;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Cultural_Heritage_System.Dtos.Request
+namespace Cultural_Heritage_System.Dtos.Request.Heritage
 {
     public class HeritageSearchRequest
     {
