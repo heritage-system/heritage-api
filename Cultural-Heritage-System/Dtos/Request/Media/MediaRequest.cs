@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Cultural_Heritage_System.Dtos.Request
+namespace Cultural_Heritage_System.Dtos.Request.Media
 {
-    public class MediaCreateRequest
+    public class MediaRequest
     {
         [Required]
         public IFormFile File { get; set; }

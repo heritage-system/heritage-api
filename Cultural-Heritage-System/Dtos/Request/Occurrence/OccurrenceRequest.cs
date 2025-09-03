@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Cultural_Heritage_System.Dtos.Request
+namespace Cultural_Heritage_System.Dtos.Request.Occurrence
 {
-    public class OccurrenceCreateRequest
+    public class OccurrenceRequest
     {
         [Required]
         public string OccurrenceType { get; set; } // ExactDate, Range, RecurringRule, Approximate, Unknown

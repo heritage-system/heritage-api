@@ -1,4 +1,4 @@
-﻿namespace Cultural_Heritage_System.Dtos.Response
+﻿namespace Cultural_Heritage_System.Dtos.Response.Occurence
 {
     public class OccurrenceResponse
     {

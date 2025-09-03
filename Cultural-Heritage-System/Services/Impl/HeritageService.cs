@@ -1,15 +1,14 @@
 ﻿using AutoMapper;
+using Azure.Core;
 using Cultural_Heritage_System.Common;
-using Cultural_Heritage_System.Dtos.Request;
+using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Response;
+using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using System.Drawing.Printing;
-using System.IO;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
@@ -51,15 +50,13 @@ namespace Cultural_Heritage_System.Services.Impl
         {
             var query = _heritageRepository.GetAllQuery();
 
-            // Search theo tên (không bắt buộc)
             if (!string.IsNullOrEmpty(keyword))
             {
-                var lowerKeyword = keyword.ToLower();
-                query = query.Where(h => h.NameUnsigned.ToLower().Contains(lowerKeyword)
+                var lowerKeyword = keyword.Trim().ToLower();
+                var unsignedTerm = StringHelper.RemoveDiacritics(lowerKeyword);
+                query = query.Where(h => h.NameUnsigned.ToLower().Contains(unsignedTerm)
                                        || h.Name.ToLower().Contains(lowerKeyword));
             }
-
-
 
             if (categoryId.HasValue)
             {
@@ -76,9 +73,6 @@ namespace Cultural_Heritage_System.Services.Impl
             return _mapper.Map<PageResponse<HeritageResponse>>(pagedResult);
         }
 
-
-
-
         public async Task<HeritageResponse> GetByIdAsync(long id)
         {
             var heritage = await _heritageRepository.GetByIdAsync(id);
@@ -87,7 +81,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
             return _mapper.Map<HeritageResponse>(heritage);
         }
-
+        
         public async Task<HeritageResponse> CreateAsync(HeritageCreateRequest request)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
@@ -95,13 +89,10 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 // 1. Tạo Heritage
                 var heritage = _mapper.Map<Heritage>(request);
-                heritage.CreatedBy = "accountIdClaim"; 
+                heritage.CreatedBy = "accountIdClaim";
                 heritage.CreatedAt = DateTime.UtcNow;
-                heritage.GenerateUnsignedFields();
 
-               
-
-                // 2. Xử lý Media (Upload Cloudinary + Lưu DB)
+                // 2. Xử lý Media (Upload Cloudinary)
                 var mediaEntities = new List<HeritageMedia>();
                 if (request.Media?.Any() == true)
                 {
@@ -125,70 +116,47 @@ namespace Cultural_Heritage_System.Services.Impl
 
                         mediaEntities.Add(new HeritageMedia
                         {
-                            //HeritageId = heritage.Id,
                             Url = uploadedUrl,
                             MediaType = typeEnum
                         });
                     }
 
-                    //await _heritageMediaRepository.AddRangeAsync(mediaEntities);
                     heritage.Media = mediaEntities;
                 }
-
-                await _heritageRepository.AddAsync(heritage);
-                await _dbContext.SaveChangesAsync(); // Cần lưu để có Heritage.Id
-
-
 
                 // 3. Xử lý Tags
                 if (request.TagIds?.Any() == true)
                 {
-                    var heritageTags = request.TagIds.Select(tagId => new HeritageTag
+                    heritage.HeritageTags = request.TagIds.Select(tagId => new HeritageTag
                     {
-                        HeritageId = heritage.Id,
                         TagId = tagId
                     }).ToList();
-
-                    await _heritageTagRepository.AddRangeAsync(heritageTags);
                 }
 
                 // 4. Xử lý Locations
-                List<Location> newLocations = new();
                 if (request.Locations?.Any() == true)
                 {
-                    newLocations = request.Locations.Select(loc =>
+                    var locationEntities = request.Locations.Select(loc => new Location
                     {
-                        var location = new Location
-                        {
-                            Province = loc.Province,
-                            District = loc.District,
-                            Ward = loc.Ward,
-                            AddressDetail = loc.AddressDetail,
-                            Latitude = loc.Latitude,
-                            Longitude = loc.Longitude
-                        };
-                        location.GenerateUnsignedFields();
-                        return location;
+                        Province = loc.Province,
+                        District = loc.District,
+                        Ward = loc.Ward,
+                        AddressDetail = loc.AddressDetail,
+                        Latitude = loc.Latitude,
+                        Longitude = loc.Longitude
                     }).ToList();
 
-                    await _locationRepository.AddRangeAsync(newLocations);
-                    await _dbContext.SaveChangesAsync(); // Lưu để có Location.Id
-
-                    var heritageLocations = newLocations.Select(l => new HeritageLocation
+                    heritage.HeritageLocations = locationEntities.Select(location => new HeritageLocation
                     {
-                        HeritageId = heritage.Id,
-                        LocationId = l.Id
+                        Location = location
                     }).ToList();
-
-                    await _heritageLocationRepository.AddRangeAsync(heritageLocations);
                 }
 
                 // 5. Xử lý Occurrences
                 if (request.Occurrences?.Any() == true)
                 {
-                    var occurrenceEntities = request.Occurrences.Select(o => new HeritageOccurrence
+                    heritage.HeritageOccurrences = request.Occurrences.Select(o => new HeritageOccurrence
                     {
-                        HeritageId = heritage.Id,
                         OccurrenceType = Enum.Parse<OccurrenceType>(o.OccurrenceType, true),
                         CalendarType = string.IsNullOrEmpty(o.CalendarType) ? null : Enum.Parse<CalendarType>(o.CalendarType, true),
                         StartDay = o.StartDay,
@@ -199,47 +167,17 @@ namespace Cultural_Heritage_System.Services.Impl
                         RecurrenceRule = o.RecurrenceRule,
                         Description = o.Description
                     }).ToList();
-
-                    await _heritageOccurrenceRepository.AddRangeAsync(occurrenceEntities);
                 }
 
-                // 6. Save tất cả thay đổi
+                // Add heritage vào context
+                await _dbContext.Heritages.AddAsync(heritage);
+
+                // Lưu tất cả thay đổi 1 lần
                 await _dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // 7. Map response
+                // Map response
                 var response = _mapper.Map<HeritageResponse>(heritage);
-                response.Media = mediaEntities.Select(m => new MediaResponse
-                {
-                    Url = m.Url,
-                    MediaType = m.MediaType.ToString()
-                }).ToList();
-
-                response.Tags = request.TagIds?.Select(t => new TagResponse { Id = t }).ToList();
-
-                response.Locations = newLocations.Select(l => new LocationResponse
-                {
-                    Province = l.Province,
-                    District = l.District,
-                    Ward = l.Ward,
-                    AddressDetail = l.AddressDetail,
-                    Latitude = l.Latitude,
-                    Longitude = l.Longitude
-                }).ToList();
-
-                response.Occurrences = request.Occurrences?.Select(o => new OccurrenceResponse
-                {
-                    OccurrenceType = o.OccurrenceType.ToString(),
-                    CalendarType = o.CalendarType?.ToString(),
-                    StartDay = o.StartDay,
-                    StartMonth = o.StartMonth,
-                    EndDay = o.EndDay,
-                    EndMonth = o.EndMonth,
-                    Frequency = o.Frequency?.ToString(),
-                    RecurrenceRule = o.RecurrenceRule,
-                    Description = o.Description
-                }).ToList();
-
                 return response;
             }
             catch
@@ -248,39 +186,129 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw;
             }
         }
-
-
-
-
         public async Task<HeritageResponse> UpdateAsync(long id, HeritageUpdateRequest request)
         {
-            var accountIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
-            if (string.IsNullOrEmpty(accountIdClaim))
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            try
             {
-                throw new AppException(ErrorCode.UNAUTHORIZED);
+                var accountIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+                if (string.IsNullOrEmpty(accountIdClaim))
+                    throw new AppException(ErrorCode.UNAUTHORIZED);
+
+                var heritage = await _heritageRepository.GetByIdAsync(id);
+
+                if (heritage == null)
+                    return null;
+
+                // 1. Cập nhật thông tin chính
+                _mapper.Map(request, heritage);
+                heritage.UpdatedBy = accountIdClaim;
+
+                // 2. Xử lý Media
+                if (request.Media?.Any() == true)
+                {
+                    // Xóa media cũ
+                    _dbContext.HeritageMedias.RemoveRange(heritage.Media);
+
+                    var newMediaEntities = new List<HeritageMedia>();
+                    foreach (var media in request.Media)
+                    {
+                        if (media.File == null)
+                            throw new ArgumentException("File is required for media upload.");
+
+                        using var stream = media.File.OpenReadStream();
+
+                        if (!Enum.TryParse<MediaType>(media.Type, true, out var typeEnum))
+                            throw new ArgumentException($"Invalid media type: {media.Type}");
+
+                        var uploadedUrl = typeEnum switch
+                        {
+                            MediaType.IMAGE => await _cloudinaryService.UploadImageAsync(stream, media.File.FileName),
+                            MediaType.VIDEO => await _cloudinaryService.UploadVideoAsync(stream, media.File.FileName),
+                            MediaType.DOCUMENT => await _cloudinaryService.UploadDocumentAsync(stream, media.File.FileName),
+                            _ => throw new ArgumentException("Invalid media type")
+                        };
+
+                        newMediaEntities.Add(new HeritageMedia
+                        {
+                            Url = uploadedUrl,
+                            MediaType = typeEnum
+                        });
+                    }
+                    heritage.Media = newMediaEntities;
+                }
+
+                // 3. Xử lý Tags
+                _dbContext.HeritageTags.RemoveRange(heritage.HeritageTags);
+                if (request.TagIds?.Any() == true)
+                {
+                    heritage.HeritageTags = request.TagIds.Select(tagId => new HeritageTag
+                    {
+                        TagId = tagId
+                    }).ToList();
+                }
+
+                // 4. Xử lý Locations
+                _dbContext.Locations.RemoveRange(heritage.HeritageLocations.Select(hl => hl.Location));
+                heritage.HeritageLocations.Clear();
+
+                if (request.Locations?.Any() == true)
+                {
+                    var locationEntities = request.Locations.Select(loc => new Location
+                    {
+                        Province = loc.Province,
+                        District = loc.District,
+                        Ward = loc.Ward,
+                        AddressDetail = loc.AddressDetail,
+                        Latitude = loc.Latitude,
+                        Longitude = loc.Longitude
+                    }).ToList();
+
+                    heritage.HeritageLocations = locationEntities.Select(location => new HeritageLocation
+                    {
+                        Location = location
+                    }).ToList();
+                }
+
+                // 5. Xử lý Occurrences
+                _dbContext.HeritageOccurrences.RemoveRange(heritage.HeritageOccurrences);
+                if (request.Occurrences?.Any() == true)
+                {
+                    heritage.HeritageOccurrences = request.Occurrences.Select(o => new HeritageOccurrence
+                    {
+                        OccurrenceType = Enum.Parse<OccurrenceType>(o.OccurrenceType, true),
+                        CalendarType = string.IsNullOrEmpty(o.CalendarType) ? null : Enum.Parse<CalendarType>(o.CalendarType, true),
+                        StartDay = o.StartDay,
+                        StartMonth = o.StartMonth,
+                        EndDay = o.EndDay,
+                        EndMonth = o.EndMonth,
+                        Frequency = string.IsNullOrEmpty(o.Frequency) ? null : Enum.Parse<FestivalFrequency>(o.Frequency, true),
+                        RecurrenceRule = o.RecurrenceRule,
+                        Description = o.Description
+                    }).ToList();
+                }
+
+                await _dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return _mapper.Map<HeritageResponse>(heritage);
             }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task<long?> DeleteAsync(long id)
+        {
             var heritage = await _heritageRepository.GetByIdAsync(id);
             if (heritage == null)
                 return null;
 
-            _mapper.Map(request, heritage);
-            heritage.UpdatedBy = accountIdClaim;
-            heritage.UpdatedAt = DateTime.UtcNow;
-
-            await _heritageRepository.UpdateAsync(heritage);
-
-            return _mapper.Map<HeritageResponse>(heritage);
-        }
-
-        //trả về id vừa xóa
-        public async Task<bool> DeleteAsync(long id)
-        {
-            var heritage = await _heritageRepository.GetByIdAsync(id);
-            if (heritage == null)
-                return false;
-
             await _heritageRepository.DeleteAsync(heritage);
-            return true;
+            return id;
         }
+
     }
 }

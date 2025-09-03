@@ -1,4 +1,4 @@
-﻿namespace Cultural_Heritage_System.Dtos.Response
+﻿namespace Cultural_Heritage_System.Dtos.Response.Tag
 {
     public class TagResponse
     {

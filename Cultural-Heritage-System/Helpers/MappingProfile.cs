@@ -1,9 +1,16 @@
 ﻿using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.Category;
+using Cultural_Heritage_System.Dtos.Request.Heritage;
+using Cultural_Heritage_System.Dtos.Request.Location;
+using Cultural_Heritage_System.Dtos.Request.Media;
+using Cultural_Heritage_System.Dtos.Request.Occurrence;
 using Cultural_Heritage_System.Dtos.Request.Tag;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Category;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
+using Cultural_Heritage_System.Dtos.Response.Location;
+using Cultural_Heritage_System.Dtos.Response.Media;
+using Cultural_Heritage_System.Dtos.Response.Occurence;
 using Cultural_Heritage_System.Dtos.Response.Tag;
 using Cultural_Heritage_System.Models;
 
@@ -99,10 +106,9 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<Location, LocationResponse>();
             CreateMap<HeritageOccurrence, OccurrenceResponse>();
 
-            CreateMap<LocationCreateRequest, HeritageLocation>();
-            CreateMap<MediaCreateRequest, HeritageMedia>();
-            CreateMap<OccurrenceCreateRequest, HeritageOccurrence>();
-            CreateMap<TagCreateRequest, HeritageTag>();
+            CreateMap<LocationRequest, HeritageLocation>();
+            CreateMap<MediaRequest, HeritageMedia>();
+            CreateMap<OccurrenceRequest, HeritageOccurrence>();
 
             CreateMap(typeof(PageResponse<>), typeof(PageResponse<>));
 

@@ -1,4 +1,9 @@
-﻿namespace Cultural_Heritage_System.Dtos.Response
+﻿using Cultural_Heritage_System.Dtos.Response.Location;
+using Cultural_Heritage_System.Dtos.Response.Media;
+using Cultural_Heritage_System.Dtos.Response.Occurence;
+using Cultural_Heritage_System.Dtos.Response.Tag;
+
+namespace Cultural_Heritage_System.Dtos.Response.Heritage
 {
     public class HeritageResponse
     {

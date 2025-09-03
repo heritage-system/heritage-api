@@ -1,5 +1,6 @@
-﻿using Cultural_Heritage_System.Dtos.Request;
+﻿using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Response;
+using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -111,24 +112,27 @@ namespace Cultural_Heritage_System.Controllers
 
 
         [HttpDelete("delete")]
-        //[Authorize(Roles ="ADMIN")]
-        public async Task<ApiResponse<string>> Delete([FromQuery] long id)
+        //[Authorize(Roles = "ADMIN")]
+        public async Task<ApiResponse<long?>> Delete([FromQuery] long id)
         {
-            var result = await _heritageService.DeleteAsync(id);
+            var deletedId = await _heritageService.DeleteAsync(id);
 
-            if (!result)
+            if (deletedId == null)
             {
-                return new ApiResponse<string>(
+                return new ApiResponse<long?>(
                     code: 404,
-                    message: "Heritage not found"
+                    message: "Heritage not found",
+                    result: null
                 );
             }
 
-            return new ApiResponse<string>(
+            return new ApiResponse<long?>(
                 code: 200,
-                message: "Delete heritage successfully"
+                message: "Delete heritage successfully",
+                result: deletedId
             );
         }
+
 
     }
 }

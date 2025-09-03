@@ -1,9 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace Cultural_Heritage_System.Dtos.Request
+﻿namespace Cultural_Heritage_System.Dtos.Response.Location
 {
-    public class LocationCreateRequest
+    public class LocationResponse
     {
         public string? Province { get; set; }
         public string? District { get; set; }
@@ -12,5 +9,4 @@ namespace Cultural_Heritage_System.Dtos.Request
         public decimal Latitude { get; set; }
         public decimal Longitude { get; set; }
     }
-
 }
