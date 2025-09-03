@@ -12,6 +12,8 @@ using Cultural_Heritage_System.Dtos.Response.Location;
 using Cultural_Heritage_System.Dtos.Response.Media;
 using Cultural_Heritage_System.Dtos.Response.Occurence;
 using Cultural_Heritage_System.Dtos.Response.Tag;
+using Cultural_Heritage_System.Dtos.Request.Report;
+using Cultural_Heritage_System.Dtos.Response.Report;
 using Cultural_Heritage_System.Models;
 
 
@@ -111,6 +113,11 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<OccurrenceRequest, HeritageOccurrence>();
 
             CreateMap(typeof(PageResponse<>), typeof(PageResponse<>));
+
+            CreateMap<CreateReportRequest, Report>();
+            CreateMap<Report, ReportResponse>();
+            CreateMap<UpdateReportRequest, Report>()
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
 
         }

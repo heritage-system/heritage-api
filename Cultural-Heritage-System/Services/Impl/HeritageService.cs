@@ -87,6 +87,10 @@ namespace Cultural_Heritage_System.Services.Impl
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
+                //var accountIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+                //if (string.IsNullOrEmpty(accountIdClaim))
+                //    throw new AppException(ErrorCode.UNAUTHORIZED);
+
                 // 1. Tạo Heritage
                 var heritage = _mapper.Map<Heritage>(request);
                 heritage.CreatedBy = "accountIdClaim";
@@ -191,9 +195,9 @@ namespace Cultural_Heritage_System.Services.Impl
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
-                var accountIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
-                if (string.IsNullOrEmpty(accountIdClaim))
-                    throw new AppException(ErrorCode.UNAUTHORIZED);
+                //var accountIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+                //if (string.IsNullOrEmpty(accountIdClaim))
+                //    throw new AppException(ErrorCode.UNAUTHORIZED);
 
                 var heritage = await _heritageRepository.GetByIdAsync(id);
 
@@ -202,7 +206,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
                 // 1. Cập nhật thông tin chính
                 _mapper.Map(request, heritage);
-                heritage.UpdatedBy = accountIdClaim;
+                heritage.UpdatedBy = "accountIdClaim";
 
                 // 2. Xử lý Media
                 if (request.Media?.Any() == true)
@@ -288,7 +292,8 @@ namespace Cultural_Heritage_System.Services.Impl
                     }).ToList();
                 }
 
-                await _dbContext.SaveChangesAsync();
+                await _heritageRepository.UpdateAsync(heritage);
+                //await _dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
 
                 return _mapper.Map<HeritageResponse>(heritage);
