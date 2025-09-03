@@ -1,10 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Helpers;
 using System.ComponentModel.DataAnnotations;
-using Cultural_Heritage_System.Common;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class Profile: BaseEntity<int>
+    public class Profile: BaseEntity<int>, IUnsignedEntity
     {
         [Required]
         [Column("user_id")]
@@ -18,11 +19,22 @@ namespace Cultural_Heritage_System.Models
         [Column("address")]
         public string? Address { get; set; }
 
+        [Column("full_name")]
+        public string FullName { get; set; }
+
+
         [Column("date_of_birth")]
-        public DateTime DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; }
 
         [Column("avatar_url")]
         public string? AvatarUrl { get; set; }
+
+        [Column("full_name_unsigned")]
+        public string FullNameUnsigned { get; set; }
+        public void GenerateUnsignedFields()
+        {
+            FullNameUnsigned = StringHelper.RemoveDiacritics(FullName).ToLower();
+        }
     }
 
 }

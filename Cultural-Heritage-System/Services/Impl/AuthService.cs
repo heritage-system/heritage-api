@@ -120,7 +120,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 user = new User
                 {
                     UserName = userInfo.Name,
-                    FullName = userInfo.Name,
+                    
                     Email = userInfo.Email,
                     Role = role,
                     PasswordHash = passwordHasher.HashPassword(user, "123")
@@ -130,7 +130,8 @@ namespace Cultural_Heritage_System.Services.Impl
 
                 Profile profile = new Profile
                 {
-                    UserId = user.Id,                  
+                    UserId = user.Id,
+                    FullName = userInfo.Name,
                     AvatarUrl = userInfo.Picture,
                 };
                 await profileRepository.AddAsync(profile);
