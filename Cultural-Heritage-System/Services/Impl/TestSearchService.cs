@@ -242,7 +242,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
             if (existingHeritage == null)
             {
-                throw new AppException(ErrorCode.HERITAGE_NOT_EXISTED);
+                throw new AppException(ErrorCode.HERITAGE_NOT_FOUND);
             }
 
             var response = mapper.Map<HeritageSearchResponse>(existingHeritage);
