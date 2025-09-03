@@ -79,6 +79,8 @@ namespace Cultural_Heritage_System.Helpers
 
             CreateMap<Category, CategorySearchResponse>();
 
+            CreateMap<ContributionCreationRequest, Contribution>();
+            CreateMap<Contribution, ContributionCreationResponse>();
         }
     }
 }

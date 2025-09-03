@@ -61,6 +61,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<ProfileRepository>();
             builder.Services.AddScoped<PasswordResetRepository>();
             builder.Services.AddScoped<TestSearchRepository>();
+            builder.Services.AddScoped<ContributionRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();
@@ -70,7 +71,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IMailService, MailService>();
             builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
             builder.Services.AddScoped<ITestSearchService, TestSearchService>();
-            //builder.Services.AddScoped<IProfileService, ProfileService>();
+            builder.Services.AddScoped<IContributionService, ContributionService>();
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddScoped<TwoFactorService>();
