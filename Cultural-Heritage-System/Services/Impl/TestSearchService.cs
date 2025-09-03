@@ -47,74 +47,18 @@ namespace Cultural_Heritage_System.Services.Impl
                     var searchTerm = request.Keyword.Trim().ToLower();
                     var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
 
-                    query = query.Where(h =>                       
+                    query = query.Where(h =>
                         h.Name.ToLower().Contains(searchTerm) ||
                         h.Description.ToLower().Contains(searchTerm) ||
 
-//                // Tag filter
-//                if (request.TagIds != null && request.TagIds.Any())
-//                {
-//                    query = query.Where(h => h.HeritageTags.Any(t => request.TagIds.Contains(t.TagId)));
-//                }
-                     
+
                         h.NameUnsigned.Contains(unsignedTerm) ||
                         h.DescriptionUnsigned.Contains(unsignedTerm));
                 }
 
-
-//                // Date filter
-//                if (request.StartDate.HasValue && request.EndDate.HasValue)
-//                {
-//                    query = query.Where(h =>
-//                        h.HeritageOccurrences.Any(o =>
-//                            o.StartDate.HasValue &&
-//                            o.EndDate.HasValue &&
-//                            o.StartDate.Value >= request.StartDate.Value &&
-//                            o.EndDate.Value <= request.EndDate.Value
-//                        ));
-//                }
-//                else if (request.StartDate.HasValue)
-//                {
-//                    query = query.Where(h =>
-//                        h.HeritageOccurrences.Any(o =>
-//                            o.StartDate.HasValue &&
-//                            o.StartDate.Value.Date == request.StartDate.Value.Date
-//                        ));
-//                }
-
-//                switch (request.SortBy)
-//                {
-//                    case SortBy.NAMEASC:
-//                        query = query.OrderBy(h => h.Name);
-//                        break;
-//                    case SortBy.NAMEDESC:
-//                        query = query.OrderByDescending(h => h.Name);
-//                        break;
-//                    case SortBy.DATEASC:
-//                        query = query.OrderBy(h => h.HeritageOccurrences.Min(o => o.StartDate));
-//                        break;
-//                    case SortBy.DATEDESC:
-//                        query = query.OrderByDescending(h => h.HeritageOccurrences.Min(o => o.StartDate));
-//                        break;
-//                    default:
-//                        query = query.OrderBy(h => h.Name);
-//                        break;
-//                }
-
-//                // Pagination
-//                var response = await query.ToPagedResponseAsync(request.Page, request.PageSize);
-//                return response;
-//            }
-//            catch (Exception ex)
-//            {
-//                logger.LogError(ex, "Error searching heritages");
-//                throw;
-//            }
-//        }
-
                 // Location filter
                 if (request.Locations != null && request.Locations.Any())
-                {                  
+                {
                     request.Locations = request.Locations
                                                .Select(loc => StringHelper.RemoveDiacritics(loc))
                                                .ToList();
@@ -152,16 +96,16 @@ namespace Cultural_Heritage_System.Services.Impl
                                         Math.Pow(Math.Sin(((double)loc.Location.Longitude - lng) * Math.PI / 180 / 2), 2)
                                     )
                                 )
-                            ) <= radius 
+                            ) <= radius
                         ));
-                  
+
                 }
 
 
 
                 int targetYear = DateTime.Now.Year;
 
-              
+
                 query = query.AsEnumerable()
                     .Select(h =>
                     {
@@ -198,11 +142,6 @@ namespace Cultural_Heritage_System.Services.Impl
                         .AsQueryable();
                 }
 
-
-
-
-
-
                 switch (request.SortBy)
                 {
                     case SortBy.IDASC:
@@ -216,12 +155,12 @@ namespace Cultural_Heritage_System.Services.Impl
                         break;
                     case SortBy.NAMEDESC:
                         query = query.OrderByDescending(h => h.Name);
-                        break;                   
+                        break;
                     default:
                         query = query.OrderBy(h => h.Name);
                         break;
                 }
-                
+
 
                 var dtoQuery = query.ProjectTo<HeritageSearchResponse>(mapper.ConfigurationProvider);
                 // Pagination
@@ -236,7 +175,7 @@ namespace Cultural_Heritage_System.Services.Impl
         }
 
         public async Task<HeritageSearchResponse> GetHeritageDetail(long id)
-        {                       
+        {
 
             var existingHeritage = await heritageRepository.GetHeritageById(id);
 
@@ -246,7 +185,7 @@ namespace Cultural_Heritage_System.Services.Impl
             }
 
             var response = mapper.Map<HeritageSearchResponse>(existingHeritage);
-           
+
             return response;
         }
 
@@ -281,7 +220,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
             var lunarCal = new ChineseLunisolarCalendar();
 
-           
+
             if (occ.CalendarType == requestType)
             {
                 if (occ.CalendarType == CalendarType.LUNAR)
@@ -295,16 +234,16 @@ namespace Cultural_Heritage_System.Services.Impl
                         return null;
                     }
                 }
-                else 
+                else
                 {
                     return new DateTime(targetYear, month, day);
                 }
             }
 
-           
+
             if (occ.CalendarType == CalendarType.LUNAR && requestType == CalendarType.SOLAR)
             {
-                
+
                 try
                 {
                     return lunarCal.ToDateTime(targetYear, month, day, 0, 0, 0, 0);
@@ -316,7 +255,7 @@ namespace Cultural_Heritage_System.Services.Impl
             }
             else if (occ.CalendarType == CalendarType.SOLAR && requestType == CalendarType.LUNAR)
             {
-               
+
                 try
                 {
                     var solarDate = new DateTime(targetYear, month, day);
@@ -324,7 +263,7 @@ namespace Cultural_Heritage_System.Services.Impl
                     int lunarMonth = lunarCal.GetMonth(solarDate);
                     int lunarDay = lunarCal.GetDayOfMonth(solarDate);
 
-                    
+
                     return lunarCal.ToDateTime(lunarYear, lunarMonth, lunarDay, 0, 0, 0, 0);
                 }
                 catch

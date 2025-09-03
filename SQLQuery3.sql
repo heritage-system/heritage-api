@@ -215,7 +215,7 @@ VALUES
 DECLARE @loc1 INT = SCOPE_IDENTITY();
 
 INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at) 
-VALUES (2, @loc1, 'system', GETDATE(), GETDATE());
+VALUES (1, @loc1, 'system', GETDATE(), GETDATE());
 
  --  Lễ hội 3: Phường Đức Thắng, Phan Thiết, Bình Thuận
 INSERT INTO Locations
@@ -228,7 +228,7 @@ VALUES
 DECLARE @loc2 INT = SCOPE_IDENTITY();
 
 INSERT INTO HeritageLocations (heritage_id, location_id, created_by, create_at, update_at) 
-VALUES (2, @loc2, 'system', GETDATE(), GETDATE());
+VALUES (1, @loc2, 'system', GETDATE(), GETDATE());
 
  --  Lễ hội 4: Lễ hội Lim, Bắc Ninh
 INSERT INTO Locations
