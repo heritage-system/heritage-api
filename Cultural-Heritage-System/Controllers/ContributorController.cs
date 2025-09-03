@@ -20,15 +20,15 @@ namespace Cultural_Heritage_System.Controllers
 
         [HttpGet("search")]
         [Authorize(Roles = "ADMIN")]
-        public async Task<ApiResponse<PageResponse<ContributorResponse>>> SearchContributors([FromQuery] ContributorSearchRequest request)
-        {
-            var result = await contributorService.SearchContributorsAsync(request);
-            return new ApiResponse<PageResponse<ContributorResponse>>(
-                code: 200,
-                message: "Contributors fetched successfully",
-                result: result
-            );
-        }
+        //public async Task<ApiResponse<PageResponse<ContributorResponse>>> SearchContributors([FromQuery] ContributorSearchRequest request)
+        //{
+        //    var result = await contributorService.SearchContributorsAsync(request);
+        //    return new ApiResponse<PageResponse<ContributorResponse>>(
+        //        code: 200,
+        //        message: "Contributors fetched successfully",
+        //        result: result
+        //    );
+        //}
 
         [HttpGet("{id}")]
         [Authorize(Roles = "ADMIN")]

@@ -30,44 +30,44 @@ namespace Cultural_Heritage_System.Services.Impl
             this.httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<PageResponse<ContributorResponse>> SearchContributorsAsync(ContributorSearchRequest request)
-        {
-            var query = contributorRepository.GetContributorsQueryable();
+        //public async Task<PageResponse<ContributorResponse>> SearchContributorsAsync(ContributorSearchRequest request)
+        //{
+        //    var query = contributorRepository.GetContributorsQueryable();
 
-            if (!string.IsNullOrEmpty(request.Keyword))
-            {
-                var searchTerm = request.Keyword.Trim().ToLower();
-                var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
+        //    if (!string.IsNullOrEmpty(request.Keyword))
+        //    {
+        //        var searchTerm = request.Keyword.Trim().ToLower();
+        //        var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
 
-                query = query.Where(h =>
-                    h.User.FullName.ToLower().Contains(searchTerm) ||
-                    h.Expertise.ToLower().Contains(searchTerm) ||
-                    h.ExpertiseUnsigned.Contains(unsignedTerm) ||
-                    h.User.FullNameUnsigned.Contains(unsignedTerm));
-            }
+        //        query = query.Where(h =>
+        //            h.User.FullName.ToLower().Contains(searchTerm) ||
+        //            h.Expertise.ToLower().Contains(searchTerm) ||
+        //            h.ExpertiseUnsigned.Contains(unsignedTerm) ||
+        //            h.User.FullNameUnsigned.Contains(unsignedTerm));
+        //    }
 
-            if (request.Verified.HasValue)
-            {
-                query = query.Where(c => c.Verified == request.Verified.Value);
-            }
+        //    if (request.Verified.HasValue)
+        //    {
+        //        query = query.Where(c => c.Verified == request.Verified.Value);
+        //    }
 
-            if (request.Status.HasValue)
-            {
-                query = query.Where(c => c.Status == request.Status.Value);
-            }
+        //    if (request.Status.HasValue)
+        //    {
+        //        query = query.Where(c => c.Status == request.Status.Value);
+        //    }
 
-            query = request.SortBy switch
-            {
-                SortBy.IDASC => query.OrderBy(c => c.Id),
-                SortBy.IDDESC => query.OrderByDescending(c => c.Id),
-                SortBy.NAMEASC => query.OrderBy(c => c.User.FullName),
-                SortBy.NAMEDESC => query.OrderByDescending(c => c.User.FullName),
-                _ => query.OrderBy(c => c.Id)
-            };
+        //    query = request.SortBy switch
+        //    {
+        //        SortBy.IDASC => query.OrderBy(c => c.Id),
+        //        SortBy.IDDESC => query.OrderByDescending(c => c.Id),
+        //        SortBy.NAMEASC => query.OrderBy(c => c.User.FullName),
+        //        SortBy.NAMEDESC => query.OrderByDescending(c => c.User.FullName),
+        //        _ => query.OrderBy(c => c.Id)
+        //    };
 
-            var dtoQuery = query.ProjectTo<ContributorResponse>(mapper.ConfigurationProvider);
-            return dtoQuery.ToPagedResponse(request.Page, request.PageSize);
-        }
+        //    var dtoQuery = query.ProjectTo<ContributorResponse>(mapper.ConfigurationProvider);
+        //    return dtoQuery.ToPagedResponse(request.Page, request.PageSize);
+        //}
 
         public async Task<ContributorResponse> GetContributorDetail(int id)
         {
