@@ -71,6 +71,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<HeritageMediaRepository>();
             builder.Services.AddScoped<LocationRepository>();
             builder.Services.AddScoped<TestSearchRepository>();
+            builder.Services.AddScoped<ContributorRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();
@@ -84,6 +85,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
             builder.Services.AddScoped<IHeritageService, HeritageService>();
             builder.Services.AddScoped<IReportService, ReportService>();
+            builder.Services.AddScoped<IContributorService, ContributorService>();
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddScoped<TwoFactorService>();
