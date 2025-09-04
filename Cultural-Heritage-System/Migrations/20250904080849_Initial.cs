@@ -130,35 +130,6 @@ namespace Cultural_Heritage_System.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Heritages",
-                columns: table => new
-                {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    description = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    category_id = table.Column<int>(type: "int", nullable: false),
-                    map_url = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    is_featured = table.Column<bool>(type: "bit", nullable: false),
-                    name_unsigned = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    description_unsigned = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Heritages", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_Heritages_Categories_category_id",
-                        column: x => x.category_id,
-                        principalTable: "Categories",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -184,124 +155,6 @@ namespace Cultural_Heritage_System.Migrations
                         name: "FK_Users_roles_role_id",
                         column: x => x.role_id,
                         principalTable: "roles",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "HeritageLocations",
-                columns: table => new
-                {
-                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
-                    location_id = table.Column<int>(type: "int", nullable: false),
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_HeritageLocations", x => new { x.heritage_id, x.location_id });
-                    table.ForeignKey(
-                        name: "FK_HeritageLocations_Heritages_heritage_id",
-                        column: x => x.heritage_id,
-                        principalTable: "Heritages",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_HeritageLocations_Locations_location_id",
-                        column: x => x.location_id,
-                        principalTable: "Locations",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "HeritageMedias",
-                columns: table => new
-                {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
-                    media_type = table.Column<string>(type: "nvarchar(20)", nullable: false),
-                    url = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_HeritageMedias", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_HeritageMedias_Heritages_heritage_id",
-                        column: x => x.heritage_id,
-                        principalTable: "Heritages",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "HeritageOccurrences",
-                columns: table => new
-                {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
-                    occurrence_type = table.Column<string>(type: "nvarchar(20)", nullable: false),
-                    calendar_type = table.Column<string>(type: "nvarchar(20)", nullable: true),
-                    start_day = table.Column<int>(type: "int", nullable: true),
-                    start_month = table.Column<int>(type: "int", nullable: true),
-                    end_day = table.Column<int>(type: "int", nullable: true),
-                    end_month = table.Column<int>(type: "int", nullable: true),
-                    frequency = table.Column<string>(type: "nvarchar(20)", nullable: true),
-                    recurrence_rule = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_HeritageOccurrences", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_HeritageOccurrences_Heritages_heritage_id",
-                        column: x => x.heritage_id,
-                        principalTable: "Heritages",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "HeritageTags",
-                columns: table => new
-                {
-                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
-                    tag_id = table.Column<int>(type: "int", nullable: false),
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_HeritageTags", x => new { x.heritage_id, x.tag_id });
-                    table.ForeignKey(
-                        name: "FK_HeritageTags_Heritages_heritage_id",
-                        column: x => x.heritage_id,
-                        principalTable: "Heritages",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_HeritageTags_Tags_tag_id",
-                        column: x => x.tag_id,
-                        principalTable: "Tags",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -355,36 +208,6 @@ namespace Cultural_Heritage_System.Migrations
                     table.PrimaryKey("PK_ExportLogs", x => x.id);
                     table.ForeignKey(
                         name: "FK_ExportLogs_Users_user_id",
-                        column: x => x.user_id,
-                        principalTable: "Users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Favorites",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    user_id = table.Column<int>(type: "int", nullable: false),
-                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
-                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Favorites", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_Favorites_Heritages_heritage_id",
-                        column: x => x.heritage_id,
-                        principalTable: "Heritages",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Favorites_Users_user_id",
                         column: x => x.user_id,
                         principalTable: "Users",
                         principalColumn: "id",
@@ -526,75 +349,6 @@ namespace Cultural_Heritage_System.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Reports",
-                columns: table => new
-                {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    user_id = table.Column<int>(type: "int", nullable: false),
-                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
-                    reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Reports", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_Reports_Heritages_heritage_id",
-                        column: x => x.heritage_id,
-                        principalTable: "Heritages",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Reports_Users_user_id",
-                        column: x => x.user_id,
-                        principalTable: "Users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Reviews",
-                columns: table => new
-                {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    user_id = table.Column<int>(type: "int", nullable: false),
-                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
-                    comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    parent_review_id = table.Column<long>(type: "bigint", nullable: true),
-                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Reviews", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_Reviews_Heritages_heritage_id",
-                        column: x => x.heritage_id,
-                        principalTable: "Heritages",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Reviews_Reviews_parent_review_id",
-                        column: x => x.parent_review_id,
-                        principalTable: "Reviews",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Reviews_Users_user_id",
-                        column: x => x.user_id,
-                        principalTable: "Users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "SystemLogs",
                 columns: table => new
                 {
@@ -677,6 +431,41 @@ namespace Cultural_Heritage_System.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Heritages",
+                columns: table => new
+                {
+                    id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    category_id = table.Column<int>(type: "int", nullable: false),
+                    map_url = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    is_featured = table.Column<bool>(type: "bit", nullable: false),
+                    name_unsigned = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    description_unsigned = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ContributorId = table.Column<int>(type: "int", nullable: true),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Heritages", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_Heritages_Categories_category_id",
+                        column: x => x.category_id,
+                        principalTable: "Categories",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Heritages_Contributors_ContributorId",
+                        column: x => x.ContributorId,
+                        principalTable: "Contributors",
+                        principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "QuizQuestions",
                 columns: table => new
                 {
@@ -748,6 +537,330 @@ namespace Cultural_Heritage_System.Migrations
                         column: x => x.user_id,
                         principalTable: "Users",
                         principalColumn: "id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ContributionPurchases",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    user_id = table.Column<int>(type: "int", nullable: false),
+                    contribution_id = table.Column<int>(type: "int", nullable: false),
+                    amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    purchased_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    payment_status = table.Column<string>(type: "nvarchar(20)", nullable: false),
+                    payment_method = table.Column<string>(type: "nvarchar(20)", nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ContributionPurchases", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_ContributionPurchases_Contributions_contribution_id",
+                        column: x => x.contribution_id,
+                        principalTable: "Contributions",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ContributionPurchases_Users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "Users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Favorites",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    user_id = table.Column<int>(type: "int", nullable: false),
+                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Favorites", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_Favorites_Heritages_heritage_id",
+                        column: x => x.heritage_id,
+                        principalTable: "Heritages",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Favorites_Users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "Users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HeritageLocations",
+                columns: table => new
+                {
+                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
+                    location_id = table.Column<int>(type: "int", nullable: false),
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HeritageLocations", x => new { x.heritage_id, x.location_id });
+                    table.ForeignKey(
+                        name: "FK_HeritageLocations_Heritages_heritage_id",
+                        column: x => x.heritage_id,
+                        principalTable: "Heritages",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_HeritageLocations_Locations_location_id",
+                        column: x => x.location_id,
+                        principalTable: "Locations",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HeritageMedias",
+                columns: table => new
+                {
+                    id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
+                    media_type = table.Column<string>(type: "nvarchar(20)", nullable: false),
+                    url = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HeritageMedias", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_HeritageMedias_Heritages_heritage_id",
+                        column: x => x.heritage_id,
+                        principalTable: "Heritages",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HeritageOccurrences",
+                columns: table => new
+                {
+                    id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
+                    occurrence_type = table.Column<string>(type: "nvarchar(20)", nullable: false),
+                    calendar_type = table.Column<string>(type: "nvarchar(20)", nullable: true),
+                    start_day = table.Column<int>(type: "int", nullable: true),
+                    start_month = table.Column<int>(type: "int", nullable: true),
+                    end_day = table.Column<int>(type: "int", nullable: true),
+                    end_month = table.Column<int>(type: "int", nullable: true),
+                    frequency = table.Column<string>(type: "nvarchar(20)", nullable: true),
+                    recurrence_rule = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HeritageOccurrences", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_HeritageOccurrences_Heritages_heritage_id",
+                        column: x => x.heritage_id,
+                        principalTable: "Heritages",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HeritageTags",
+                columns: table => new
+                {
+                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
+                    tag_id = table.Column<int>(type: "int", nullable: false),
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HeritageTags", x => new { x.heritage_id, x.tag_id });
+                    table.ForeignKey(
+                        name: "FK_HeritageTags_Heritages_heritage_id",
+                        column: x => x.heritage_id,
+                        principalTable: "Heritages",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_HeritageTags_Tags_tag_id",
+                        column: x => x.tag_id,
+                        principalTable: "Tags",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Reports",
+                columns: table => new
+                {
+                    id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    user_id = table.Column<int>(type: "int", nullable: false),
+                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
+                    reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reports", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_Reports_Heritages_heritage_id",
+                        column: x => x.heritage_id,
+                        principalTable: "Heritages",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Reports_Users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "Users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Reviews",
+                columns: table => new
+                {
+                    id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    user_id = table.Column<int>(type: "int", nullable: false),
+                    heritage_id = table.Column<long>(type: "bigint", nullable: false),
+                    comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    parent_review_id = table.Column<long>(type: "bigint", nullable: true),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Reviews", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_Reviews_Heritages_heritage_id",
+                        column: x => x.heritage_id,
+                        principalTable: "Heritages",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Reviews_Reviews_parent_review_id",
+                        column: x => x.parent_review_id,
+                        principalTable: "Reviews",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Reviews_Users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "Users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RevenueShares",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    contribution_id = table.Column<int>(type: "int", nullable: false),
+                    contributor_id = table.Column<int>(type: "int", nullable: false),
+                    purchase_id = table.Column<int>(type: "int", nullable: false),
+                    total_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    contributor_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    system_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    payout_status = table.Column<string>(type: "nvarchar(20)", nullable: false),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RevenueShares", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_RevenueShares_ContributionPurchases_purchase_id",
+                        column: x => x.purchase_id,
+                        principalTable: "ContributionPurchases",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_RevenueShares_Contributions_contribution_id",
+                        column: x => x.contribution_id,
+                        principalTable: "Contributions",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_RevenueShares_Contributors_contributor_id",
+                        column: x => x.contributor_id,
+                        principalTable: "Contributors",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WalletTransactions",
+                columns: table => new
+                {
+                    id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    wallet_id = table.Column<int>(type: "int", nullable: false),
+                    type = table.Column<string>(type: "nvarchar(20)", nullable: false),
+                    amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    description = table.Column<string>(type: "text", nullable: true),
+                    related_purchase_id = table.Column<int>(type: "int", nullable: true),
+                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WalletTransactions", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_WalletTransactions_ContributionPurchases_related_purchase_id",
+                        column: x => x.related_purchase_id,
+                        principalTable: "ContributionPurchases",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_WalletTransactions_Wallets_wallet_id",
+                        column: x => x.wallet_id,
+                        principalTable: "Wallets",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -834,113 +947,6 @@ namespace Cultural_Heritage_System.Migrations
                         principalColumn: "id");
                 });
 
-            migrationBuilder.CreateTable(
-                name: "ContributionPurchases",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    user_id = table.Column<int>(type: "int", nullable: false),
-                    contribution_id = table.Column<int>(type: "int", nullable: false),
-                    amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
-                    purchased_at = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    payment_status = table.Column<string>(type: "nvarchar(20)", nullable: false),
-                    payment_method = table.Column<string>(type: "nvarchar(20)", nullable: false),
-                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ContributionPurchases", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_ContributionPurchases_Contributions_contribution_id",
-                        column: x => x.contribution_id,
-                        principalTable: "Contributions",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ContributionPurchases_Users_user_id",
-                        column: x => x.user_id,
-                        principalTable: "Users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "RevenueShares",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    contribution_id = table.Column<int>(type: "int", nullable: false),
-                    contributor_id = table.Column<int>(type: "int", nullable: false),
-                    purchase_id = table.Column<int>(type: "int", nullable: false),
-                    total_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
-                    contributor_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
-                    system_amount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
-                    payout_status = table.Column<string>(type: "nvarchar(20)", nullable: false),
-                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_RevenueShares", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_RevenueShares_ContributionPurchases_purchase_id",
-                        column: x => x.purchase_id,
-                        principalTable: "ContributionPurchases",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_RevenueShares_Contributions_contribution_id",
-                        column: x => x.contribution_id,
-                        principalTable: "Contributions",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_RevenueShares_Contributors_contributor_id",
-                        column: x => x.contributor_id,
-                        principalTable: "Contributors",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "WalletTransactions",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    wallet_id = table.Column<int>(type: "int", nullable: false),
-                    type = table.Column<string>(type: "nvarchar(20)", nullable: false),
-                    amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    description = table.Column<string>(type: "text", nullable: true),
-                    related_purchase_id = table.Column<int>(type: "int", nullable: true),
-                    created_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    updated_by = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    create_at = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    update_at = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WalletTransactions", x => x.id);
-                    table.ForeignKey(
-                        name: "FK_WalletTransactions_ContributionPurchases_related_purchase_id",
-                        column: x => x.related_purchase_id,
-                        principalTable: "ContributionPurchases",
-                        principalColumn: "id");
-                    table.ForeignKey(
-                        name: "FK_WalletTransactions_Wallets_wallet_id",
-                        column: x => x.wallet_id,
-                        principalTable: "Wallets",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
             migrationBuilder.CreateIndex(
                 name: "IX_ContributionPurchases_contribution_id",
                 table: "ContributionPurchases",
@@ -1005,6 +1011,11 @@ namespace Cultural_Heritage_System.Migrations
                 name: "IX_Heritages_category_id",
                 table: "Heritages",
                 column: "category_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Heritages_ContributorId",
+                table: "Heritages",
+                column: "ContributorId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_HeritageTags_tag_id",

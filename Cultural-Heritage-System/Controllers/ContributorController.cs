@@ -1,5 +1,6 @@
-﻿using Cultural_Heritage_System.Dtos.Request;
+﻿using Cultural_Heritage_System.Dtos.Request.Contributor;
 using Cultural_Heritage_System.Dtos.Response;
+using Cultural_Heritage_System.Dtos.Response.Contributor;
 using Cultural_Heritage_System.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -20,15 +21,11 @@ namespace Cultural_Heritage_System.Controllers
 
         [HttpGet("search")]
         [Authorize(Roles = "ADMIN")]
-        //public async Task<ApiResponse<PageResponse<ContributorResponse>>> SearchContributors([FromQuery] ContributorSearchRequest request)
-        //{
-        //    var result = await contributorService.SearchContributorsAsync(request);
-        //    return new ApiResponse<PageResponse<ContributorResponse>>(
-        //        code: 200,
-        //        message: "Contributors fetched successfully",
-        //        result: result
-        //    );
-        //}
+        public async Task<ApiResponse<PageResponse<ContributorResponse>>> SearchContributors([FromQuery] ContributorSearchRequest request)
+        {
+            return new ApiResponse<PageResponse<ContributorResponse>>(200, "Search Contributors",
+                await contributorService.SearchContributorsAsync(request));
+        }
 
         [HttpGet("{id}")]
         [Authorize(Roles = "ADMIN")]

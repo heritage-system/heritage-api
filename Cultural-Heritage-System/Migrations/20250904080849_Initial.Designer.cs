@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Cultural_Heritage_System.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250903150445_Initial")]
+    [Migration("20250904080849_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -418,6 +418,9 @@ namespace Cultural_Heritage_System.Migrations
                         .HasColumnType("int")
                         .HasColumnName("category_id");
 
+                    b.Property<int?>("ContributorId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("create_at");
@@ -466,6 +469,8 @@ namespace Cultural_Heritage_System.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("ContributorId");
 
                     b.ToTable("Heritages");
                 });
@@ -1851,6 +1856,10 @@ namespace Cultural_Heritage_System.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Cultural_Heritage_System.Models.Contributor", null)
+                        .WithMany("ContributorHeritages")
+                        .HasForeignKey("ContributorId");
+
                     b.Navigation("Category");
                 });
 
@@ -2183,6 +2192,8 @@ namespace Cultural_Heritage_System.Migrations
             modelBuilder.Entity("Cultural_Heritage_System.Models.Contributor", b =>
                 {
                     b.Navigation("Contributions");
+
+                    b.Navigation("ContributorHeritages");
                 });
 
             modelBuilder.Entity("Cultural_Heritage_System.Models.Heritage", b =>

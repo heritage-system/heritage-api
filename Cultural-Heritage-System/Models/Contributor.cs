@@ -2,10 +2,11 @@
 using System.ComponentModel.DataAnnotations;
 using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Helpers;
+using System.Text.Json.Serialization;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class Contributor : BaseEntity<int>
+    public class Contributor : BaseEntity<int>,IUnsignedEntity
     {
         [Required]
         [ForeignKey("User")]
@@ -40,5 +41,7 @@ namespace Cultural_Heritage_System.Models
             ExpertiseUnsigned = StringHelper.RemoveDiacritics(Expertise).ToLower();
         }
 
+        [JsonIgnore]
+        public ICollection<Heritage> ContributorHeritages { get; set; } = new List<Heritage>();
     }
 }

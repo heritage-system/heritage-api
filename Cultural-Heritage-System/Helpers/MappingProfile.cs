@@ -15,6 +15,8 @@ using Cultural_Heritage_System.Dtos.Response.Tag;
 using Cultural_Heritage_System.Dtos.Request.Report;
 using Cultural_Heritage_System.Dtos.Response.Report;
 using Cultural_Heritage_System.Models;
+using Cultural_Heritage_System.Dtos.Request.Contributor;
+using Cultural_Heritage_System.Dtos.Response.Contributor;
 
 
 namespace Cultural_Heritage_System.Helpers
@@ -123,10 +125,9 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<UpdateReportRequest, Report>()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
-
             CreateMap<Contributor, ContributorResponse>()
-                //.ForMember(dest => dest.UserFullName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : null))
-                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : null));
+                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
+                .ForMember(dest => dest.Count, opt => opt.MapFrom(src => src.Contributions.Count));
         }
     }
 }

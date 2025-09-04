@@ -1,11 +1,12 @@
-﻿using Cultural_Heritage_System.Dtos.Request;
+﻿using Cultural_Heritage_System.Dtos.Request.Contributor;
 using Cultural_Heritage_System.Dtos.Response;
+using Cultural_Heritage_System.Dtos.Response.Contributor;
 
 namespace Cultural_Heritage_System.Services
 {
     public interface IContributorService
     {
-        //Task<PageResponse<ContributorResponse>> SearchContributorsAsync(ContributorSearchRequest request);
+        Task<PageResponse<ContributorResponse>> SearchContributorsAsync(ContributorSearchRequest request);
         Task<ContributorResponse> GetContributorDetail(int id);
         Task<ContributorResponse> CreateContributor(ContributorCreateRequest request);
         Task<ContributorResponse> UpdateContributor(int id, ContributorUpdateRequest request);

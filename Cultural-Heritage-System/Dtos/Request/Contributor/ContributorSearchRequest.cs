@@ -1,6 +1,6 @@
 ﻿using Cultural_Heritage_System.Common;
 
-namespace Cultural_Heritage_System.Dtos.Request
+namespace Cultural_Heritage_System.Dtos.Request.Contributor
 {
     public class ContributorSearchRequest
     {
