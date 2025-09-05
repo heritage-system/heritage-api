@@ -2,3 +2,97 @@
 
 GET {{Cultural_Heritage_System_HostAddress}}/weatherforecast/
 Accept: application/json
+
+### Create Heritage with Media Upload
+POST {{baseUrl}}/api/heritage/heritage/create
+Authorization: Bearer {{authToken}}
+Content-Type: multipart/form-data
+
+# Form data
+--boundary
+Content-Disposition: form-data; name="Name"
+
+Di tích lịch sử Văn Miếu
+--boundary
+Content-Disposition: form-data; name="Description"
+
+Văn Miếu - Quốc Tử Giám là quần thể di tích đa dạng và phong phú hàng đầu của thành phố Hà Nội
+--boundary
+Content-Disposition: form-data; name="CategoryId"
+
+1
+--boundary
+Content-Disposition: form-data; name="MapUrl"
+
+https://maps.google.com/?q=van-mieu
+--boundary
+Content-Disposition: form-data; name="IsFeatured"
+
+true
+--boundary
+Content-Disposition: form-data; name="Media[0].Type"
+
+IMAGE
+--boundary
+Content-Disposition: form-data; name="Media[0].File"; filename="van-mieu-1.jpg"
+Content-Type: image/jpeg
+
+< ./images/van-mieu-1.jpg
+--boundary
+Content-Disposition: form-data; name="Media[1].Type"
+
+IMAGE
+--boundary
+Content-Disposition: form-data; name="Media[1].File"; filename="van-mieu-2.jpg"
+Content-Type: image/jpeg
+
+< ./images/van-mieu-2.jpg
+--boundary
+Content-Disposition: form-data; name="TagIds[0]"
+
+1
+--boundary
+Content-Disposition: form-data; name="TagIds[1]"
+
+2
+--boundary
+Content-Disposition: form-data; name="Locations[0].Name"
+
+Văn Miếu, Đống Đa, Hà Nội
+--boundary
+Content-Disposition: form-data; name="Locations[0].Latitude"
+
+21.0278
+--boundary
+Content-Disposition: form-data; name="Locations[0].Longitude"
+
+105.8342
+--boundary
+Content-Disposition: form-data; name="Occurrences[0].Description"
+
+Lễ hội Văn Miếu diễn ra vào tháng 3 âm lịch hàng năm
+--boundary--
+
+### Create Heritage without Media (Simple)
+POST {{baseUrl}}/api/heritage/heritage/create
+Authorization: Bearer {{authToken}}
+Content-Type: multipart/form-data
+
+# Form data
+--boundary
+Content-Disposition: form-data; name="Name"
+
+Chùa Một Cột
+--boundary
+Content-Disposition: form-data; name="Description"
+
+Chùa Một Cột hay Chùa Mật (chữ Hán: 一柱寺) là một ngôi chùa có kiến trúc độc đáo ở Hà Nội
+--boundary
+Content-Disposition: form-data; name="CategoryId"
+
+1
+--boundary
+Content-Disposition: form-data; name="IsFeatured"
+
+false
+--boundary--

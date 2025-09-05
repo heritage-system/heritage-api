@@ -4,6 +4,7 @@
     {
         Task SendEmailWelcome(string to, string user, DateTime registrationDate);
         Task SendEmailOtpResetPassword(string to,string otp, DateTime expiresAt);
+        Task SendEmailAnswerReport(string to, long reportId, string answer);
 
     }
 }
