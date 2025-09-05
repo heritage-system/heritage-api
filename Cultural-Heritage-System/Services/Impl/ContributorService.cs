@@ -62,6 +62,8 @@ namespace Cultural_Heritage_System.Services.Impl
                             UpdatedAt = c.UpdatedAt,
                             CreatedBy = c.CreatedBy,
                             UpdatedBy = c.UpdatedBy,
+                            FullNameUnsigned = profile.FullNameUnsigned,
+                            ExpertiseUnsigned = c.ExpertiseUnsigned,
                             Count = c.Contributions.Count()
                         };
 
@@ -69,9 +71,13 @@ namespace Cultural_Heritage_System.Services.Impl
             if (!string.IsNullOrEmpty(request.Keyword))
             {
                 var searchTerm = request.Keyword.Trim().ToLower();
+                var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
                 query = query.Where(x =>
-                    (x.Expertise != null && x.Expertise.ToLower().Contains(searchTerm)) ||
-                    (x.UserFullName != null && x.UserFullName.ToLower().Contains(searchTerm)));
+                    x.Expertise != null && x.Expertise.ToLower().Contains(searchTerm) ||
+                    x.UserFullName != null && x.UserFullName.ToLower().Contains(searchTerm) ||
+
+                    x.FullNameUnsigned.Contains(unsignedTerm) ||
+                    x.ExpertiseUnsigned.Contains(unsignedTerm));
             }
 
             if (request.Verified.HasValue)

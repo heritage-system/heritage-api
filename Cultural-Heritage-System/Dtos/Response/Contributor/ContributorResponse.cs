@@ -26,5 +26,9 @@ namespace Cultural_Heritage_System.Dtos.Response.Contributor
         public string? UpdatedByName { get; set; }
         public string? UpdatedByEmail { get; set; }
         public int Count { get; set; }
+
+        public string? ExpertiseUnsigned { get; set; }
+        public string? FullNameUnsigned { get; set; }
+
     }
 }
