@@ -70,8 +70,11 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<HeritageLocationRepository>();
             builder.Services.AddScoped<HeritageMediaRepository>();
             builder.Services.AddScoped<LocationRepository>();
+            builder.Services.AddScoped<FavoriteRepository>();
+            builder.Services.AddScoped<HeritageRepository>();
             builder.Services.AddScoped<TestSearchRepository>();
             builder.Services.AddScoped<ContributorRepository>();
+
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();
@@ -80,6 +83,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IMailService, MailService>();
             builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
+            builder.Services.AddScoped<IFavoriteService, FavoriteService>();
             builder.Services.AddScoped<ITestSearchService, TestSearchService>();
             //builder.Services.AddScoped<IProfileService, ProfileService>();
             builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
