@@ -22,6 +22,10 @@ namespace Cultural_Heritage_System.Models
         [Column("reason")]
         public string Reason { get; set; }
 
+        [Column("status")]
+        public ReportStatus Status { get; set; } = ReportStatus.Pending; 
+
+        public ICollection<ReportReply> Replies { get; set; } = new List<ReportReply>();
     }
 
 }

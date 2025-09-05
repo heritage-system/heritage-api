@@ -19,16 +19,17 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("all")]
-        //[Authorize(Roles = "MEMBER")]
-        public async Task<ApiResponse<IEnumerable<ReportResponse>>> GetAll()
+        // [Authorize(Roles = "MEMBER")]
+        public async Task<ApiResponse<PageResponse<ReportResponse>>> GetAll([FromQuery] int page = 1,[FromQuery] int pageSize = 5,[FromQuery] string? keyword = null)
         {
-            var reports = await _reportService.GetAllAsync();
-            return new ApiResponse<IEnumerable<ReportResponse>>(
+            var result = await _reportService.GetAllAsync(page, pageSize, keyword);
+            return new ApiResponse<PageResponse<ReportResponse>>(
                 code: 200,
                 message: "Get reports successfully",
-                result: reports
+                result: result
             );
         }
+
 
         [HttpGet("id")]
         //[Authorize(Roles = "MEMBER")]
