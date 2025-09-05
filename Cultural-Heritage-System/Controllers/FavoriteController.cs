@@ -2,7 +2,6 @@
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 
@@ -14,37 +13,25 @@ namespace Cultural_Heritage_System.Controllers
     public class FavoriteController : ControllerBase
     {
         private readonly IFavoriteService favoriteService;
-        private readonly IHttpContextAccessor httpContextAccessor;
 
-        public FavoriteController(IFavoriteService favoriteService, IHttpContextAccessor httpContextAccessor)
+        public FavoriteController(IFavoriteService favoriteService)
         {
             this.favoriteService = favoriteService;
-            this.httpContextAccessor = httpContextAccessor;
         }
 
         [HttpGet]
         public async Task<ApiResponse<PageResponse<FavoriteHeritageResponse>>> GetFavorites(
             [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? searchName = null)
         {
             try
             {
-                var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
-                if (string.IsNullOrEmpty(accountIdClaim))
-                {
-                    return new ApiResponse<PageResponse<FavoriteHeritageResponse>>
-                    {
-                        code = 401,
-                        message = "Unauthorized"
-                    };
-                }
-
                 // Validate pagination parameters
                 if (page < 1) page = 1;
                 if (pageSize < 1 || pageSize > 100) pageSize = 10;
 
-                var userId = int.Parse(accountIdClaim);
-                var favorites = await favoriteService.GetFavoritesByUserIdAsync(userId, page, pageSize);
+                var favorites = await favoriteService.GetFavoritesAsync(page, pageSize, searchName);
 
                 return new ApiResponse<PageResponse<FavoriteHeritageResponse>>(
                     code: 200,
@@ -67,22 +54,11 @@ namespace Cultural_Heritage_System.Controllers
         {
             try
             {
-                var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
-                if (string.IsNullOrEmpty(accountIdClaim))
-                {
-                    return new ApiResponse<object>
-                    {
-                        code = 401,
-                        message = "Unauthorized"
-                    };
-                }
-
-                var userId = int.Parse(accountIdClaim);
-                await favoriteService.AddFavoriteAsync(userId, request);
+                await favoriteService.AddFavoriteAsync(request);
 
                 return new ApiResponse<object>(
                     code: 201,
-                    message: "Added to favorites successfully"
+                    message : "Added to favorites successfully"
                 );
             }
             catch (Exception ex)
@@ -100,22 +76,11 @@ namespace Cultural_Heritage_System.Controllers
         {
             try
             {
-                var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
-                if (string.IsNullOrEmpty(accountIdClaim))
-                {
-                    return new ApiResponse<object>
-                    {
-                        code = 401,
-                        message = "Unauthorized"
-                    };
-                }
-
-                var userId = int.Parse(accountIdClaim);
-                await favoriteService.RemoveFavoriteAsync(userId, request);
+                await favoriteService.RemoveFavoriteAsync(request);
 
                 return new ApiResponse<object>(
                     code: 200,
-                    message: "Removed from favorites successfully"
+                    message : "Removed from favorites successfully"
                 );
             }
             catch (Exception ex)
