@@ -13,16 +13,16 @@ namespace Cultural_Heritage_System.Services.Impl
     public class ContributionService : IContributionService
     {
         private readonly IHttpContextAccessor httpContextAccessor;
-        private readonly UserRepository userRepository;
+        private readonly ContributorRepository contributorRepository;
         private readonly ContributionRepository contributionRepository;
         private readonly IMapper mapper;
         private readonly IMailService mailService;
         private readonly ILogger<ContributionService> logger;
 
-        public ContributionService(UserRepository userRepository, ContributionRepository contributionRepository, ILogger<ContributionService> logger, IMailService mailService,
+        public ContributionService(ContributorRepository contributorRepository, ContributionRepository contributionRepository, ILogger<ContributionService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
-            this.userRepository = userRepository;
+            this.contributorRepository = contributorRepository;
             this.logger = logger;
             this.contributionRepository = contributionRepository;
             this.mailService = mailService;
@@ -34,9 +34,17 @@ namespace Cultural_Heritage_System.Services.Impl
             var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;       
             Contribution contribution = mapper.Map<Contribution>(request);
 
-            //Un-contributor id
-            contribution.ContributorId = 1;
-         
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            var currentContributor = await contributorRepository.GetContributorByUserId(int.Parse(accountIdClaim));
+            if (currentContributor == null)
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            contribution.ContributorId = currentContributor.Id;
+
             await contributionRepository.AddAsync(contribution);
 
             return mapper.Map<ContributionCreationResponse>(contribution);
