@@ -197,6 +197,18 @@ namespace Cultural_Heritage_System.Models
                     .HasForeignKey(rp => rp.UserId)
                     .OnDelete(DeleteBehavior.NoAction);
 
+            modelBuilder.Entity<Favorite>()
+                .HasOne(f => f.User)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Favorite>()
+                .HasOne(f => f.Heritage)
+                .WithMany()
+                .HasForeignKey(f => f.HeritageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

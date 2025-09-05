@@ -1,7 +1,7 @@
 ﻿using Cultural_Heritage_System.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace medical_appointment_booking.Repositories
+namespace Cultural_Heritage_System.Repositories
 {
     public class BaseRepository<T> where T : class
     {
