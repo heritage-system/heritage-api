@@ -30,7 +30,7 @@ namespace Cultural_Heritage_System.Services.Impl
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<PageResponse<ReportResponse>> GetAllAsync(int page,int pageSize,string? keyword = null,DateTime? startDate = null,DateTime? endDate = null)
+        public async Task<PageResponse<ReportResponse>> GetAllAsync(int page,int pageSize,string? keyword = null,DateTime? startDate = null,DateTime? endDate = null,string? status = null) 
         {
             var query = _reportRepository.GetAllQuery();
 
@@ -40,7 +40,6 @@ namespace Cultural_Heritage_System.Services.Impl
                 var unsignedTerm = StringHelper.RemoveDiacritics(lowerKeyword);
 
                 query = query.Where(r =>
-                    r.Reason.ToLower().Contains(lowerKeyword) ||
                     r.Heritage.Name.ToLower().Contains(lowerKeyword) ||
                     r.Heritage.NameUnsigned.ToLower().Contains(unsignedTerm) ||
                     r.User.UserName.ToLower().Contains(lowerKeyword) ||
@@ -57,11 +56,19 @@ namespace Cultural_Heritage_System.Services.Impl
                 query = query.Where(r => r.CreatedAt <= endDate.Value);
             }
 
+            if (!string.IsNullOrEmpty(status)) 
+            {
+                if (Enum.TryParse<ReportStatus>(status, true, out var parsedStatus))
+                {
+                    query = query.Where(r => r.Status == parsedStatus);
+                }
+            }
+
+
             var pagedResult = await query.ToPagedResponseAsync(page, pageSize);
 
             return _mapper.Map<PageResponse<ReportResponse>>(pagedResult);
         }
-
 
         public async Task<ReportResponse?> GetByIdAsync(long id)
         {
@@ -76,27 +83,6 @@ namespace Cultural_Heritage_System.Services.Impl
             return _mapper.Map<ReportResponse>(entity);
         }
 
-        public async Task<ReportResponse?> UpdateAsync(long id, UpdateReportRequest request)
-        {
-            var entity = await _reportRepository.GetByIdAsync(id);
-            if (entity == null) return null;
-
-            if (request.Reason != null)
-            {
-                entity.Reason = request.Reason;
-            }
-
-            await _reportRepository.UpdateAsync(entity);
-            return _mapper.Map<ReportResponse>(entity);
-        }
-
-        public async Task<bool> DeleteAsync(long id)
-        {
-            var report = await _reportRepository.GetByIdAsync(id);
-            if (report == null) return false;
-            await _reportRepository.DeleteAsync(report);
-            return true;
-        }
         public async Task<bool> AnswerReportAsync(long reportId, string answer)
         {
             var report = await _reportRepository.GetByIdAsync(reportId);
@@ -111,7 +97,6 @@ namespace Cultural_Heritage_System.Services.Impl
             if (string.IsNullOrEmpty(accountIdClaim))
                 throw new AppException(ErrorCode.UNAUTHORIZED);
 
-
             var reply = new ReportReply
             {
                 ReportId = reportId,
@@ -120,14 +105,12 @@ namespace Cultural_Heritage_System.Services.Impl
             };
             await _reportReplyRepository.AddAsync(reply);
 
-            if (report.Status == ReportStatus.Pending)
+            if (report.Status == ReportStatus.PENDING)
             {
-                report.Status = ReportStatus.Answered;
+                report.Status = ReportStatus.ANSWERED;
                 await _reportRepository.UpdateAsync(report);
             }
-
             return true;
         }
-
     }
 }
