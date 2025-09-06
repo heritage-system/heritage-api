@@ -5,6 +5,7 @@ using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -13,7 +14,7 @@ namespace Cultural_Heritage_System.Services.Impl
 {
     public class AuthService : IAuthService
     {
-
+        private readonly IHttpContextAccessor httpContextAccessor;
         private readonly ILogger<AuthenticationService> logger;
         private readonly IJwtService jwtService;
         private readonly PasswordHasher<User> passwordHasher;
@@ -22,6 +23,7 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly GoogleAuthClient googleAuthClient;
         private readonly GoogleUserInfoClient googleUserInfoClient;
         private readonly ProfileRepository profileRepository;
+        private readonly RefreshTokenRepository refreshTokenRepository;
         //private readonly FacebookAuthClient facebookAuthClient;
         //private readonly FacebookUserInfoClient facebookUserInfoClient;
 
@@ -32,7 +34,9 @@ namespace Cultural_Heritage_System.Services.Impl
             RoleRepository roleRepository,
             GoogleAuthClient googleAuthClient,
             GoogleUserInfoClient googleUserInfoClient,
-            ProfileRepository profileRepository
+            ProfileRepository profileRepository,
+            RefreshTokenRepository refreshTokenRepository,
+            IHttpContextAccessor httpContextAccessor
             )
         {
             this.logger = logger;
@@ -45,6 +49,8 @@ namespace Cultural_Heritage_System.Services.Impl
             this.profileRepository = profileRepository;
             //this.facebookAuthClient = facebookAuthClient;
             //this.facebookUserInfoClient = facebookUserInfoClient;
+            this.refreshTokenRepository = refreshTokenRepository;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<SignInResponse> SignIn(SignInRequest request)
@@ -94,6 +100,12 @@ namespace Cultural_Heritage_System.Services.Impl
 
             var accessToken = jwtService.GenerateAccessToken(claims);
             var refreshToken = jwtService.GenerateRefreshToken(claims);
+
+            await refreshTokenRepository.AddAsync(new RefreshToken
+            {
+                UserId = user.Id,
+                Token = refreshToken
+            });
 
             logger.LogInformation("SignIn success for userId: {UserId}", user.Id);
 
@@ -147,6 +159,13 @@ namespace Cultural_Heritage_System.Services.Impl
 
             var accessToken = jwtService.GenerateAccessToken(claims);
             var refreshToken = jwtService.GenerateRefreshToken(claims);
+
+            await refreshTokenRepository.AddAsync(new RefreshToken
+            {
+                UserId = user.Id,
+                Token = refreshToken
+            });
+
 
             logger.LogInformation("SignIn Google success for userId: {UserId}", user.Id);
 
@@ -217,10 +236,53 @@ namespace Cultural_Heritage_System.Services.Impl
         //    return new SignInResponse(accessToken, refreshToken, user.Role.Name, "Bearer", TwoFaStep.NONE);
         //}
 
-        public Task<SignInResponse> RefreshToken()
+        public async Task<SignInResponse> RefreshToken(string refreshToken)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(refreshToken))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+        
+            var rt = await refreshTokenRepository.FindByTokenAsync(refreshToken);
+            if (rt == null) 
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+          
+            var user = await userRepository.FindUserById(rt.UserId);
+            if (user == null)
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            var claims = new[]
+            {
+                new Claim("userId", user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim("Authorities", user.Role.Name)
+            };
+
+            var accessToken = jwtService.GenerateAccessToken(claims);
+            var newRefreshToken = jwtService.GenerateRefreshToken(claims);
+
+            rt.Token = newRefreshToken;
+
+            await refreshTokenRepository.UpdateAsync(rt);
+
+            // 5) TwoFaStep: parse từ field đúng (VD: user.TwoFaStepString)
+            TwoFaStep stepEnum = TwoFaStep.NONE;
+            if (!string.IsNullOrWhiteSpace(user.TwoFactorSecret))
+            {
+                if (!Enum.TryParse(user.TwoFactorSecret, ignoreCase: true, out stepEnum))
+                    stepEnum = TwoFaStep.NONE;
+            }
+         
+            // 6) Trả response
+            return new SignInResponse(
+                accessToken,
+                newRefreshToken,
+                user.Role?.Name ?? "User",
+                "Bearer",
+                stepEnum
+            );
         }
+
 
         public Task SignOut()
         {

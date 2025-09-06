@@ -1,10 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Helpers;
 using System.ComponentModel.DataAnnotations;
-using Cultural_Heritage_System.Common;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class Contribution: BaseEntity<int>
+    public class Contribution: BaseEntity<int>,IUnsignedEntity
     {
         [Required]
         [Column("contributor_id")]
@@ -25,13 +26,21 @@ namespace Cultural_Heritage_System.Models
         [Column("media_url")]
         public string MediaUrl { get; set; }
 
-        [Column("status")]
-        public string Status { get; set; }
+        [Column("status" ,TypeName = "nvarchar(20)")]
+        public ContributionStatus Status { get; set; } = ContributionStatus.PENDING;
 
         [Column("reviewed_by")]
         [ForeignKey(nameof(Reviewer))]
         public int? ReviewedBy { get; set; }
         public User? Reviewer { get; set; }
+
+        [Column("title_unsigned")]
+        public string TitleUnsigned { get; set; }
+        public void GenerateUnsignedFields()
+        {
+            TitleUnsigned = StringHelper.RemoveDiacritics(Title).ToLower();
+        }
+
     }
 
 }
