@@ -136,8 +136,17 @@ namespace Cultural_Heritage_System.Helpers
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Heritage.Category.Name))
                 .ForMember(dest => dest.IsFeatured, opt => opt.MapFrom(src => src.Heritage.IsFeatured))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
+
             CreateMap<ContributionCreationRequest, Contribution>();
-            CreateMap<Contribution, ContributionCreationResponse>();
+            CreateMap<Contribution, ContributionResponse>()
+             .ForMember(d => d.ContributorName, o => o.MapFrom(s => s.Contributor.User.UserName))
+             .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl));         
+            CreateMap<Contribution, ContributionSearchResponse>()
+             .ForMember(d => d.ContributorName, o => o.MapFrom(s => s.Contributor.User.UserName))
+             .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl))
+             .ForMember(d => d.PostedAt, o => o.MapFrom(s => s.UpdatedAt))
+             .ForMember(d => d.ContributorNameUnsigned, o => o.MapFrom(s => s.Contributor.User.UserNameUnsigned))
+             .ForMember(d => d.FirstText, o => o.MapFrom<ContributionFirstTextResolver>());
         }
     }
 }
