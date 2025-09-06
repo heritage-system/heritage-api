@@ -123,7 +123,7 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<CreateReportRequest, Report>();
             CreateMap<Report, ReportResponse>()
                 .ForMember(dest => dest.HeritageName, opt => opt.MapFrom(src => src.Heritage.Name))
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.UserName)); 
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.UserName));
 
             CreateMap<UpdateReportRequest, Report>()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));

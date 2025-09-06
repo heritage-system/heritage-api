@@ -9,6 +9,7 @@ namespace Cultural_Heritage_System.Dtos.Response.Report
         public string Reason { get; set; }
         public string? CreatedAt { get; set; }
         public string UserName { get; set; }
+        public string Status { get; set; }
     }
 }
 

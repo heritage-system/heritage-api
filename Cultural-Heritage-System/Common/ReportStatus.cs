@@ -2,8 +2,7 @@
 {
     public enum ReportStatus
     {
-        Pending = 0, 
-        Answered = 1 
+        PENDING, ANSWERED, CANCEL
     }
 
 }

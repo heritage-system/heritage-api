@@ -19,10 +19,15 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("all")]
-        // [Authorize(Roles = "MEMBER")]
-        public async Task<ApiResponse<PageResponse<ReportResponse>>> GetAll([FromQuery] int page = 1,[FromQuery] int pageSize = 5,[FromQuery] string? keyword = null)
+        //[Authorize(Roles = "MEMBER")]
+        public async Task<ApiResponse<PageResponse<ReportResponse>>> GetAll(
+            [FromQuery] int page,
+            [FromQuery] int pageSize,
+            [FromQuery] string? keyword = null,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
         {
-            var result = await _reportService.GetAllAsync(page, pageSize, keyword);
+            var result = await _reportService.GetAllAsync(page, pageSize, keyword, startDate, endDate);
             return new ApiResponse<PageResponse<ReportResponse>>(
                 code: 200,
                 message: "Get reports successfully",

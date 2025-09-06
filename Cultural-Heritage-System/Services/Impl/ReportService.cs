@@ -30,7 +30,7 @@ namespace Cultural_Heritage_System.Services.Impl
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<PageResponse<ReportResponse>> GetAllAsync(int page, int pageSize, string? keyword = null)
+        public async Task<PageResponse<ReportResponse>> GetAllAsync(int page,int pageSize,string? keyword = null,DateTime? startDate = null,DateTime? endDate = null)
         {
             var query = _reportRepository.GetAllQuery();
 
@@ -38,18 +38,29 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 var lowerKeyword = keyword.Trim().ToLower();
                 var unsignedTerm = StringHelper.RemoveDiacritics(lowerKeyword);
-                query = query.Where(r => r.Reason.ToLower().Contains(lowerKeyword)
-                                      || r.Heritage.Name.ToLower().Contains(lowerKeyword)
-                                      || r.User.UserName.ToLower().Contains(lowerKeyword)
-                                      || r.User.UserNameUnsigned.ToLower().Contains(unsignedTerm));
 
+                query = query.Where(r =>
+                    r.Reason.ToLower().Contains(lowerKeyword) ||
+                    r.Heritage.Name.ToLower().Contains(lowerKeyword) ||
+                    r.Heritage.NameUnsigned.ToLower().Contains(unsignedTerm) ||
+                    r.User.UserName.ToLower().Contains(lowerKeyword) ||
+                    r.User.UserNameUnsigned.ToLower().Contains(unsignedTerm));
+            }
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(r => r.CreatedAt >= startDate.Value);
+            }
+
+            if (endDate.HasValue)
+            {
+                query = query.Where(r => r.CreatedAt <= endDate.Value);
             }
 
             var pagedResult = await query.ToPagedResponseAsync(page, pageSize);
 
             return _mapper.Map<PageResponse<ReportResponse>>(pagedResult);
         }
-
 
 
         public async Task<ReportResponse?> GetByIdAsync(long id)
