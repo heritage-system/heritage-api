@@ -1,5 +1,5 @@
 ﻿using Cultural_Heritage_System.Models;
-using medical_appointment_booking.Repositories;
+using Cultural_Heritage_System.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cultural_Heritage_System.Repositories
@@ -12,6 +12,24 @@ namespace Cultural_Heritage_System.Repositories
             : base(context)
         {
             _logger = logger;
-        }       
+        }
+
+        public IQueryable<Contribution> GetContributionsQueryable()
+        {
+            return _context.Contributions
+                .Include(h => h.Contributor)
+                .ThenInclude(c => c.User)
+                .ThenInclude(u => u.Profile)
+                .AsQueryable();
+        }
+
+        public async Task<Contribution?> GetContributionById(long id)
+        {
+            return await _dbSet
+               .Include(h => h.Contributor)
+                .ThenInclude(c => c.User)
+                .ThenInclude(u => u.Profile)
+                .FirstOrDefaultAsync(u => u.Id == id);
+        }
     }
 }

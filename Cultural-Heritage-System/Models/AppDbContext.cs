@@ -209,6 +209,12 @@ namespace Cultural_Heritage_System.Models
                 .HasForeignKey(f => f.HeritageId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(rt => rt.User)
+                .WithMany(u => u.RefreshTokens) 
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

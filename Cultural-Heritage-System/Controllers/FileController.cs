@@ -1,6 +1,7 @@
 ﻿using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Services;
 using Cultural_Heritage_System.Services.Impl;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cultural_Heritage_System.Controllers
@@ -21,7 +22,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("upload/image")]
-        //[Authorize]
+        [Authorize]
         public async Task<ApiResponse<string>> UploadImage(IFormFile file)
         {
             try

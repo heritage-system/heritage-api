@@ -143,13 +143,11 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<ContributionCreationRequest, Contribution>();
             CreateMap<Contribution, ContributionResponse>()
              .ForMember(d => d.ContributorName, o => o.MapFrom(s => s.Contributor.User.UserName))
-             .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl));         
+             .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl));
             CreateMap<Contribution, ContributionSearchResponse>()
              .ForMember(d => d.ContributorName, o => o.MapFrom(s => s.Contributor.User.UserName))
              .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl))
-             .ForMember(d => d.PostedAt, o => o.MapFrom(s => s.UpdatedAt))
-             .ForMember(d => d.ContributorNameUnsigned, o => o.MapFrom(s => s.Contributor.User.UserNameUnsigned))
-             .ForMember(d => d.FirstText, o => o.MapFrom<ContributionFirstTextResolver>());
+             .ForMember(d => d.PostedAt, o => o.MapFrom(s => s.UpdatedAt));            
         }
     }
 }

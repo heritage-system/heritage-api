@@ -1,7 +1,12 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using Azure.Core;
 using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Request;
+using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Response;
+using Cultural_Heritage_System.Dtos.Response.Heritage;
+using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
@@ -29,7 +34,73 @@ namespace Cultural_Heritage_System.Services.Impl
             this.mapper = mapper;
             this.httpContextAccessor = httpContextAccessor;
         }
-        public async Task<ContributionCreationResponse> PostContribution(ContributionCreationRequest request)
+
+        public Task<PageResponse<ContributionSearchResponse>> SearchContributionsAsync(ContributionSearchRequest request)
+        {
+            try
+            {
+                var query = contributionRepository.GetContributionsQueryable();
+
+               
+                // Keyword search
+                if (!string.IsNullOrEmpty(request.Keyword))
+                {
+                    var searchTerm = request.Keyword.Trim().ToLower();
+                    var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
+
+                    query = query.Where(h =>
+                        h.Title.ToLower().Contains(searchTerm) ||
+                        h.Contributor.User.UserName.ToLower().Contains(searchTerm) ||
+
+
+                        h.TitleUnsigned.Contains(unsignedTerm) ||
+                        h.Contributor.User.UserNameUnsigned.Contains(unsignedTerm));
+                }            
+
+                //// Category filter
+                //if (request.CategoryIds != null && request.CategoryIds.Any())
+                //{
+                //    query = query.Where(h => request.CategoryIds.Contains(h.CategoryId));
+                //}
+
+                //// Tag filter
+                //if (request.TagIds != null && request.TagIds.Any())
+                //{
+                //    query = query.Where(h => h.HeritageTags.Any(t => request.TagIds.Contains(t.TagId)));
+                //}
+              
+                switch (request.SortBy)
+                {
+                    case SortBy.IDASC:
+                        query = query.OrderBy(h => h.Id);
+                        break;
+                    case SortBy.IDDESC:
+                        query = query.OrderByDescending(h => h.Id);
+                        break;
+                    case SortBy.NAMEASC:
+                        query = query.OrderBy(h => h.Title);
+                        break;
+                    case SortBy.NAMEDESC:
+                        query = query.OrderByDescending(h => h.Title);
+                        break;
+                    default:
+                        query = query.OrderBy(h => h.Id);
+                        break;
+                }
+
+                var dtoQuery = query.ProjectTo<ContributionSearchResponse>(mapper.ConfigurationProvider);
+                // Pagination
+                var response = dtoQuery.ToPagedResponseAsync(request.Page, request.PageSize);
+                return response;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error searching heritages");
+                throw;
+            }
+        }
+
+        public async Task<ContributionResponse> PostContribution(ContributionCreationRequest request)
         {
             var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;       
             Contribution contribution = mapper.Map<Contribution>(request);
@@ -47,7 +118,21 @@ namespace Cultural_Heritage_System.Services.Impl
 
             await contributionRepository.AddAsync(contribution);
 
-            return mapper.Map<ContributionCreationResponse>(contribution);
+            return mapper.Map<ContributionResponse>(contribution);
+        }
+
+        public async Task<ContributionResponse> GetContributionDetail(int id)
+        {
+            var existingContribution = await contributionRepository.GetContributionById(id);
+
+            if (existingContribution == null)
+            {
+                throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
+            }
+
+            var response = mapper.Map<ContributionResponse>(existingContribution);
+
+            return response;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Cultural_Heritage_System.Dtos.Request;
+using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Models;
@@ -26,15 +27,38 @@ namespace Cultural_Heritage_System.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<ApiResponse<ContributionCreationResponse>> CreateContribution([FromBody] ContributionCreationRequest request)
+        public async Task<ApiResponse<ContributionResponse>> CreateContribution([FromBody] ContributionCreationRequest request)
         {
             var users = await contributionService.PostContribution(request);
 
-            return new ApiResponse<ContributionCreationResponse>(
+            return new ApiResponse<ContributionResponse>(
                 code: 201,
                 message: "Created contribution",
                 result: users
             );
-        }     
+        }
+
+        [HttpGet("search_contribution")]
+        public async Task<ApiResponse<PageResponse<ContributionSearchResponse>>> GetAllWithSearch(
+           [FromQuery] ContributionSearchRequest request)
+
+        {
+            return new ApiResponse<PageResponse<ContributionSearchResponse>>
+            {
+                code = 200,
+                result = await contributionService.SearchContributionsAsync(request)
+            };
+        }
+
+        [HttpGet("contributionDetail")]
+        public async Task<ApiResponse<ContributionResponse>> GetHeritageDetail(int id)
+        {
+            var result = await contributionService.GetContributionDetail(id);
+            return new ApiResponse<ContributionResponse>(
+                code: 200,
+                message: "Get contribution details successfully",
+                result: result
+            );
+        }
     }
 }

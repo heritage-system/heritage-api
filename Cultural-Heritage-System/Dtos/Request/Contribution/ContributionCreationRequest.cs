@@ -9,7 +9,7 @@ namespace Cultural_Heritage_System.Models
         public string Title { get; set; }
         public string Content { get; set; }
         public string MediaUrl { get; set; }
-        public decimal Price { get; set; }
+        public decimal Price { get; set; } = 0m;
     }
 
 }

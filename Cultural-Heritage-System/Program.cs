@@ -64,7 +64,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<PasswordResetRepository>();
             builder.Services.AddScoped<HeritageRepository>();
             builder.Services.AddScoped<ReportRepository>();
-
+            builder.Services.AddScoped<RefreshTokenRepository>();
             builder.Services.AddScoped<HeritageOccurrenceRepository>();
             builder.Services.AddScoped<HeritageTagRepository>();
             builder.Services.AddScoped<HeritageLocationRepository>();
