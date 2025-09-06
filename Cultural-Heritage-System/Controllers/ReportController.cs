@@ -20,15 +20,23 @@ namespace Cultural_Heritage_System.Controllers
 
         [HttpGet("all")]
         //[Authorize(Roles = "MEMBER")]
-        public async Task<ApiResponse<IEnumerable<ReportResponse>>> GetAll()
+        public async Task<ApiResponse<PageResponse<ReportResponse>>> GetAll(
+             [FromQuery] int page,
+             [FromQuery] int pageSize,
+             [FromQuery] string? keyword = null,
+             [FromQuery] DateTime? startDate = null,
+             [FromQuery] DateTime? endDate = null,
+             [FromQuery] string? status = null) 
         {
-            var reports = await _reportService.GetAllAsync();
-            return new ApiResponse<IEnumerable<ReportResponse>>(
+            var result = await _reportService.GetAllAsync(page, pageSize, keyword, startDate, endDate, status);
+            return new ApiResponse<PageResponse<ReportResponse>>(
                 code: 200,
                 message: "Get reports successfully",
-                result: reports
+                result: result
             );
         }
+
+
 
         [HttpGet("id")]
         //[Authorize(Roles = "MEMBER")]
@@ -96,55 +104,5 @@ namespace Cultural_Heritage_System.Controllers
                 message: "Answer sent successfully"
             );
         }
-
-        [HttpPut("update")]
-        //[Authorize(Roles = "ADMIN")]
-        public async Task<ApiResponse<ReportResponse>> Update([FromQuery] long id, [FromBody] UpdateReportRequest request)
-        {
-            if (!ModelState.IsValid)
-            {
-                return new ApiResponse<ReportResponse>(
-                    code: 400,
-                    message: "Invalid model state"
-                );
-            }
-
-            var updated = await _reportService.UpdateAsync(id, request);
-            if (updated == null)
-            {
-                return new ApiResponse<ReportResponse>(
-                    code: 404,
-                    message: "Report not found"
-                );
-            }
-
-            return new ApiResponse<ReportResponse>(
-                code: 200,
-                message: "Report updated successfully",
-                result: updated
-            );
-        }
-
-        [HttpDelete("delete")]
-        //[Authorize(Roles = "ADMIN")]
-        public async Task<ApiResponse<long?>> Delete([FromQuery] long id)
-        {
-            var ok = await _reportService.DeleteAsync(id);
-            if (!ok)
-            {
-                return new ApiResponse<long?>(
-                    code: 404,
-                    message: "Report not found"
-                );
-            }
-
-            return new ApiResponse<long?>(
-                code: 200,
-                message: "Delete report successfully",
-                result: id
-            );
-        }
-
-       
     }
 }
