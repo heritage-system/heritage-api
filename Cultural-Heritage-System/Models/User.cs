@@ -5,17 +5,21 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class User : BaseEntity<int>,IUnsignedEntity
+    public class User : BaseEntity<int>, IUnsignedEntity
     {
         [Column("username")]
         public string UserName { get; set; }
+
+        [Column("user_image_url")]
+
+        public string UserImageUrl { get; set; } = "https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg";
 
         [Column("email")]
         public string Email { get; set; }
 
         [Column("password_hash")]
         public string PasswordHash { get; set; }
-     
+
         [Column("user_status", TypeName = "nvarchar(20)")]
         public UserStatus UserStatus { get; set; } = UserStatus.ACTIVE;
 
@@ -50,7 +54,7 @@ namespace Cultural_Heritage_System.Models
         public string UserNameUnsigned { get; set; }
         public void GenerateUnsignedFields()
         {
-            UserNameUnsigned = StringHelper.RemoveDiacritics(UserName).ToLower();        
+            UserNameUnsigned = StringHelper.RemoveDiacritics(UserName).ToLower();
         }
     }
 }
