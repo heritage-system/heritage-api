@@ -21,7 +21,7 @@ namespace Cultural_Heritage_System.Controllers
 
         [HttpGet("all")]
         [Authorize(Roles = "MEMBER")]
-        public async Task<ApiResponse<PageResponse<HeritageResponse>>> GetAll([FromQuery] int page = 1,[FromQuery] int pageSize = 5,[FromQuery] string? keyword = null,
+        public async Task<ApiResponse<PageResponse<HeritageResponse>>> GetAll([FromQuery] int page,[FromQuery] int pageSize,[FromQuery] string? keyword = null,
                                                                                 [FromQuery] int? categoryId = null,[FromQuery] int? tagId = null)
         {
             var heritages = await _heritageService.GetAllAsync(page, pageSize, keyword, categoryId, tagId);

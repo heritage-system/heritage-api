@@ -123,7 +123,10 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap(typeof(PageResponse<>), typeof(PageResponse<>));
 
             CreateMap<CreateReportRequest, Report>();
-            CreateMap<Report, ReportResponse>();
+            CreateMap<Report, ReportResponse>()
+                .ForMember(dest => dest.HeritageName, opt => opt.MapFrom(src => src.Heritage.Name))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.UserName));
+
             CreateMap<UpdateReportRequest, Report>()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
@@ -192,6 +195,15 @@ namespace Cultural_Heritage_System.Helpers
                 ForMember(dest => dest.ReviewId, opt => opt.MapFrom(src => src.Id))
                .ForMember(dest => dest.success, opt => opt.Ignore()) // Set manually
                .ForMember(dest => dest.message, opt => opt.Ignore()); // Set manually;
+
+            CreateMap<ContributionCreationRequest, Contribution>();
+            CreateMap<Contribution, ContributionResponse>()
+             .ForMember(d => d.ContributorName, o => o.MapFrom(s => s.Contributor.User.UserName))
+             .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl));
+            CreateMap<Contribution, ContributionSearchResponse>()
+             .ForMember(d => d.ContributorName, o => o.MapFrom(s => s.Contributor.User.UserName))
+             .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl))
+             .ForMember(d => d.PostedAt, o => o.MapFrom(s => s.UpdatedAt));            
         }
 
     }
