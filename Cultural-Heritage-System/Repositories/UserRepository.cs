@@ -1,5 +1,6 @@
-﻿using Cultural_Heritage_System.Models;
-using medical_appointment_booking.Repositories;
+﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Models;
+using Cultural_Heritage_System.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cultural_Heritage_System.Repositories
@@ -47,6 +48,13 @@ namespace Cultural_Heritage_System.Repositories
             return await _dbSet
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.Id == id);
+        }
+
+        public IQueryable<User> GetQueryable()
+        {
+            return _dbSet
+                .Include(u => u.Role)
+                .Where(u => u.Role.Name == DefinitionRole.MEMBER);
         }
 
     }

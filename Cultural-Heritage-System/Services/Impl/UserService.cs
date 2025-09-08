@@ -139,7 +139,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
 
-            var accountId = int.Parse(accountIdClaim);
+            var accountId = int.Parse(accountIdClaim);  
 
             var existingUser = await userRepository.FindUserById(accountId);
             if (existingUser == null)

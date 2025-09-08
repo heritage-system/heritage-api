@@ -63,15 +63,60 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
 
-        [HttpDelete("{id}")]
+        [HttpPut("{id}/disable")]
         [Authorize(Roles = "ADMIN")]
-        public async Task<ApiResponse<object>> Delete(int id)
+        public async Task<ApiResponse<object>> Disable(int id)
         {
-            await contributorService.DeleteContributor(id);
+            await contributorService.DisableContributor(id);
             return new ApiResponse<object>(
                 code: 200,
-                message: "Contributor deleted successfully"
+                message: "Contributor disabled successfully"
             );
         }
+
+        [HttpGet("dropdown-users")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<ApiResponse<List<DropdownUserResponse>>> SearchDropdownUser([FromQuery] string? keyword)
+        {
+            var result = await contributorService.SearchDropdownUserAsync(keyword);
+            return new ApiResponse<List<DropdownUserResponse>>(200,"List of members",result );
+        }
+
+        [HttpPut("{id}/approve")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<ApiResponse<ContributorResponse>> Approve(int id)
+        {
+            var result = await contributorService.ApproveContributor(id);
+            return new ApiResponse<ContributorResponse>(
+                200,
+                "Contributor approved successfully",
+                result
+            );
+        }
+
+        [HttpPut("{id}/reject")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<ApiResponse<ContributorResponse>> Reject(int id)
+        {
+            var result = await contributorService.RejectContributor(id);
+            return new ApiResponse<ContributorResponse>(
+                200,
+                "Contributor rejected successfully",
+                result
+            );
+        }
+
+        [HttpPost("apply")]
+        [Authorize(Roles = "MEMBER")]
+        public async Task<ApiResponse<ContributorResponse>> Apply([FromBody] ContributorCreateRequest request)
+        {
+            var result = await contributorService.ApplyContributor(request);
+            return new ApiResponse<ContributorResponse>(
+                201,
+                "Contributor application submitted successfully",
+                result
+            );
+        }
+
     }
 }

@@ -126,8 +126,16 @@ namespace Cultural_Heritage_System.Helpers
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Contributor, ContributorResponse>()
-                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
-                .ForMember(dest => dest.Count, opt => opt.MapFrom(src => src.Contributions.Count));
+                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User.Email))
+                .ForMember(dest => dest.Count, opt => opt.MapFrom(src => src.Contributions != null ? src.Contributions.Count : 0));
+
+            CreateMap<Favorite, FavoriteHeritageResponse>()
+                .ForMember(dest => dest.HeritageId, opt => opt.MapFrom(src => src.HeritageId))
+                .ForMember(dest => dest.HeritageName, opt => opt.MapFrom(src => src.Heritage.Name))
+                .ForMember(dest => dest.HeritageDescription, opt => opt.MapFrom(src => src.Heritage.Description))
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Heritage.Category.Name))
+                .ForMember(dest => dest.IsFeatured, opt => opt.MapFrom(src => src.Heritage.IsFeatured))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
         }
     }
 }
