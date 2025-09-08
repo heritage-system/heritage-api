@@ -33,8 +33,7 @@ namespace Cultural_Heritage_System.Models
 
         public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
-        public ICollection<Report> Reports { get; set; } = new List<Report>();
-        public ICollection<Contributor> Contributors { get; set; } = new List<Contributor>();
+        public ICollection<Report> Reports { get; set; } = new List<Report>();     
         public ICollection<Contribution> ReviewedContributions { get; set; } = new List<Contribution>();
 
         public ICollection<Wallet> Wallets { get; set; } = new List<Wallet>();
@@ -45,6 +44,10 @@ namespace Cultural_Heritage_System.Models
         public ICollection<ReviewLike> ReviewLikes { get; set; } = new List<ReviewLike>();
 
         public ICollection<ReviewReport> ReviewReports { get; set; } = new List<ReviewReport>();
+
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+        public Contributor? Contributor { get; set; } 
+        public Profile? Profile { get; set; }
 
         [Column("user_name_unsigned")]
         public string UserNameUnsigned { get; set; }

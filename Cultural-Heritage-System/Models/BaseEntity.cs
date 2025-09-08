@@ -17,10 +17,10 @@ namespace Cultural_Heritage_System.Models
         public string? UpdatedBy { get; set; }
 
         [Column("create_at")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         [Column("update_at")]
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.Now;
     }
 
 }
