@@ -164,6 +164,12 @@ namespace Cultural_Heritage_System.Models
                 .HasForeignKey(r => r.HeritageId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Review → ReviewMedias
+            modelBuilder.Entity<Review>()
+                .HasMany(r => r.ReviewMedias)
+                .WithOne(rm => rm.Review)
+                .HasForeignKey(rm => rm.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
             // Self-reference: Parent Review
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.ParentReview)
@@ -213,7 +219,7 @@ namespace Cultural_Heritage_System.Models
 
             modelBuilder.Entity<RefreshToken>()
                 .HasOne(rt => rt.User)
-                .WithMany(u => u.RefreshTokens) 
+                .WithMany(u => u.RefreshTokens)
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 

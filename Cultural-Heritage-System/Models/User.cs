@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class User : BaseEntity<int>,IUnsignedEntity
+    public class User : BaseEntity<int>, IUnsignedEntity
     {
         [Column("username")]
         public string UserName { get; set; }
@@ -15,7 +15,7 @@ namespace Cultural_Heritage_System.Models
 
         [Column("password_hash")]
         public string PasswordHash { get; set; }
-     
+
         [Column("user_status", TypeName = "nvarchar(20)")]
         public UserStatus UserStatus { get; set; } = UserStatus.ACTIVE;
 
@@ -33,7 +33,7 @@ namespace Cultural_Heritage_System.Models
 
         public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
-        public ICollection<Report> Reports { get; set; } = new List<Report>();     
+        public ICollection<Report> Reports { get; set; } = new List<Report>();
         public ICollection<Contribution> ReviewedContributions { get; set; } = new List<Contribution>();
 
         public ICollection<Wallet> Wallets { get; set; } = new List<Wallet>();
@@ -50,14 +50,14 @@ namespace Cultural_Heritage_System.Models
         public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
 
         public ICollection<ContributionAccessLog> ContributionAccessLogs { get; set; } = new List<ContributionAccessLog>();
-        public Contributor? Contributor { get; set; } 
+        public Contributor? Contributor { get; set; }        
         public Profile? Profile { get; set; }
 
         [Column("user_name_unsigned")]
         public string UserNameUnsigned { get; set; }
         public void GenerateUnsignedFields()
         {
-            UserNameUnsigned = StringHelper.RemoveDiacritics(UserName).ToLower();        
+            UserNameUnsigned = StringHelper.RemoveDiacritics(UserName).ToLower();
         }
     }
 }
