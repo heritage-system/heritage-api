@@ -10,6 +10,10 @@ namespace Cultural_Heritage_System.Services
         Task<ContributorResponse> GetContributorDetail(int id);
         Task<ContributorResponse> CreateContributor(ContributorCreateRequest request);
         Task<ContributorResponse> UpdateContributor(int id, ContributorUpdateRequest request);
-        Task DeleteContributor(int id);
+        Task DisableContributor(int id);
+        Task<List<DropdownUserResponse>> SearchDropdownUserAsync(string? keyword);
+        Task<ContributorResponse> ApproveContributor(int id);
+        Task<ContributorResponse> RejectContributor(int id);
+        Task<ContributorResponse> ApplyContributor(ContributorCreateRequest request);
     }
 }

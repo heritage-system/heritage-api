@@ -51,6 +51,8 @@ namespace Cultural_Heritage_System.Middlewares
         public static readonly ErrorCode FAVORITE_NOT_FOUND = new ErrorCode(404, "Heritage is not in favorites",HttpStatusCode.NotFound);
 
         public static readonly ErrorCode CONTRIBUTION_NOT_EXISTED = new ErrorCode(404, "Contribution not existed", HttpStatusCode.NotFound);
+        public static readonly ErrorCode INVALID_ROLE = new ErrorCode(400, "Contributor rights can only be granted to Members.", HttpStatusCode.NotFound);
+        public static readonly ErrorCode CONTRIBUTOR_DISABLED = new ErrorCode(403, "This contributor has been disabled and cannot be approved.", HttpStatusCode.NotFound);
         public static readonly ErrorCode CONTRIBUTOR_IS_NOT_PREMIUM_ELIGIBLE = new ErrorCode(404, "Contributor is not premium eligible", HttpStatusCode.NotFound);
     }
 

@@ -2,9 +2,8 @@
 {
     public class ContributorCreateRequest
     {
-        public string UserEmail { get; set; }
+        public int UserId { get; set; }
         public string? Bio { get; set; }
         public string? Expertise { get; set; }
-        public string? DocumentsUrl { get; set; }
     }
 }
