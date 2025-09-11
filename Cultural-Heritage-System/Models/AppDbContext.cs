@@ -41,6 +41,8 @@ namespace Cultural_Heritage_System.Models
         public DbSet<ReviewLike> ReviewLikes { get; set; }
         public DbSet<ReviewReport> ReviewReports { get; set; }
         public DbSet<ReviewMedia> ReviewMedias { get; set; }
+
+        public DbSet<Subscription> Subscriptions { get; set; }
         public override int SaveChanges()
         {
             ApplyUnsignedFields();
@@ -199,7 +201,7 @@ namespace Cultural_Heritage_System.Models
 
             modelBuilder.Entity<Favorite>()
                 .HasOne(f => f.User)
-                .WithMany()
+                .WithMany(u => u.Favorites)
                 .HasForeignKey(f => f.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
@@ -214,6 +216,30 @@ namespace Cultural_Heritage_System.Models
                 .WithMany(u => u.RefreshTokens) 
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ContributionHeritageTag>()
+                .HasOne(rt => rt.Heritage)
+                .WithMany(u => u.ContributionHeritageTags)
+                .HasForeignKey(rt => rt.HeritageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ContributionHeritageTag>()
+                .HasOne(rt => rt.Contribution)
+                .WithMany(u => u.ContributionHeritageTags)
+                .HasForeignKey(rt => rt.ContributionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ContributionAccessLog>()
+                .HasOne(l => l.User)
+                .WithMany(u => u.ContributionAccessLogs)
+                .HasForeignKey(l => l.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ContributionAccessLog>()
+                .HasOne(l => l.Subscription)
+                .WithMany()
+                .HasForeignKey(l => l.SubscriptionId)
+                .OnDelete(DeleteBehavior.Restrict);
 
         }
     }
