@@ -86,38 +86,38 @@ namespace Cultural_Heritage_System.Services.Impl
             var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
             int? currentUserId = string.IsNullOrEmpty(accountIdClaim) ? null : int.Parse(accountIdClaim);
 
-            var reviews = await reviewRepository.GetReviewsWithIncludes()
-      .Where(r => r.HeritageId == heritageId && r.ParentReviewId == null)
-      .ToListAsync();
+            // ✅ Use hierarchy loader instead of flat include
+            var reviews = await reviewRepository.GetReviewsHierarchy(heritageId);
 
-            // Map manually to set Likes count and LikedByMe
             return reviews.Select(r => MapReviewResponse(r, currentUserId)).ToList();
         }
+
 
         // Recursive mapper
         private ReviewResponse MapReviewResponse(Review review, int? currentUserId)
         {
             var response = mapper.Map<ReviewResponse>(review);
 
-            // Set the actual review author's user ID
-            response.UserId = review.UserId; // ✅ use review.UserId, not currentUserId
-
-            // LikedByMe is still based on current user
+            response.UserId = review.UserId;
             response.LikedByMe = currentUserId.HasValue &&
                                  review.Likes?.Any(l => l.UserId == currentUserId.Value) == true;
             response.CreatedByMe = currentUserId.HasValue &&
-                                    int.Parse(review.CreatedBy) == currentUserId;
-            // Recursively map replies
-            if (review.Replies != null && response.Replies != null)
+                                   review.UserId == currentUserId;
+
+            // ✅ always build replies manually, no duplication
+            response.Replies = new List<ReviewResponse>();
+            if (review.Replies != null)
             {
-                for (int i = 0; i < review.Replies.Count; i++)
+                foreach (var reply in review.Replies)
                 {
-                    response.Replies[i] = MapReviewResponse(review.Replies.ElementAt(i), currentUserId);
+                    response.Replies.Add(MapReviewResponse(reply, currentUserId));
                 }
             }
 
             return response;
         }
+
+
 
 
 
@@ -225,11 +225,9 @@ namespace Cultural_Heritage_System.Services.Impl
                     });
                 }
             }
-
-
-            review.UpdatedAt = DateTime.UtcNow;
-
-            await reviewRepository.SaveChangesAsync();
+            var vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+            review.UpdatedAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
+            await reviewRepository.UpdateAsync(review);
 
             // Map to response DTO
             var response = mapper.Map<ReviewUpdateResponse>(review);
@@ -268,7 +266,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 };
 
             // Remove review
-            await reviewRepository.DeleteAsync(review);
+            await reviewRepository.DeleteReviewWithRepliesAsync(review.Id);
 
             // Map to response DTO using AutoMapper
             var response = mapper.Map<ReviewDeleteResponse>(review);

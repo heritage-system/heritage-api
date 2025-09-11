@@ -143,13 +143,16 @@ namespace Cultural_Heritage_System.Helpers
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
             // Review → ReviewResponse
             CreateMap<Review, ReviewResponse>()
-             .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.User.UserName))
-             .ForMember(dest => dest.UserImageUrl, opt => opt.MapFrom(src => src.User.Profile.AvatarUrl))
-             .ForMember(dest => dest.Likes, opt => opt.MapFrom(src => src.Likes != null ? src.Likes.Count : 0))
-             .ForMember(dest => dest.LikedByMe, opt => opt.Ignore()) // set manually based on current user
-             .ForMember(dest => dest.ReviewMedias, opt => opt.MapFrom(src => src.ReviewMedias))
-             .ForMember(dest => dest.Replies, opt => opt.MapFrom(src => src.Replies))
-             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
+        .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.User.UserName))
+        .ForMember(dest => dest.UserImageUrl, opt => opt.MapFrom(src => src.User.Profile.AvatarUrl))
+        .ForMember(dest => dest.Likes, opt => opt.MapFrom(src => src.Likes != null ? src.Likes.Count : 0))
+        .ForMember(dest => dest.LikedByMe, opt => opt.Ignore()) // ✅ manual later
+        .ForMember(dest => dest.CreatedByMe, opt => opt.Ignore()) // ✅ prevent reset
+        .ForMember(dest => dest.ReviewMedias, opt => opt.MapFrom(src => src.ReviewMedias))
+        .ForMember(dest => dest.Replies, opt => opt.Ignore())
+        .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+         .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
+
             CreateMap<ReviewResponse, Review>();
             // ReviewMedia → ReviewMediaResponse
             CreateMap<ReviewMedia, ReviewMediaResponse>()
