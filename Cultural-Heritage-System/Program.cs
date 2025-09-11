@@ -6,6 +6,7 @@ using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 using Cultural_Heritage_System.Services;
 using Cultural_Heritage_System.Services.Impl;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cultural_Heritage_System
@@ -54,7 +55,10 @@ namespace Cultural_Heritage_System
             CorsConfiguration.ConfigureServices(builder.Services); // CORS
             builder.Services.AddHttpContextAccessor(); // HttpContextAccessor
 
-
+            builder.Services.Configure<FormOptions>(options =>
+            {
+                options.MultipartBodyLengthLimit = 104857600; // 100MB
+            });
 
             builder.Services.AddScoped<UserRepository>();
             builder.Services.AddScoped<TagRepository>();
@@ -64,6 +68,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<PasswordResetRepository>();
             builder.Services.AddScoped<HeritageRepository>();
             builder.Services.AddScoped<ReportRepository>();
+            builder.Services.AddScoped<ReviewRepository>();
+
             builder.Services.AddScoped<RefreshTokenRepository>();
             builder.Services.AddScoped<HeritageOccurrenceRepository>();
             builder.Services.AddScoped<HeritageTagRepository>();
@@ -92,6 +98,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IHeritageService, HeritageService>();
             builder.Services.AddScoped<IReportService, ReportService>();
             builder.Services.AddScoped<IContributorService, ContributorService>();
+            builder.Services.AddScoped<IReviewService, ReviewService>();
             builder.Services.AddScoped<IReportReplyService, ReportReplyService>();
             builder.Services.AddScoped<IContributionService, ContributionService>();
 
@@ -110,6 +117,11 @@ namespace Cultural_Heritage_System
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
+                app.UseDeveloperExceptionPage();
+            }
+            else
+            {
+                app.UseExceptionHandler("/error");
             }
 
             app.UseHttpsRedirection();
@@ -118,6 +130,7 @@ namespace Cultural_Heritage_System
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseAuthentication();
             app.UseAuthorization();
+
 
 
             app.MapControllers();
