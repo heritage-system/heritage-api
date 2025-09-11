@@ -144,7 +144,7 @@ namespace Cultural_Heritage_System.Helpers
             // Review → ReviewResponse
             CreateMap<Review, ReviewResponse>()
              .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.User.UserName))
-             .ForMember(dest => dest.UserImageUrl, opt => opt.MapFrom(src => src.User.UserImageUrl))
+             .ForMember(dest => dest.UserImageUrl, opt => opt.MapFrom(src => src.User.Profile.AvatarUrl))
              .ForMember(dest => dest.Likes, opt => opt.MapFrom(src => src.Likes != null ? src.Likes.Count : 0))
              .ForMember(dest => dest.LikedByMe, opt => opt.Ignore()) // set manually based on current user
              .ForMember(dest => dest.ReviewMedias, opt => opt.MapFrom(src => src.ReviewMedias))
@@ -153,7 +153,8 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<ReviewResponse, Review>();
             // ReviewMedia → ReviewMediaResponse
             CreateMap<ReviewMedia, ReviewMediaResponse>()
-                .ForMember(dest => dest.MediaType, opt => opt.MapFrom(src => src.MediaType.ToString()));
+    .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.MediaType));
+
 
             // ReviewCreateRequest → Review
             CreateMap<ReviewCreateRequest, Review>()
@@ -203,7 +204,7 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<Contribution, ContributionSearchResponse>()
              .ForMember(d => d.ContributorName, o => o.MapFrom(s => s.Contributor.User.UserName))
              .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl))
-             .ForMember(d => d.PostedAt, o => o.MapFrom(s => s.UpdatedAt));            
+             .ForMember(d => d.PostedAt, o => o.MapFrom(s => s.UpdatedAt));
         }
 
     }

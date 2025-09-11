@@ -10,10 +10,6 @@ namespace Cultural_Heritage_System.Models
         [Column("username")]
         public string UserName { get; set; }
 
-        [Column("user_image_url")]
-
-        public string UserImageUrl { get; set; } = "https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg";
-
         [Column("email")]
         public string Email { get; set; }
 
@@ -37,7 +33,7 @@ namespace Cultural_Heritage_System.Models
 
         public ICollection<Favorite> Favorites { get; set; } = new List<Favorite>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
-        public ICollection<Report> Reports { get; set; } = new List<Report>();     
+        public ICollection<Report> Reports { get; set; } = new List<Report>();
         public ICollection<Contribution> ReviewedContributions { get; set; } = new List<Contribution>();
 
         public ICollection<Wallet> Wallets { get; set; } = new List<Wallet>();
@@ -50,7 +46,7 @@ namespace Cultural_Heritage_System.Models
         public ICollection<ReviewReport> ReviewReports { get; set; } = new List<ReviewReport>();
 
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
-        public Contributor? Contributor { get; set; } 
+        public Contributor? Contributor { get; set; }
         public Profile? Profile { get; set; }
 
         [Column("user_name_unsigned")]

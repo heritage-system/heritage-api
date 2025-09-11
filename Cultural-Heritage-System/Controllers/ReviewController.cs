@@ -24,7 +24,7 @@ namespace Cultural_Heritage_System.Controllers
         /// <summary>
         /// Create a new review (with optional media and replies).
         /// </summary>
-        [HttpPost]
+        [HttpPost("create_review")]
         public async Task<ApiResponse<ReviewResponse>> CreateReview([FromForm] ReviewCreateRequest request)
         {
 
@@ -72,7 +72,7 @@ namespace Cultural_Heritage_System.Controllers
         [HttpGet]
         public async Task<ApiResponse<IQueryable<Review>>> GetReviews()
         {
-            // Toggle like/unlike
+
             var response = reviewService.GetReviewsQueryable();
 
             return new ApiResponse<IQueryable<Review>>(

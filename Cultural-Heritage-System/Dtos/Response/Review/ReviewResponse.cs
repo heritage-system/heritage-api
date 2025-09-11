@@ -1,5 +1,8 @@
-﻿namespace Cultural_Heritage_System.Dtos.Response.Review
+﻿using Cultural_Heritage_System.Common;
+
+namespace Cultural_Heritage_System.Dtos.Response.Review
 {
+
     public class ReviewResponse
     {
         public long Id { get; set; }
@@ -8,12 +11,14 @@
         public string Username { get; set; }   // match frontend
         public string UserImageUrl { get; set; } // new: profile image
 
+
         public long HeritageId { get; set; }
         public string Comment { get; set; }
         public long? ParentReviewId { get; set; }
 
-        public int Likes { get; set; } // frontend expects count, not list
+        public int Likes { get; set; }
         public bool LikedByMe { get; set; }
+        public bool CreatedByMe { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
@@ -24,7 +29,7 @@
     {
         public long Id { get; set; }
         public string Url { get; set; }
-        public string MediaType { get; set; }
+        public MediaType Type { get; set; }
     }
 }
 

@@ -39,27 +39,22 @@ namespace Cultural_Heritage_System.Services.Impl
             }
 
             var review = mapper.Map<Review>(request);
-            review.CreatedAt = DateTime.UtcNow;
             review.CreatedBy = accountIdClaim;
             review.UserId = int.Parse(accountIdClaim);
-            // 2. Handle media upload (if any)
-            var mediaEntities = new List<ReviewMedia>();
+
+            // luôn khởi tạo list trống
+            review.ReviewMedias = new List<ReviewMedia>();
+
             if (request.Media?.Any() == true)
             {
-                foreach (var media in request.Media ?? new List<ReviewMediaRequest>())
+                foreach (var media in request.Media)
                 {
-                    Console.WriteLine($"Media: File={(media.File != null ? media.File.FileName : "NULL")}, " +
-                  $"Length={(media.File?.Length ?? 0)}, " +
-                  $"Type={media.Type}");
                     if (media.File == null)
                         throw new ArgumentException("File is required for media upload.");
 
                     using var stream = media.File.OpenReadStream();
 
-                    if (!Enum.TryParse<MediaType>(media.Type, true, out var typeEnum))
-                        throw new ArgumentException($"Invalid media type: {media.Type}");
-
-                    var uploadedUrl = typeEnum switch
+                    var uploadedUrl = media.Type switch
                     {
                         MediaType.IMAGE => await cloudinaryService.UploadImageAsync(stream, media.File.FileName),
                         MediaType.VIDEO => await cloudinaryService.UploadVideoAsync(stream, media.File.FileName),
@@ -67,29 +62,21 @@ namespace Cultural_Heritage_System.Services.Impl
                         _ => throw new ArgumentException("Invalid media type")
                     };
 
-                    mediaEntities.Add(new ReviewMedia
+                    review.ReviewMedias.Add(new ReviewMedia
                     {
                         Url = uploadedUrl,
-                        MediaType = typeEnum
+                        MediaType = media.Type
                     });
                 }
-
-                review.ReviewMedias = mediaEntities;
             }
+
 
             // 3. Save review
             await reviewRepository.AddAsync(review);
 
-            // 4. Reload entity with navigation props
-            var createdReview = await reviewRepository.GetReviewsQueryable()
-                .Include(r => r.User)
-                .Include(r => r.Heritage)
-                .Include(r => r.ReviewMedias)
-                .Include(r => r.Likes).ThenInclude(l => l.User)
-                .Include(r => r.Reports).ThenInclude(rep => rep.User)
-                .Include(r => r.Replies)
-                .FirstAsync(r => r.Id == review.Id);
-
+            // 4. Reload entity with navigation props => change to Repository
+            var createdReview = await reviewRepository.GetReviewsWithIncludes()
+     .FirstAsync(r => r.Id == review.Id);
             // 5. Map entity -> response
             return mapper.Map<ReviewResponse>(createdReview);
         }
@@ -99,17 +86,9 @@ namespace Cultural_Heritage_System.Services.Impl
             var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
             int? currentUserId = string.IsNullOrEmpty(accountIdClaim) ? null : int.Parse(accountIdClaim);
 
-            var reviews = await reviewRepository.GetReviewsQueryable()
-                .Where(r => r.HeritageId == heritageId && r.ParentReviewId == null)
-                .Include(r => r.User)
-                .Include(r => r.Heritage)
-                .Include(r => r.ReviewMedias)
-                .Include(r => r.Likes).ThenInclude(l => l.User)
-                .Include(r => r.Reports).ThenInclude(rep => rep.User)
-                .Include(r => r.Replies).ThenInclude(reply => reply.User)
-                .Include(r => r.Replies).ThenInclude(reply => reply.ReviewMedias)
-                .Include(r => r.Replies).ThenInclude(reply => reply.Likes)
-                .ToListAsync();
+            var reviews = await reviewRepository.GetReviewsWithIncludes()
+      .Where(r => r.HeritageId == heritageId && r.ParentReviewId == null)
+      .ToListAsync();
 
             // Map manually to set Likes count and LikedByMe
             return reviews.Select(r => MapReviewResponse(r, currentUserId)).ToList();
@@ -126,7 +105,8 @@ namespace Cultural_Heritage_System.Services.Impl
             // LikedByMe is still based on current user
             response.LikedByMe = currentUserId.HasValue &&
                                  review.Likes?.Any(l => l.UserId == currentUserId.Value) == true;
-
+            response.CreatedByMe = currentUserId.HasValue &&
+                                    int.Parse(review.CreatedBy) == currentUserId;
             // Recursively map replies
             if (review.Replies != null && response.Replies != null)
             {
@@ -190,7 +170,6 @@ namespace Cultural_Heritage_System.Services.Impl
 
             // Set LikedByMe manually
             response.LikedByMe = review.Likes.Any(l => l.UserId == currentUserId);
-            Console.WriteLine(response.LikedByMe.ToString());
             return response;
         }
 
@@ -230,10 +209,8 @@ namespace Cultural_Heritage_System.Services.Impl
 
                     using var stream = media.File.OpenReadStream();
 
-                    if (!Enum.TryParse<MediaType>(media.Type, true, out var typeEnum))
-                        throw new ArgumentException($"Invalid media type: {media.Type}");
-
-                    var uploadedUrl = typeEnum switch
+                    // media.Type is already MediaType enum
+                    var uploadedUrl = media.Type switch
                     {
                         MediaType.IMAGE => await cloudinaryService.UploadImageAsync(stream, media.File.FileName),
                         MediaType.VIDEO => await cloudinaryService.UploadVideoAsync(stream, media.File.FileName),
@@ -244,10 +221,11 @@ namespace Cultural_Heritage_System.Services.Impl
                     review.ReviewMedias.Add(new ReviewMedia
                     {
                         Url = uploadedUrl,
-                        MediaType = typeEnum
+                        MediaType = media.Type
                     });
                 }
             }
+
 
             review.UpdatedAt = DateTime.UtcNow;
 
@@ -290,7 +268,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 };
 
             // Remove review
-            reviewRepository.DeleteAsync(review);
+            await reviewRepository.DeleteAsync(review);
 
             // Map to response DTO using AutoMapper
             var response = mapper.Map<ReviewDeleteResponse>(review);

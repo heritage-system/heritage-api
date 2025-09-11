@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Cultural_Heritage_System.Common;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Cultural_Heritage_System.Dtos.Request.Review
 {
     public class ReviewCreateRequest
     {
+
+
         [FromForm]
         public int HeritageId { get; set; }
 
@@ -23,6 +26,7 @@ namespace Cultural_Heritage_System.Dtos.Request.Review
         public IFormFile? File { get; set; }
 
         [FromForm(Name = "Type")]
-        public string? Type { get; set; }
+        //Enum 
+        public MediaType Type { get; set; }
     }
 }
