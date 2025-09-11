@@ -46,6 +46,10 @@ namespace Cultural_Heritage_System.Models
         public ICollection<ReviewReport> ReviewReports { get; set; } = new List<ReviewReport>();
 
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+
+        public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
+
+        public ICollection<ContributionAccessLog> ContributionAccessLogs { get; set; } = new List<ContributionAccessLog>();
         public Contributor? Contributor { get; set; } 
         public Profile? Profile { get; set; }
 
