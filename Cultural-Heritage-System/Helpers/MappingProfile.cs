@@ -131,8 +131,8 @@ namespace Cultural_Heritage_System.Helpers
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Contributor, ContributorResponse>()
-                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
-                .ForMember(dest => dest.Count, opt => opt.MapFrom(src => src.Contributions.Count));
+                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User.Email))
+                .ForMember(dest => dest.Count, opt => opt.MapFrom(src => src.Contributions != null ? src.Contributions.Count : 0));
 
             CreateMap<Favorite, FavoriteHeritageResponse>()
                 .ForMember(dest => dest.HeritageId, opt => opt.MapFrom(src => src.HeritageId))

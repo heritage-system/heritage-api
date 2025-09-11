@@ -7,8 +7,6 @@ namespace Cultural_Heritage_System.Dtos.Response.Contributor
         public int Id { get; set; }
         public string? Bio { get; set; }
         public string? Expertise { get; set; }
-        public string? DocumentsUrl { get; set; }
-        public decimal? Rating { get; set; }
         public bool Verified { get; set; }
         public ContributorStatus Status { get; set; }
 
@@ -26,5 +24,9 @@ namespace Cultural_Heritage_System.Dtos.Response.Contributor
         public string? UpdatedByName { get; set; }
         public string? UpdatedByEmail { get; set; }
         public int Count { get; set; }
+
+        public string? ExpertiseUnsigned { get; set; }
+        public string? FullNameUnsigned { get; set; }
+
     }
 }
