@@ -31,7 +31,10 @@ namespace Cultural_Heritage_System.Models
 
         [Column("status", TypeName = "nvarchar(20)")]
         public ContributorStatus Status { get; set; } = ContributorStatus.APPLIED;
-      
+
+        [Column("is_premium_eligible")]
+        public bool IsPremiumEligible { get; set; } = false;
+
         public ICollection<Contribution> Contributions { get; set; } = new List<Contribution>();
 
         [Column("expertise_unsigned")]
