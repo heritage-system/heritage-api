@@ -33,6 +33,19 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
 
+        [HttpGet("get_list_heritage_name")]
+        //[Authorize(Roles = "CONTRIBUTOR")]
+        public async Task<ApiResponse<List<HeritageNameSearchResponse>>> GetListHeritageName([FromQuery] string keyword)
+        {
+            var heritages = await _heritageService.SearchListHeritageName(keyword);
+
+            return new ApiResponse<List<HeritageNameSearchResponse>>(
+                code: 200,
+                message: "Get the heritage's name list successfully",
+                result: heritages
+            );
+        }
+
         [HttpGet("id")]
         //[Authorize(Roles ="ADMIN")]
         public async Task<ApiResponse<HeritageResponse>> GetById([FromQuery] long id)

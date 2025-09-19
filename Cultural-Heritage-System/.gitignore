@@ -63,3 +63,5 @@ project.assets.json
 *.lib
 *.nupkg
 *.ntvs*
+
+Migrations/

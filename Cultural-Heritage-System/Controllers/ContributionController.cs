@@ -7,6 +7,7 @@ using Cultural_Heritage_System.Services;
 using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cultural_Heritage_System.Controllers
@@ -50,8 +51,8 @@ namespace Cultural_Heritage_System.Controllers
             };
         }
 
-        [HttpGet("contributionDetail")]
-        public async Task<ApiResponse<ContributionResponse>> GetHeritageDetail(int id)
+        [HttpGet("get_contribution_detail")]
+        public async Task<ApiResponse<ContributionResponse>> GetContributionDetail(int id)
         {
             var result = await contributionService.GetContributionDetail(id);
             return new ApiResponse<ContributionResponse>(
@@ -59,6 +60,54 @@ namespace Cultural_Heritage_System.Controllers
                 message: "Get contribution details successfully",
                 result: result
             );
+        }
+
+        [HttpPost("unlock_contribution")]
+        public async Task<ApiResponse<ContributionResponse>> UnlockContribution(int id)
+        {          
+            return new ApiResponse<ContributionResponse>(
+                code: 200,
+                message: "Unlock contribution successfully",
+                result: await contributionService.UnlockContribution(id)
+            );
+        }
+
+        [HttpGet("get_contribution_save")]
+        public async Task<ApiResponse<PageResponse<ContributionSaveResponse>>> GetContributionSaves(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? searchName = null)
+        {                  
+
+            return new ApiResponse<PageResponse<ContributionSaveResponse>>(
+                code: 200,
+                message: "Get list contribution save successfully",
+                result: await contributionService.GetContributionSave(page, pageSize, searchName)
+            );
+           
+        }
+
+        [HttpPost("add_contribution_save")]
+        public async Task<ApiResponse<bool>> AddContributionSave(int id)
+        {                 
+            return new ApiResponse<bool>(
+                code: 201,
+                message: "Added to contribution save successfully",
+                result: await contributionService.AddContributionSave(id)
+            );
+           
+        }
+
+        [HttpDelete("remove_contribution_save")]
+        public async Task<ApiResponse<object>> RemoveContributionSave(int id)
+        {
+                        
+            return new ApiResponse<object>(
+                code: 200,
+                message: "Removed from contribution save successfully",
+                result: await contributionService.RemoveContributionSave(id)
+            );
+           
         }
     }
 }

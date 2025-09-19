@@ -30,8 +30,7 @@ namespace Cultural_Heritage_System.Models
         public DbSet<Role> Roles { get; set; }
         public DbSet<SystemLog> SystemLogs { get; set; }
         public DbSet<Tag> Tags { get; set; }
-        public DbSet<User> Users { get; set; }
-        public DbSet<ContributionPurchase> ContributionPurchases { get; set; }
+        public DbSet<User> Users { get; set; }       
         public DbSet<Contributor> Contributors { get; set; }
         public DbSet<RevenueShare> RevenueShares { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
@@ -43,6 +42,8 @@ namespace Cultural_Heritage_System.Models
         public DbSet<ReviewMedia> ReviewMedias { get; set; }
 
         public DbSet<Subscription> Subscriptions { get; set; }
+
+        public DbSet<ContributionReviewLike> ContributionReviewLike { get; set; }
         public override int SaveChanges()
         {
             ApplyUnsignedFields();
@@ -146,9 +147,9 @@ namespace Cultural_Heritage_System.Models
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<RevenueShare>()
-                .HasOne(rs => rs.ContributionPurchase)
+                .HasOne(rs => rs.ContributionUnlock)
                 .WithMany()
-                .HasForeignKey(rs => rs.PurchaseId)
+                .HasForeignKey(rs => rs.UnlockId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Review>()
@@ -246,6 +247,42 @@ namespace Cultural_Heritage_System.Models
                 .WithMany()
                 .HasForeignKey(l => l.SubscriptionId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ContributionReview>()
+                .HasOne(r => r.User)
+                .WithMany(u => u.ContributionReviews)
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+           
+            modelBuilder.Entity<ContributionReview>()
+                .HasOne(r => r.Contribution)
+                .WithMany(h => h.Reviews)
+                .HasForeignKey(r => r.ContributionId)
+                .OnDelete(DeleteBehavior.Cascade);
+           
+          
+            modelBuilder.Entity<ContributionReview>()
+                .HasOne(r => r.ParentReview)
+                .WithMany(r => r.Replies)
+                .HasForeignKey(r => r.ParentReviewId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+            modelBuilder.Entity<ContributionReviewLike>()
+                .HasKey(rl => new { rl.ContributionReviewId, rl.UserId });
+
+            modelBuilder.Entity<ContributionReviewLike>()
+                .HasOne(rl => rl.ContributionReview)
+                .WithMany(r => r.Likes)
+                .HasForeignKey(rl => rl.ContributionReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ContributionReviewLike>()
+                .HasOne(rl => rl.User)
+                .WithMany(u => u.ContributionReviewLike)
+                .HasForeignKey(rl => rl.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
 
         }
     }

@@ -9,7 +9,8 @@ namespace Cultural_Heritage_System.Models
         public string Title { get; set; }
         public string Content { get; set; }
         public string MediaUrl { get; set; }
-        public decimal Price { get; set; } = 0m;
+        public List<int>? TagHeritageIds { get; set; }
+        public PremiumType PremiumType { get; set; } = PremiumType.FREE;
     }
 
 }

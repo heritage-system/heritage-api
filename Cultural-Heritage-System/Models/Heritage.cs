@@ -36,6 +36,8 @@ namespace Cultural_Heritage_System.Models
 
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
 
+        public ICollection<ContributionHeritageTag> ContributionHeritageTags { get; set; } = new List<ContributionHeritageTag>();
+
         [Column("name_unsigned")]
         public string NameUnsigned { get; set; }
 

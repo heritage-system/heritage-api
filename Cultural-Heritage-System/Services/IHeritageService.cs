@@ -11,5 +11,6 @@ namespace Cultural_Heritage_System.Services.Impl
         Task<HeritageResponse> CreateAsync(HeritageCreateRequest request);
         Task<HeritageResponse> UpdateAsync(long id, HeritageUpdateRequest request);
         Task<long?> DeleteAsync(long id);
+        Task<List<HeritageNameSearchResponse>> SearchListHeritageName(string keyword);
     }
 }
