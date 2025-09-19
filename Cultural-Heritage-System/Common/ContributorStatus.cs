@@ -2,6 +2,7 @@
 {
     public enum ContributorStatus
     {
-        APPLIED, APPROVED, REJECTED, ACTIVE, SUSPENDED
+        APPLIED, ACTIVE, REJECTED, SUSPENDED
     }
 }
+    

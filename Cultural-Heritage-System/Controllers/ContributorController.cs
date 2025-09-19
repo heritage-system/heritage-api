@@ -107,8 +107,8 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("apply")]
-        [Authorize(Roles = "MEMBER")]
-        public async Task<ApiResponse<ContributorResponse>> Apply([FromBody] ContributorCreateRequest request)
+        [Authorize(Roles = "MEMBER, CONTRIBUTOR")]
+        public async Task<ApiResponse<ContributorResponse>> Apply([FromBody] ContributorApplyRequest request)
         {
             var result = await contributorService.ApplyContributor(request);
             return new ApiResponse<ContributorResponse>(
@@ -117,6 +117,19 @@ namespace Cultural_Heritage_System.Controllers
                 result
             );
         }
+
+        [HttpGet("my-application")]
+        [Authorize(Roles = "MEMBER, CONTRIBUTOR, ADMIN")]
+        public async Task<ApiResponse<ContributorApplyResponse?>> GetMyApplication()
+        {
+            var result = await contributorService.GetContributorApplication();
+            return new ApiResponse<ContributorApplyResponse?>(
+                code: 200,
+                message: result == null ? "No application found" : "Application fetched successfully",
+                result: result
+            );
+        }
+
 
     }
 }
