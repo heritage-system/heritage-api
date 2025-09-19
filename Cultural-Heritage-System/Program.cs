@@ -82,7 +82,11 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<ReportReplyRepository>();
             builder.Services.AddScoped<ContributorRepository>();
             builder.Services.AddScoped<ContributionRepository>();
-
+            builder.Services.AddScoped<SubscriptionRepository>();
+            builder.Services.AddScoped<ContributionAccessLogRepository>();
+            builder.Services.AddScoped<ContributionUnlockRepository>();
+            builder.Services.AddScoped<ContributionSaveRepository>();
+            builder.Services.AddScoped<ContributionReviewRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();
@@ -101,6 +105,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IReviewService, ReviewService>();
             builder.Services.AddScoped<IReportReplyService, ReportReplyService>();
             builder.Services.AddScoped<IContributionService, ContributionService>();
+            builder.Services.AddScoped<IContributionReviewService, ContributionReviewService>();
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddScoped<TwoFactorService>();
@@ -110,19 +115,19 @@ namespace Cultural_Heritage_System
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                dbContext.Database.Migrate();
+                //dbContext.Database.Migrate();
             }
 
-            if (app.Environment.IsDevelopment())
-            {
+            //if (app.Environment.IsDevelopment())
+            //{
                 app.UseSwagger();
                 app.UseSwaggerUI();
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/error");
-            }
+            //    app.UseDeveloperExceptionPage();
+            //}
+            //else
+            //{
+            //    app.UseExceptionHandler("/error");
+            //}
 
             app.UseHttpsRedirection();
             app.UseCors("AllowAll");

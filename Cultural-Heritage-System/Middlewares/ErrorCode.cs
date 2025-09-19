@@ -53,6 +53,11 @@ namespace Cultural_Heritage_System.Middlewares
         public static readonly ErrorCode CONTRIBUTION_NOT_EXISTED = new ErrorCode(404, "Contribution not existed", HttpStatusCode.NotFound);
         public static readonly ErrorCode INVALID_ROLE = new ErrorCode(400, "Contributor rights can only be granted to Members.", HttpStatusCode.NotFound);
         public static readonly ErrorCode CONTRIBUTOR_DISABLED = new ErrorCode(403, "This contributor has been disabled and cannot be approved.", HttpStatusCode.NotFound);
+        public static readonly ErrorCode CONTRIBUTOR_IS_NOT_PREMIUM_ELIGIBLE = new ErrorCode(400, "Contributor is not premium eligible", HttpStatusCode.BadRequest);
+        public static readonly ErrorCode USER_NOT_PREMIUM = new ErrorCode(400, "User not buy premium service yet", HttpStatusCode.BadRequest);
+        public static readonly ErrorCode OVER_OPEN_LIMIT = new ErrorCode(400, "User has no open contribution token", HttpStatusCode.BadRequest);
+        public static readonly ErrorCode CONTRIBUTION_SAVE_ALREADY_EXISTS = new ErrorCode(400, "Contribution save is already existed", HttpStatusCode.BadRequest);
+        public static readonly ErrorCode CONTRIBUTION_SAVE_NOT_FOUND = new ErrorCode(404, "Contribution save is not in favorites", HttpStatusCode.NotFound);
     }
 
 }

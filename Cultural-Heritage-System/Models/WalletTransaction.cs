@@ -24,7 +24,7 @@ namespace Cultural_Heritage_System.Models
         [ForeignKey("RelatedPurchase")]
         [Column("related_purchase_id")]
         public int? RelatedPurchaseId { get; set; }
-        public ContributionPurchase? RelatedPurchase { get; set; }
+        public ContributionUnlock? ContributionUnlock { get; set; }
 
     }
 }

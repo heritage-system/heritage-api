@@ -46,7 +46,17 @@ namespace Cultural_Heritage_System.Models
         public ICollection<ReviewReport> ReviewReports { get; set; } = new List<ReviewReport>();
 
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
-        public Contributor? Contributor { get; set; }
+
+        public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
+
+        public ICollection<ContributionAccessLog> ContributionAccessLogs { get; set; } = new List<ContributionAccessLog>();
+        public ICollection<ContributionUnlock> ContributionUnlocks { get; set; } = new List<ContributionUnlock>();
+        public ICollection<ContributionSave> ContributionSaves { get; set; } = new List<ContributionSave>();
+
+        public ICollection<ContributionReview> ContributionReviews { get; set; } = new List<ContributionReview>();
+        public ICollection<ContributionReviewLike> ContributionReviewLike { get; set; } = new List<ContributionReviewLike>();
+
+        public Contributor? Contributor { get; set; }        
         public Profile? Profile { get; set; }
 
         [Column("user_name_unsigned")]

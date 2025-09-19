@@ -4,7 +4,7 @@ using Cultural_Heritage_System.Common;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class ContributionPurchase : BaseEntity<int>
+    public class ContributionUnlock : BaseEntity<int>
     {
 
         [Required]
@@ -19,17 +19,6 @@ namespace Cultural_Heritage_System.Models
         public int ContributionId { get; set; }
         public Contribution Contribution { get; set; }
 
-        [Column("amount", TypeName = "decimal(10,2)")]
-        public decimal Amount { get; set; }
-
-        [Column("purchased_at")]
-        public DateTime PurchasedAt { get; set; } = DateTime.UtcNow;
-
-        [Column("payment_status", TypeName = "nvarchar(20)")]
-        public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.PENDING;
-
-        [Column("payment_method", TypeName = "nvarchar(20)")]
-        public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.WALLET;
 
     }
 
