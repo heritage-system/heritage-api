@@ -1,4 +1,5 @@
-﻿using Cultural_Heritage_System.Dtos.Models;
+﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Dtos.Models;
 using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.Category;
 using Cultural_Heritage_System.Dtos.Request.Contributor;
@@ -207,7 +208,7 @@ namespace Cultural_Heritage_System.Helpers
              .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl))
              .ForMember(dest => dest.View,
                     opt => opt.MapFrom(src => src.ContributionAccessLogs != null ? src.ContributionAccessLogs.Count : 0));
-            
+
 
             CreateMap<ContributionHeritageTag, HeritageNameSearchResponse>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
@@ -216,7 +217,13 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<Contribution, ContributionSearchResponse>()
              .ForMember(d => d.ContributorName, o => o.MapFrom(s => s.Contributor.User.UserName))
              .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl))
-             .ForMember(d => d.PostedAt, o => o.MapFrom(s => s.UpdatedAt));
+             .ForMember(dest => dest.View,
+                    opt => opt.MapFrom(src => src.ContributionAccessLogs != null ? src.ContributionAccessLogs.Count : 0))
+            .ForMember(dest => dest.Comments,
+                    opt => opt.MapFrom(src => src.Reviews != null ? src.Reviews.Count : 0))
+            .ForMember(dest => dest.IsPremium, opt => opt.MapFrom(src =>
+                src.PremiumType != PremiumType.FREE));
+
 
             CreateMap<Heritage, HeritageNameSearchResponse>();
 
@@ -247,6 +254,16 @@ namespace Cultural_Heritage_System.Helpers
                 opt => opt.Ignore());
 
             CreateMap<ContributionReviewCreateRequest, ContributionReview>();
+
+
+            CreateMap<ContributionReview, LikeReviewResponse>()
+                  .ForMember(dest => dest.ReviewId, opt => opt.MapFrom(src => src.Id))
+                  .ForMember(dest => dest.LikeCount, opt => opt.MapFrom(src => src.Likes != null ? src.Likes.Count : 0))
+                  .ForMember(dest => dest.LikedByMe, opt => opt.Ignore());
+            CreateMap<ContributionReviewUpdateRequest, ContributionReview>();
+            CreateMap<ContributionReview, ContributionReviewUpdateResponse>();
+
+
         }
 
     }

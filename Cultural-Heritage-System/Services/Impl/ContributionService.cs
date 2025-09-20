@@ -50,13 +50,13 @@ namespace Cultural_Heritage_System.Services.Impl
             this.contributionReviewRepository = contributionReviewRepository;
         }
 
-        public Task<PageResponse<ContributionSearchResponse>> SearchContributionsAsync(ContributionSearchRequest request)
+        public async Task<PageResponse<ContributionSearchResponse>> SearchContributionsAsync(ContributionSearchRequest request)
         {
             try
             {
                 var query = contributionRepository.GetContributionsQueryable();
 
-               
+
                 // Keyword search
                 if (!string.IsNullOrEmpty(request.Keyword))
                 {
@@ -64,26 +64,23 @@ namespace Cultural_Heritage_System.Services.Impl
                     var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
 
                     query = query.Where(h =>
+                        // Contribution title
                         h.Title.ToLower().Contains(searchTerm) ||
-                        h.Contributor.User.UserName.ToLower().Contains(searchTerm) ||
-
-
                         h.TitleUnsigned.Contains(unsignedTerm) ||
-                        h.Contributor.User.UserNameUnsigned.Contains(unsignedTerm));
-                }            
 
-                //// Category filter
-                //if (request.CategoryIds != null && request.CategoryIds.Any())
-                //{
-                //    query = query.Where(h => request.CategoryIds.Contains(h.CategoryId));
-                //}
+                        // Contributor username
+                        h.Contributor.User.UserName.ToLower().Contains(searchTerm) ||
+                        h.Contributor.User.UserNameUnsigned.Contains(unsignedTerm) ||
 
-                //// Tag filter
-                //if (request.TagIds != null && request.TagIds.Any())
-                //{
-                //    query = query.Where(h => h.HeritageTags.Any(t => request.TagIds.Contains(t.TagId)));
-                //}
-              
+                        // Heritage liên quan qua ContributionHeritageTag
+                        h.ContributionHeritageTags.Any(tag =>
+                            tag.Heritage.Name.ToLower().Contains(searchTerm) ||
+                            tag.Heritage.NameUnsigned.Contains(unsignedTerm)
+                        )
+                    );
+                }
+
+            
                 switch (request.SortBy)
                 {
                     case SortBy.IDASC:
@@ -99,13 +96,28 @@ namespace Cultural_Heritage_System.Services.Impl
                         query = query.OrderByDescending(h => h.Title);
                         break;
                     default:
-                        query = query.OrderBy(h => h.Id);
+                        query = query.OrderBy(h => h.CreatedAt);
                         break;
                 }
 
+               
                 var dtoQuery = query.ProjectTo<ContributionSearchResponse>(mapper.ConfigurationProvider);
+              
                 // Pagination
-                var response = dtoQuery.ToPagedResponseAsync(request.Page, request.PageSize);
+                var response = await dtoQuery.ToPagedResponseAsync(request.Page, request.PageSize);
+
+                var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+                if (!string.IsNullOrEmpty(accountIdClaim) && response.Items != null)
+                {
+                    var userId = int.Parse(accountIdClaim);
+
+                    foreach (var item in response.Items)
+                    {
+                        item.IsSave = await contributionSaveRepository.IsContributionSaveExists(userId, item.Id);
+                    }
+                }
+
+
                 return response;
             }
             catch (Exception ex)
@@ -144,6 +156,9 @@ namespace Cultural_Heritage_System.Services.Impl
             contribution.ContributorId = currentContributor.Id;
 
             contribution.PreviewContent = DeltaHelper.GeneratePreviewDelta(contribution.Content);
+
+            contribution.FirstContent = DeltaHelper.ExtractFirstLongParagraph(contribution.Content);
+
 
             await contributionRepository.AddAsync(contribution);
 

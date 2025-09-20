@@ -1,6 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Dtos.Models;
+using Cultural_Heritage_System.Dtos.Response.Heritage;
 using System.ComponentModel.DataAnnotations;
-using Cultural_Heritage_System.Common;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cultural_Heritage_System.Models
 {
@@ -10,11 +12,15 @@ namespace Cultural_Heritage_System.Models
         public int ContributorId { get; set; }
         public string ContributorName { get; set; }
         public string AvatarUrl { get; set; }
-        public string FirstText { get; set; }
         public string Title { get; set; }
-        public string MediaUrl { get; set; }      
-        public decimal Price { get; set; }  
-        public DateTime PostedAt { get; set; }
+        public string MediaUrl { get; set; }
+        public string? FirstContent { get; set; }    
+        public DateTimeOffset PublishedAt { get; set; }
+        public List<HeritageNameSearchResponse> ContributionHeritageTags { get; set; } = new List<HeritageNameSearchResponse>();
+        public int View { get; set; }
+        public int Comments { get; set; }
+        public bool IsSave { get; set; } = false;
+        public bool IsPremium { get; set; } = false;
     }
 
 }

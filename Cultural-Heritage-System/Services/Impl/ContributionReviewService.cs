@@ -81,17 +81,100 @@ namespace Cultural_Heritage_System.Services.Impl
 
         public async Task<LikeReviewResponse> ToggleLikeAsync(LikeReviewRequest request)
         {
-            throw new NotImplementedException();
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            int currentUserId = int.Parse(accountIdClaim);
+
+            // Load the review including likes
+            var review = await contributionReviewRepository.GetContributionReviewById(request.ReviewId);               
+
+            if (review == null)
+                throw new AppException(ErrorCode.REVIEW_NOT_FOUND);
+
+            // Check if user already liked
+            var existingLike = review.Likes.FirstOrDefault(l => l.UserId == currentUserId);
+
+            if (request.Like)
+            {
+                if (existingLike == null)
+                {
+                    review.Likes ??= new List<ContributionReviewLike>();
+                    review.Likes.Add(new ContributionReviewLike
+                    {
+                        ContributionReviewId = review.Id,
+                        UserId = currentUserId
+                    });
+                }
+            }
+            else
+            {
+                if (existingLike != null)
+                {
+                    review.Likes.Remove(existingLike);
+                }
+            }
+
+
+            // Save changes
+            await contributionReviewRepository.SaveChangesAsync();
+
+            // Map using AutoMapper
+            var response = mapper.Map<LikeReviewResponse>(review);
+
+            // Set LikedByMe manually
+            response.LikedByMe = review.Likes.Any(l => l.UserId == currentUserId);
+            return response;
         }
 
-        public async Task<ReviewUpdateResponse> UpdateReview(ContributionReviewUpdateRequest request)
+        public async Task<ContributionReviewUpdateResponse> UpdateReview(ContributionReviewUpdateRequest request)
         {
-            throw new NotImplementedException();
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            var review = await contributionReviewRepository.GetContributionReviewById(request.Id);
+
+            if (review == null)
+                throw new AppException(ErrorCode.REVIEW_NOT_FOUND);
+
+            if (review.UserId != int.Parse(accountIdClaim))
+                throw new AppException(ErrorCode.FORBIDDEN);
+
+           
+            mapper.Map(request, review);
+        
+            review.UpdatedAt =DateTime.Now;
+            await contributionReviewRepository.UpdateAsync(review);
+
+            // Map to response DTO
+            var response = mapper.Map<ContributionReviewUpdateResponse>(review);
+            return response;
         }
 
-        public async Task<ReviewDeleteResponse> DeleteReview(long reviewId)
+        public async Task<bool> DeleteReview(long reviewId)
         {
-            throw new NotImplementedException();
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            int currentUserId = int.Parse(accountIdClaim);
+
+            // Find the review
+            var review = await contributionReviewRepository.GetContributionReviewById(reviewId);
+
+            if (review == null)
+                throw new AppException(ErrorCode.REVIEW_NOT_FOUND);
+
+            // Optional: check ownership
+            if (review.UserId != currentUserId)
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            // Remove review
+            await contributionReviewRepository.DeleteContributionReviewWithRepliesAsync(review.Id);
+        
+            return true;
         }
 
         private ContributionReviewResponse MapReviewResponse(ContributionReview review, int? currentUserId)

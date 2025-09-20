@@ -40,8 +40,11 @@ namespace Cultural_Heritage_System.Models
 
         // Paywall/Preview
         [Column("preview_content")]
-        public string? PreviewContent { get; set; } 
-       
+        public string? PreviewContent { get; set; }
+
+        [Column("first_content")]
+        public string? FirstContent { get; set; }
+
         //// Thống kê cơ bản
         //[Column("word_count")]
         //public int WordCount { get; set; }
