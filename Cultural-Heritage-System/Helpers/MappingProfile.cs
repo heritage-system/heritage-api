@@ -2,6 +2,7 @@
 using Cultural_Heritage_System.Dtos.Models;
 using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.Category;
+using Cultural_Heritage_System.Dtos.Request.ContribtutionReport;
 using Cultural_Heritage_System.Dtos.Request.Contributor;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Request.Location;
@@ -12,6 +13,7 @@ using Cultural_Heritage_System.Dtos.Request.Review;
 using Cultural_Heritage_System.Dtos.Request.Tag;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Category;
+using Cultural_Heritage_System.Dtos.Response.Contribution;
 using Cultural_Heritage_System.Dtos.Response.Contributor;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Location;
@@ -263,7 +265,7 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<ContributionReviewUpdateRequest, ContributionReview>();
             CreateMap<ContributionReview, ContributionReviewUpdateResponse>();
 
-
+            CreateMap<ContributionReportCreationRequest, ContributionReport>();
         }
 
     }
