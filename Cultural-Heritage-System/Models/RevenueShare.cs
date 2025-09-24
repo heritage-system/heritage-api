@@ -22,8 +22,8 @@ namespace Cultural_Heritage_System.Models
         [Required]
         [ForeignKey("ContributionPurchase")]
         [Column("purchase_id")]
-        public int PurchaseId { get; set; }
-        public ContributionPurchase ContributionPurchase { get; set; }
+        public int UnlockId { get; set; }
+        public ContributionUnlock ContributionUnlock { get; set; }
 
         [Column("total_amount", TypeName = "decimal(10,2)")]
         public decimal TotalAmount { get; set; }

@@ -1,7 +1,9 @@
 ﻿using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
+using Cultural_Heritage_System.Dtos.Request.Review;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
+using Cultural_Heritage_System.Dtos.Response.Review;
 using Cultural_Heritage_System.Models;
 
 namespace Cultural_Heritage_System.Services
@@ -11,6 +13,11 @@ namespace Cultural_Heritage_System.Services
         Task<ContributionResponse> PostContribution(ContributionCreationRequest request);
         Task<ContributionResponse> GetContributionDetail(int id);
         Task<PageResponse<ContributionSearchResponse>> SearchContributionsAsync(ContributionSearchRequest request);
+        Task<ContributionResponse> UnlockContribution(int contributionId);
+        Task<bool> AddContributionSave(int contributionId);
+        Task<PageResponse<ContributionSaveResponse>> GetContributionSave(int page, int pageSize, string? searchName);      
+        Task<bool> RemoveContributionSave(int contributionId);
+        
     }
 }
 

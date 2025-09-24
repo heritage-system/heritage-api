@@ -20,6 +20,8 @@ namespace Cultural_Heritage_System.Repositories
                 .Include(h => h.Contributor)
                 .ThenInclude(c => c.User)
                 .ThenInclude(u => u.Profile)
+                .Include(h => h.ContributionHeritageTags)
+                .Include(h => h.ContributionAccessLogs)
                 .AsQueryable();
         }
 
@@ -29,6 +31,10 @@ namespace Cultural_Heritage_System.Repositories
                .Include(h => h.Contributor)
                 .ThenInclude(c => c.User)
                 .ThenInclude(u => u.Profile)
+               .Include(h => h.ContributionHeritageTags)
+                .ThenInclude(c => c.Heritage)
+               .Include(h => h.ContributionAccessLogs)
+               .Include(c => c.ContributionSaves)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
     }

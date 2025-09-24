@@ -315,5 +315,24 @@ namespace Cultural_Heritage_System.Services.Impl
             return id;
         }
 
+        public async Task<List<HeritageNameSearchResponse>> SearchListHeritageName(string keyword)
+        {
+            var query = _heritageRepository.GetAllQuery();
+
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                var lowerKeyword = keyword.Trim().ToLower();
+                var unsignedTerm = StringHelper.RemoveDiacritics(lowerKeyword);
+
+                query = query.Where(h => h.NameUnsigned.ToLower().Contains(unsignedTerm)
+                                       || h.Name.ToLower().Contains(lowerKeyword));
+            }
+
+            var list = await query.ToListAsync();
+
+            return _mapper.Map<List<HeritageNameSearchResponse>>(list);
+        }
+
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using Cultural_Heritage_System.Dtos.Request;
+﻿using Cultural_Heritage_System.Dtos.Models;
+using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.Category;
 using Cultural_Heritage_System.Dtos.Request.Contributor;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
@@ -199,11 +200,49 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<ContributionCreationRequest, Contribution>();
             CreateMap<Contribution, ContributionResponse>()
              .ForMember(d => d.ContributorName, o => o.MapFrom(s => s.Contributor.User.UserName))
-             .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl));
+             .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl))
+             .ForMember(dest => dest.View,
+                    opt => opt.MapFrom(src => src.ContributionAccessLogs != null ? src.ContributionAccessLogs.Count : 0));
+            
+
+            CreateMap<ContributionHeritageTag, HeritageNameSearchResponse>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Heritage.Name));
+
             CreateMap<Contribution, ContributionSearchResponse>()
              .ForMember(d => d.ContributorName, o => o.MapFrom(s => s.Contributor.User.UserName))
              .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl))
              .ForMember(d => d.PostedAt, o => o.MapFrom(s => s.UpdatedAt));
+
+            CreateMap<Heritage, HeritageNameSearchResponse>();
+
+            CreateMap<Subscription, SubscriptionDto>()
+                .ForMember(sub => sub.MaxOpensPerMonth, opt => opt.MapFrom(src => src.Package.MaxOpensPerMonth));
+
+            CreateMap<ContributionSave, ContributionSaveResponse>()
+                .ForMember(dest => dest.ContributionId, opt => opt.MapFrom(src => src.Contribution.Id))
+                .ForMember(dest => dest.ContributorId, opt => opt.MapFrom(src => src.Contribution.Contributor.Id))
+                .ForMember(dest => dest.ContributorName, opt => opt.MapFrom(src => src.Contribution.Contributor.User.Profile.FullName))
+                .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.Contribution.Contributor.User.Profile.AvatarUrl))
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Contribution.Title))
+                .ForMember(dest => dest.MediaUrl, opt => opt.MapFrom(src => src.Contribution.MediaUrl))
+                .ForMember(dest => dest.ContributionHeritageTags, opt => opt.MapFrom(src => src.Contribution.ContributionHeritageTags.Select(ht => ht.Heritage)));
+
+            CreateMap<ContributionReview, ContributionReviewResponse>()
+            .ForMember(dest => dest.Username,
+                opt => opt.MapFrom(src => src.User.UserName))
+            .ForMember(dest => dest.UserImageUrl,
+                opt => opt.MapFrom(src => src.User.Profile.AvatarUrl))
+            .ForMember(dest => dest.Likes,
+                opt => opt.MapFrom(src => src.Likes != null ? src.Likes.Count : 0))
+            .ForMember(dest => dest.Replies,
+                opt => opt.MapFrom(src => src.Replies))
+            .ForMember(dest => dest.LikedByMe,
+                opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedByMe,
+                opt => opt.Ignore());
+
+            CreateMap<ContributionReviewCreateRequest, ContributionReview>();
 
             CreateMap<Contributor, ContributorResponse>()
              .ForMember(dest => dest.UserFullName,
@@ -212,6 +251,8 @@ namespace Cultural_Heritage_System.Helpers
                  opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
              .ForMember(dest => dest.Count,
                  opt => opt.MapFrom(src => src.Contributions != null ? src.Contributions.Count : 0))
+              .ForMember(dest => dest.DocumentsUrl,  
+                    opt => opt.MapFrom(src => src.DocumentsUrl))
              .ForMember(dest => dest.CreatedByName, opt => opt.Ignore())
              .ForMember(dest => dest.CreatedByEmail, opt => opt.Ignore())
              .ForMember(dest => dest.UpdatedByName, opt => opt.Ignore())

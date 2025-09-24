@@ -7,6 +7,7 @@ namespace Cultural_Heritage_System.Dtos.Response.Contributor
         public int Id { get; set; }
         public string? Bio { get; set; }
         public string? Expertise { get; set; }
+        public string? DocumentsUrl { get; set; }
         public string Status { get; set; }
 
         public int UserId { get; set; }

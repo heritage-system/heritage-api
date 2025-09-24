@@ -16,6 +16,6 @@ namespace Cultural_Heritage_System.Services
         Task<ContributorResponse> RejectContributor(int id);
         Task<ContributorResponse> ApplyContributor(ContributorApplyRequest request);
         Task<ContributorApplyResponse?> GetContributorApplication();
-
+        Task<ContributorResponse> ReActivateContributor(int id);
     }
 }

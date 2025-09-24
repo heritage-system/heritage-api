@@ -130,6 +130,17 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
 
+        [HttpPut("{id}/reactivate")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<ApiResponse<ContributorResponse>> ReActivate(int id)
+        {
+            var result = await contributorService.ReActivateContributor(id);
+            return new ApiResponse<ContributorResponse>(
+                200,
+                "Contributor re-activated successfully",
+                result
+            );
+        }
 
     }
 }
