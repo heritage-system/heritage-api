@@ -8,6 +8,7 @@ using Cultural_Heritage_System.Services;
 using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 namespace Cultural_Heritage_System
 {
@@ -108,6 +109,23 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IReportReplyService, ReportReplyService>();
             builder.Services.AddScoped<IContributionService, ContributionService>();
             builder.Services.AddScoped<IContributionReviewService, ContributionReviewService>();
+            builder.Services.AddScoped<IUserCacheService, UserCacheService>();
+
+            // Redis
+            builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+            {
+                var configuration = new ConfigurationOptions
+                {
+                    EndPoints = { builder.Configuration["Redis:Host"] + ":" + builder.Configuration["Redis:Port"] },
+                    DefaultDatabase = int.Parse(builder.Configuration["Redis:DefaultDatabase"] ?? "0"),
+                    Password = builder.Configuration["Redis:Password"],
+                    AbortOnConnectFail = false 
+                };
+                return ConnectionMultiplexer.Connect(configuration);
+            });
+
+            //builder.Services.AddScoped<IUserCacheService, UserCacheService>();
+
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddScoped<TwoFactorService>();

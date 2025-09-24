@@ -19,6 +19,7 @@ public class ContributorService : IContributorService
     private readonly ProfileRepository profileRepository;
     private readonly UserRepository userRepository;
     private readonly RoleRepository roleRepository;
+    private readonly IUserCacheService userCacheService;
 
     public ContributorService(
         ContributorRepository contributorRepository,
@@ -27,7 +28,8 @@ public class ContributorService : IContributorService
         IHttpContextAccessor httpContextAccessor,
         ProfileRepository profileRepository,
         UserRepository userRepository,
-        RoleRepository roleRepository
+        RoleRepository roleRepository,
+        IUserCacheService userCacheService
     )
     {
         this.contributorRepository = contributorRepository;
@@ -37,31 +39,30 @@ public class ContributorService : IContributorService
         this.profileRepository = profileRepository;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.userCacheService = userCacheService;
     }
 
     public async Task<PageResponse<ContributorResponse>> SearchContributorsAsync(ContributorSearchRequest request)
     {
-        var query = from c in contributorRepository.GetContributorsQueryable()
-                    join p in profileRepository.GetQueryable() on c.UserId equals p.UserId into cp
-                    from profile in cp.DefaultIfEmpty()
-                    select new ContributorResponse
-                    {
-                        Id = c.Id,
-                        Bio = c.Bio,
-                        Expertise = c.Expertise,
-                        Verified = c.Verified,
-                        Status = c.Status,
-                        UserId = c.UserId,
-                        UserEmail = c.User.Email,
-                        UserFullName = profile.FullName,
-                        CreatedAt = c.CreatedAt,
-                        UpdatedAt = c.UpdatedAt,
-                        CreatedBy = c.CreatedBy,
-                        UpdatedBy = c.UpdatedBy,
-                        FullNameUnsigned = profile.FullNameUnsigned,
-                        ExpertiseUnsigned = c.ExpertiseUnsigned,
-                        Count = c.Contributions.Count()
-                    };
+        var query = contributorRepository.GetContributorsQueryable()
+         .Select(c => new ContributorResponse
+         {
+             Id = c.Id,
+             Bio = c.Bio,
+             Expertise = c.Expertise,
+             DocumentsUrl = c.DocumentsUrl,
+             Status = c.Status.ToString(),
+             UserId = c.UserId,
+             UserEmail = c.User.Email,
+             UserFullName = c.User.Profile.FullName,           
+             FullNameUnsigned = c.User.Profile.FullNameUnsigned,
+             ExpertiseUnsigned = c.ExpertiseUnsigned,
+             Count = c.Contributions.Count,
+             CreatedAt = c.CreatedAt,
+             UpdatedAt = c.UpdatedAt,
+             CreatedBy = c.CreatedBy,
+             UpdatedBy = c.UpdatedBy
+         });
 
         // ---- Filter ----
         if (!string.IsNullOrWhiteSpace(request.Keyword))
@@ -73,18 +74,16 @@ public class ContributorService : IContributorService
                 (x.Expertise != null && x.Expertise.ToLower().Contains(searchTerm)) ||
                 (x.UserFullName != null && x.UserFullName.ToLower().Contains(searchTerm)) ||
                 (x.FullNameUnsigned != null && x.FullNameUnsigned.Contains(unsignedTerm)) ||
-                (x.ExpertiseUnsigned != null && x.ExpertiseUnsigned.Contains(unsignedTerm))
+                (x.ExpertiseUnsigned != null && x.ExpertiseUnsigned.Contains(unsignedTerm)) ||
+                (x.UserEmail != null && x.UserEmail.ToLower().Contains(searchTerm))
             );
-        }
-
-        if (request.Verified.HasValue)
-        {
-            query = query.Where(x => x.Verified == request.Verified.Value);
         }
 
         if (request.Status.HasValue)
         {
-            query = query.Where(x => x.Status == request.Status.Value);
+            var statusString = request.Status.Value.ToString();
+
+            query = query.Where(x => x.Status == statusString);
         }
 
         // ---- Sort ----
@@ -94,6 +93,8 @@ public class ContributorService : IContributorService
             SortBy.IDDESC => query.OrderByDescending(x => x.Id),
             SortBy.NAMEASC => query.OrderBy(x => x.UserFullName),
             SortBy.NAMEDESC => query.OrderByDescending(x => x.UserFullName),
+            SortBy.DATEASC => query.OrderBy(x => x.UpdatedAt ?? x.CreatedAt),
+            SortBy.DATEDESC => query.OrderByDescending(x => x.UpdatedAt ?? x.CreatedAt),
             _ => query.OrderBy(x => x.Id)
         };
 
@@ -145,13 +146,8 @@ public class ContributorService : IContributorService
         if (contributor == null) return null;
 
         var response = mapper.Map<ContributorResponse>(contributor);
-
-        var profile = await profileRepository.GetProfileByUserIdAsync(contributor.UserId);
-        if (profile != null)
-        {
-            response.UserFullName = profile.FullName;
-        }
-
+        response.UserFullName = contributor.User?.Profile?.FullName;
+        response.DocumentsUrl = contributor.DocumentsUrl;
         return response;
     }
 
@@ -170,12 +166,14 @@ public class ContributorService : IContributorService
 
         var existedContributor = await contributorRepository
             .GetContributorsQueryable()
-            .FirstOrDefaultAsync(c => c.UserId == targetUser.Id);
+            .FirstOrDefaultAsync(c => c.UserId == targetUser.Id
+        && (c.Status == ContributorStatus.APPLIED || c.Status == ContributorStatus.ACTIVE));
 
         if (existedContributor != null)
         {
             throw new AppException(ErrorCode.CONTRIBUTOR_EXISTED);
         }
+
 
         var contributorRole = await roleRepository.FindByRoleName(DefinitionRole.CONTRIBUTOR);
         if (contributorRole == null)
@@ -215,17 +213,58 @@ public class ContributorService : IContributorService
 
         contributor.Bio = request.Bio;
         contributor.Expertise = request.Expertise;
-        contributor.Verified = request.Verified;
-        contributor.Status = request.Status;
+        contributor.DocumentsUrl = request.DocumentsUrl;
+
+        // parse string sang enum (nếu null thì giữ nguyên status cũ)
+        if (!string.IsNullOrWhiteSpace(request.Status))
+        {
+            if (Enum.TryParse<ContributorStatus>(request.Status, true, out var parsedStatus))
+            {
+                contributor.Status = parsedStatus;
+            }
+            else
+            {
+                throw new AppException(ErrorCode.INVALID_STATUS);
+            }
+        }
 
         var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value ?? "system";
         contributor.UpdatedBy = accountIdClaim;
         contributor.UpdatedAt = DateTime.UtcNow;
 
+        var targetUser = await userRepository.FindUserById(contributor.UserId);
+        if (targetUser == null)
+        {
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        }
+
+        // giữ logic role update như cũ
+        if (contributor.Status == ContributorStatus.ACTIVE)
+        {
+            var contributorRole = await roleRepository.FindByRoleName(DefinitionRole.CONTRIBUTOR);
+            if (contributorRole == null)
+            {
+                contributorRole = new Role { Name = DefinitionRole.CONTRIBUTOR };
+                await roleRepository.CreateRole(contributorRole);
+            }
+            targetUser.RoleId = contributorRole.Id;
+            await userRepository.UpdateAsync(targetUser);
+        }
+        else if (contributor.Status == ContributorStatus.REJECTED || contributor.Status == ContributorStatus.SUSPENDED)
+        {
+            var memberRole = await roleRepository.FindByRoleName(DefinitionRole.MEMBER);
+            if (memberRole == null)
+            {
+                memberRole = new Role { Name = DefinitionRole.MEMBER };
+                await roleRepository.CreateRole(memberRole);
+            }
+            targetUser.RoleId = memberRole.Id;
+            await userRepository.UpdateAsync(targetUser);
+        }
+
         await contributorRepository.UpdateAsync(contributor);
         return mapper.Map<ContributorResponse>(contributor);
     }
-
 
     public async Task DisableContributor(int id)
     {
@@ -241,31 +280,46 @@ public class ContributorService : IContributorService
 
     public async Task<List<DropdownUserResponse>> SearchDropdownUserAsync(string? keyword)
     {
-        var query = from u in userRepository.GetQueryable()
-                    join p in profileRepository.GetQueryable()
-                        on u.Id equals p.UserId into up
-                    from profile in up.DefaultIfEmpty()
-                    where u.Role.Name == DefinitionRole.MEMBER
-                    select new { u, profile };
+        if (string.IsNullOrWhiteSpace(keyword))
+        {
+            // Lấy từ cache trước
+            var cached = await userCacheService.GetCachedUsersAsync();
+            if (cached.Count > 0)
+                return cached.Take(10).ToList();
 
-        if (!string.IsNullOrWhiteSpace(keyword))
+            // Cache miss -> query DB
+            var latestUsers = await userRepository.GetQueryable()
+                .Where(u => u.Role.Name == DefinitionRole.MEMBER)
+                .OrderByDescending(u => u.CreatedAt)
+                .Take(50)
+                .Select(u => new DropdownUserResponse
+                {
+                    Id = u.Id,
+                    Email = u.Email,
+                    FullName = u.Profile.FullName
+                })
+                .ToListAsync();
+
+            await userCacheService.SetCachedUsersAsync(latestUsers);
+            return latestUsers.Take(10).ToList();
+        }
+        else
         {
             var search = keyword.Trim().ToLower();
-            query = query.Where(x =>
-                (x.u.Email != null && x.u.Email.ToLower().Contains(search)) ||
-                (x.profile.FullName != null && x.profile.FullName.ToLower().Contains(search))
-            );
+            return await userRepository.GetQueryable()
+                .Where(u => u.Role.Name == DefinitionRole.MEMBER &&
+                       ((u.Email != null && u.Email.ToLower().Contains(search)) ||
+                        (u.Profile.FullName != null && u.Profile.FullName.ToLower().Contains(search))))
+                .OrderByDescending(u => u.CreatedAt)
+                .Take(10)
+                .Select(u => new DropdownUserResponse
+                {
+                    Id = u.Id,
+                    Email = u.Email,
+                    FullName = u.Profile.FullName
+                })
+                .ToListAsync();
         }
-
-        return await query
-            .Take(50)
-            .Select(x => new DropdownUserResponse
-            {
-                Id = x.u.Id,
-                Email = x.u.Email,
-                FullName = x.profile.FullName
-            })
-            .ToListAsync();
     }
 
     public async Task<ContributorResponse> ApproveContributor(int id)
@@ -281,11 +335,9 @@ public class ContributorService : IContributorService
             throw new AppException(ErrorCode.CONTRIBUTOR_DISABLED);
         }
 
-        // Đổi trạng thái contributor
         contributor.Verified = true;
         contributor.Status = ContributorStatus.ACTIVE;
 
-        // Đổi role user thành Contributor
         var targetUser = await userRepository.FindUserById(contributor.UserId);
         if (targetUser == null)
         {
@@ -323,7 +375,70 @@ public class ContributorService : IContributorService
         return mapper.Map<ContributorResponse>(contributor);
     }
 
-    public async Task<ContributorResponse> ApplyContributor(ContributorCreateRequest request)
+    public async Task<ContributorResponse> ApplyContributor(ContributorApplyRequest request)
+    {
+        var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(accountIdClaim))
+        {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        var userId = int.Parse(accountIdClaim);
+        var targetUser = await userRepository.FindUserById(userId);
+        if (targetUser == null)
+        {
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        }
+
+        if (targetUser.Role?.Name != DefinitionRole.MEMBER)
+        {
+            throw new AppException(ErrorCode.INVALID_ROLE);
+        }
+
+        // Tìm contributor cũ
+        var contributor = await contributorRepository
+            .GetContributorsQueryable()
+            .FirstOrDefaultAsync(c => c.UserId == targetUser.Id);
+
+        if (contributor != null)
+        {
+            if (contributor.Status == ContributorStatus.APPLIED || contributor.Status == ContributorStatus.ACTIVE)
+            {
+                throw new AppException(ErrorCode.CONTRIBUTOR_EXISTED);
+            }
+
+            // Nếu REJECTED hoặc SUSPENDED → update lại
+            contributor.Bio = request.Bio;
+            contributor.Expertise = request.Expertise;
+            contributor.DocumentsUrl = request.DocumentsUrl;
+            contributor.Status = ContributorStatus.APPLIED;
+            contributor.UpdatedBy = accountIdClaim;
+            contributor.UpdatedAt = DateTime.UtcNow;
+
+            await contributorRepository.UpdateAsync(contributor);
+            return mapper.Map<ContributorResponse>(contributor);
+        }
+        else
+        {
+            // Nếu chưa có record nào thì tạo mới
+            contributor = new Contributor
+            {
+                UserId = targetUser.Id,
+                Bio = request.Bio,
+                Expertise = request.Expertise,
+                DocumentsUrl = request.DocumentsUrl,
+                Verified = false,
+                Status = ContributorStatus.APPLIED,
+                CreatedBy = accountIdClaim,
+                UpdatedBy = accountIdClaim
+            };
+
+            await contributorRepository.AddAsync(contributor);
+            return mapper.Map<ContributorResponse>(contributor);
+        }
+    }
+
+    public async Task<ContributorApplyResponse?> GetContributorApplication()
     {
         var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
         if (string.IsNullOrEmpty(accountIdClaim))
@@ -333,39 +448,53 @@ public class ContributorService : IContributorService
 
         var userId = int.Parse(accountIdClaim);
 
-        var targetUser = await userRepository.FindUserById(userId);
+        var contributor = await contributorRepository
+            .GetContributorsQueryable()
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+
+        if (contributor == null)
+            return null;
+
+        return mapper.Map<ContributorApplyResponse>(contributor);
+    }
+
+    public async Task<ContributorResponse> ReActivateContributor(int id)
+    {
+        var contributor = await contributorRepository.GetContributorById(id);
+        if (contributor == null)
+        {
+            throw new AppException(ErrorCode.CONTRIBUTOR_NOT_EXISTED);
+        }
+
+        if (contributor.Status != ContributorStatus.SUSPENDED)
+        {
+            throw new AppException(ErrorCode.INVALID_STATUS);
+        }
+
+        contributor.Status = ContributorStatus.ACTIVE;
+        contributor.Verified = true;
+        contributor.UpdatedAt = DateTime.UtcNow;
+        contributor.UpdatedBy = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value ?? "system";
+
+        var targetUser = await userRepository.FindUserById(contributor.UserId);
         if (targetUser == null)
         {
             throw new AppException(ErrorCode.USER_NOT_EXISTED);
         }
 
-        // Chỉ member mới được apply
-        if (targetUser.Role?.Name != DefinitionRole.MEMBER)
+        var contributorRole = await roleRepository.FindByRoleName(DefinitionRole.CONTRIBUTOR);
+        if (contributorRole == null)
         {
-            throw new AppException(ErrorCode.INVALID_ROLE);
+            contributorRole = new Role { Name = DefinitionRole.CONTRIBUTOR };
+            await roleRepository.CreateRole(contributorRole);
         }
 
-        // Check nếu đã apply / contributor rồi
-        var existedContributor = await contributorRepository
-            .GetContributorsQueryable()
-            .FirstOrDefaultAsync(c => c.UserId == targetUser.Id);
+        targetUser.RoleId = contributorRole.Id;
+        await userRepository.UpdateAsync(targetUser);
 
-        if (existedContributor != null)
-        {
-            throw new AppException(ErrorCode.CONTRIBUTOR_EXISTED);
-        }
-
-        var contributor = new Contributor
-        {
-            UserId = targetUser.Id,
-            Bio = request.Bio,
-            Expertise = request.Expertise,
-            Verified = false,
-            Status = ContributorStatus.APPLIED
-        };
-
-        await contributorRepository.AddAsync(contributor);
+        await contributorRepository.UpdateAsync(contributor);
 
         return mapper.Map<ContributorResponse>(contributor);
     }
+
 }

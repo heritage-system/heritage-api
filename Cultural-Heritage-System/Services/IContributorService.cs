@@ -14,6 +14,8 @@ namespace Cultural_Heritage_System.Services
         Task<List<DropdownUserResponse>> SearchDropdownUserAsync(string? keyword);
         Task<ContributorResponse> ApproveContributor(int id);
         Task<ContributorResponse> RejectContributor(int id);
-        Task<ContributorResponse> ApplyContributor(ContributorCreateRequest request);
+        Task<ContributorResponse> ApplyContributor(ContributorApplyRequest request);
+        Task<ContributorApplyResponse?> GetContributorApplication();
+        Task<ContributorResponse> ReActivateContributor(int id);
     }
 }
