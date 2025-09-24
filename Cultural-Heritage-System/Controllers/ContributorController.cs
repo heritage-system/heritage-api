@@ -107,13 +107,37 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("apply")]
-        [Authorize(Roles = "MEMBER")]
-        public async Task<ApiResponse<ContributorResponse>> Apply([FromBody] ContributorCreateRequest request)
+        [Authorize(Roles = "MEMBER, CONTRIBUTOR")]
+        public async Task<ApiResponse<ContributorResponse>> Apply([FromBody] ContributorApplyRequest request)
         {
             var result = await contributorService.ApplyContributor(request);
             return new ApiResponse<ContributorResponse>(
                 201,
                 "Contributor application submitted successfully",
+                result
+            );
+        }
+
+        [HttpGet("my-application")]
+        [Authorize(Roles = "MEMBER, CONTRIBUTOR, ADMIN")]
+        public async Task<ApiResponse<ContributorApplyResponse?>> GetMyApplication()
+        {
+            var result = await contributorService.GetContributorApplication();
+            return new ApiResponse<ContributorApplyResponse?>(
+                code: 200,
+                message: result == null ? "No application found" : "Application fetched successfully",
+                result: result
+            );
+        }
+
+        [HttpPut("{id}/reactivate")]
+        [Authorize(Roles = "ADMIN")]
+        public async Task<ApiResponse<ContributorResponse>> ReActivate(int id)
+        {
+            var result = await contributorService.ReActivateContributor(id);
+            return new ApiResponse<ContributorResponse>(
+                200,
+                "Contributor re-activated successfully",
                 result
             );
         }

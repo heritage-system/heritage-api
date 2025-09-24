@@ -58,6 +58,7 @@ namespace Cultural_Heritage_System.Middlewares
         public static readonly ErrorCode OVER_OPEN_LIMIT = new ErrorCode(400, "User has no open contribution token", HttpStatusCode.BadRequest);
         public static readonly ErrorCode CONTRIBUTION_SAVE_ALREADY_EXISTS = new ErrorCode(400, "Contribution save is already existed", HttpStatusCode.BadRequest);
         public static readonly ErrorCode CONTRIBUTION_SAVE_NOT_FOUND = new ErrorCode(404, "Contribution save is not in favorites", HttpStatusCode.NotFound);
+        public static readonly ErrorCode INVALID_STATUS = new ErrorCode(403, "Invalid contributor status.", HttpStatusCode.BadRequest);
     }
 
 }

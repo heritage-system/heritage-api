@@ -17,22 +17,25 @@ namespace Cultural_Heritage_System.Repositories
         public async Task<Contributor?> GetContributorById(int id)
         {
             return await _context.Contributors
-                .Include(c => c.User)                 
-                .Include(c => c.Contributions)        
+                .Include(c => c.User)
+                    .ThenInclude(u => u.Profile)    
+                .Include(c => c.Contributions)
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public IQueryable<Contributor> GetContributorsQueryable()
         {
             return _context.Contributors
-                .Include(c => c.User)                 
-                .Include(c => c.Contributions);      
+                .Include(c => c.User)
+                    .ThenInclude(u => u.Profile)  
+                .Include(c => c.Contributions);
         }
 
         public async Task<Contributor?> GetContributorByUserId(int id)
         {
             return await _context.Contributors
                 .Include(c => c.User)
+                    .ThenInclude(u => u.Profile)   
                 .Include(c => c.Contributions)
                 .FirstOrDefaultAsync(c => c.UserId == id);
         }

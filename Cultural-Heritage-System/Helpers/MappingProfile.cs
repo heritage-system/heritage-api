@@ -131,10 +131,6 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<UpdateReportRequest, Report>()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
-            CreateMap<Contributor, ContributorResponse>()
-                .ForMember(dest => dest.UserEmail, opt => opt.MapFrom(src => src.User.Email))
-                .ForMember(dest => dest.Count, opt => opt.MapFrom(src => src.Contributions != null ? src.Contributions.Count : 0));
-
             CreateMap<Favorite, FavoriteHeritageResponse>()
                 .ForMember(dest => dest.HeritageId, opt => opt.MapFrom(src => src.HeritageId))
                 .ForMember(dest => dest.HeritageName, opt => opt.MapFrom(src => src.Heritage.Name))
@@ -247,6 +243,25 @@ namespace Cultural_Heritage_System.Helpers
                 opt => opt.Ignore());
 
             CreateMap<ContributionReviewCreateRequest, ContributionReview>();
+
+            CreateMap<Contributor, ContributorResponse>()
+             .ForMember(dest => dest.UserFullName,
+                 opt => opt.MapFrom(src => src.User != null && src.User.Profile != null ? src.User.Profile.FullName : null))
+             .ForMember(dest => dest.UserEmail,
+                 opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
+             .ForMember(dest => dest.Count,
+                 opt => opt.MapFrom(src => src.Contributions != null ? src.Contributions.Count : 0))
+              .ForMember(dest => dest.DocumentsUrl,  
+                    opt => opt.MapFrom(src => src.DocumentsUrl))
+             .ForMember(dest => dest.CreatedByName, opt => opt.Ignore())
+             .ForMember(dest => dest.CreatedByEmail, opt => opt.Ignore())
+             .ForMember(dest => dest.UpdatedByName, opt => opt.Ignore())
+             .ForMember(dest => dest.UpdatedByEmail, opt => opt.Ignore());
+
+            CreateMap<Contributor, ContributorApplyResponse>()
+                .ForMember(dest => dest.Status,
+                    opt => opt.MapFrom(src => src.Status.ToString()));
+
         }
 
     }
