@@ -11,7 +11,7 @@ namespace Cultural_Heritage_System.Dtos.Request.Heritage
         public long Id { get; set; }
         public string Name { get; set; }
 
-        public HeritageDescriptionRequest Description { get; set; }
+        public HeritageContentRequest Description { get; set; }
 
 
         public int CategoryId { get; set; }

@@ -13,6 +13,9 @@ namespace Cultural_Heritage_System.Models
         [Column("description")]
         public string Description { get; set; }
 
+        [Column("content")]
+        public string Content { get; set; }
+
         [Required]
         [Column("category_id")]
         [ForeignKey("Category")]

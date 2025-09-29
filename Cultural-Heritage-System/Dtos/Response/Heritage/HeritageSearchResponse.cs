@@ -12,6 +12,7 @@ namespace Cultural_Heritage_System.Dtos.Response.Heritage
         public string Name { get; set; }      
         public string Description { get; set; }
 
+        public string Content { get; set; }
         public int CategoryId { get; set; }
         public string CategoryName { get; set; }
             
