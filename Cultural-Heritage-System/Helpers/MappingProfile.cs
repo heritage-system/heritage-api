@@ -104,8 +104,8 @@ namespace Cultural_Heritage_System.Helpers
 
             //Heritage
             CreateMap<HeritageCreateRequest, Heritage>()
-            .ForMember(dest => dest.Description,
-               opt => opt.MapFrom(src => JsonSerializer.Serialize(src.Description, (JsonSerializerOptions)null)));
+            .ForMember(dest => dest.Content,
+               opt => opt.MapFrom(src => JsonSerializer.Serialize(src.Content, (JsonSerializerOptions)null)));
             //.ForMember(dest => dest.Media, opt => opt.MapFrom(src => src.Media))
             //.ForMember(dest => dest.HeritageOccurrences, opt => opt.MapFrom(src => src.Occurrences))
             //.ForMember(dest => dest.HeritageTags, opt => opt.MapFrom(src => src.TagIds));
