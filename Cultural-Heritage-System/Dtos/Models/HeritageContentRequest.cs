@@ -1,6 +1,6 @@
 ﻿namespace Cultural_Heritage_System.Dtos.Models
 {
-    public class HeritageDescriptionRequest
+    public class HeritageContentRequest
     {
         public List<ContentBlock> History { get; set; } = new();
         public List<ContentBlock> Rituals { get; set; } = new();

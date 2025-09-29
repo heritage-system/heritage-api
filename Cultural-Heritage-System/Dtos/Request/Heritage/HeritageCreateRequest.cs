@@ -10,7 +10,8 @@ namespace Cultural_Heritage_System.Dtos.Request.Heritage
     {      
         public string Name { get; set; }
 
-        public HeritageDescriptionRequest Description { get; set; }
+        public string Description { get; set; }
+        public HeritageContentRequest Content { get; set; }
 
         public int CategoryId { get; set; }       
     
