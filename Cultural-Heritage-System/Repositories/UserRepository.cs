@@ -19,6 +19,7 @@ namespace Cultural_Heritage_System.Repositories
         {
             return await _context.Users
                 .Include(u => u.Role)
+                .Include(u => u.Profile)
                 .FirstOrDefaultAsync(u => u.Email == emailOrUserName || u.UserName == emailOrUserName);
         }
 
@@ -26,6 +27,7 @@ namespace Cultural_Heritage_System.Repositories
         {
             return await _dbSet
                 .Include(u => u.Role)
+                .Include(u => u.Profile)
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
@@ -47,6 +49,7 @@ namespace Cultural_Heritage_System.Repositories
         {
             return await _dbSet
                 .Include(u => u.Role)
+                .Include(u => u.Profile)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
@@ -54,6 +57,7 @@ namespace Cultural_Heritage_System.Repositories
         {
             return _dbSet
                 .Include(u => u.Role)
+                .Include(u => u.Profile)
                 .Where(u => u.Role.Name == DefinitionRole.MEMBER);
         }
 

@@ -93,7 +93,7 @@ namespace Cultural_Heritage_System.Services
             var accessToken = jwtService.GenerateAccessToken(claims);
             var refreshToken = jwtService.GenerateRefreshToken(claims);
 
-            return new SignInResponse(accessToken, refreshToken, user.Role?.Name ?? "", "Bearer", TwoFaStep.VERIFICATION_REQUIRED);
+            return new SignInResponse(accessToken, refreshToken, user.Role?.Name ?? "", "Bearer", TwoFaStep.VERIFICATION_REQUIRED, user.UserName,user.Profile.AvatarUrl);
         }
 
 

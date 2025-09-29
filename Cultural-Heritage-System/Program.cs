@@ -85,9 +85,11 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<ContributionRepository>();
             builder.Services.AddScoped<SubscriptionRepository>();
             builder.Services.AddScoped<ContributionAccessLogRepository>();
-            builder.Services.AddScoped<ContributionUnlockRepository>();
+            //builder.Services.AddScoped<ContributionUnlockRepository>();
             builder.Services.AddScoped<ContributionSaveRepository>();
             builder.Services.AddScoped<ContributionReviewRepository>();
+            builder.Services.AddScoped<ContributionHeritageTagRepository>();
+            builder.Services.AddScoped<ContributionReportRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();

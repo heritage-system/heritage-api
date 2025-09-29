@@ -29,13 +29,12 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly IMapper mapper;
         private readonly IMailService mailService;
         private readonly ILogger<ContributionService> logger;
-        private readonly ContributionAccessLogRepository contributionAccessLogRepository;
-        private readonly ContributionUnlockRepository contributionUnlockRepository;
+        private readonly ContributionAccessLogRepository contributionAccessLogRepository;        
         private readonly ContributionSaveRepository contributionSaveRepository;
         private readonly ContributionReviewRepository contributionReviewRepository;
         public ContributionReviewService(ContributorRepository contributorRepository, ContributionRepository contributionRepository, ILogger<ContributionService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor, SubscriptionRepository subscriptionRepository, 
-            ContributionAccessLogRepository contributionAccessLogRepository, ContributionUnlockRepository contributionUnlockRepository, 
+            ContributionAccessLogRepository contributionAccessLogRepository, 
             ContributionSaveRepository contributionSaveRepository, ContributionReviewRepository contributionReviewRepository)
         {
             this.contributorRepository = contributorRepository;
@@ -46,7 +45,6 @@ namespace Cultural_Heritage_System.Services.Impl
             this.httpContextAccessor = httpContextAccessor;
             this.subscriptionRepository = subscriptionRepository;
             this.contributionAccessLogRepository = contributionAccessLogRepository;
-            this.contributionUnlockRepository = contributionUnlockRepository;
             this.contributionSaveRepository = contributionSaveRepository;
             this.contributionReviewRepository = contributionReviewRepository;
         }
@@ -66,7 +64,9 @@ namespace Cultural_Heritage_System.Services.Impl
           
             await contributionReviewRepository.AddAsync(review);        
             var createdReview = await contributionReviewRepository.GetContributionReviewById(review.Id);         
-            return mapper.Map<ContributionReviewResponse>(createdReview);
+            var result =  mapper.Map<ContributionReviewResponse>(createdReview);
+            result.CreatedByMe = true;
+            return result;
         }
 
         public async Task<List<ContributionReviewResponse>> GetReviewsByContributionId(long contributionId)
@@ -81,17 +81,100 @@ namespace Cultural_Heritage_System.Services.Impl
 
         public async Task<LikeReviewResponse> ToggleLikeAsync(LikeReviewRequest request)
         {
-            throw new NotImplementedException();
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            int currentUserId = int.Parse(accountIdClaim);
+
+            // Load the review including likes
+            var review = await contributionReviewRepository.GetContributionReviewById(request.ReviewId);               
+
+            if (review == null)
+                throw new AppException(ErrorCode.REVIEW_NOT_FOUND);
+
+            // Check if user already liked
+            var existingLike = review.Likes.FirstOrDefault(l => l.UserId == currentUserId);
+
+            if (request.Like)
+            {
+                if (existingLike == null)
+                {
+                    review.Likes ??= new List<ContributionReviewLike>();
+                    review.Likes.Add(new ContributionReviewLike
+                    {
+                        ContributionReviewId = review.Id,
+                        UserId = currentUserId
+                    });
+                }
+            }
+            else
+            {
+                if (existingLike != null)
+                {
+                    review.Likes.Remove(existingLike);
+                }
+            }
+
+
+            // Save changes
+            await contributionReviewRepository.SaveChangesAsync();
+
+            // Map using AutoMapper
+            var response = mapper.Map<LikeReviewResponse>(review);
+
+            // Set LikedByMe manually
+            response.LikedByMe = review.Likes.Any(l => l.UserId == currentUserId);
+            return response;
         }
 
-        public async Task<ReviewUpdateResponse> UpdateReview(ContributionReviewUpdateRequest request)
+        public async Task<ContributionReviewUpdateResponse> UpdateReview(ContributionReviewUpdateRequest request)
         {
-            throw new NotImplementedException();
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            var review = await contributionReviewRepository.GetContributionReviewById(request.Id);
+
+            if (review == null)
+                throw new AppException(ErrorCode.REVIEW_NOT_FOUND);
+
+            if (review.UserId != int.Parse(accountIdClaim))
+                throw new AppException(ErrorCode.FORBIDDEN);
+
+           
+            mapper.Map(request, review);
+        
+            review.UpdatedAt =DateTime.Now;
+            await contributionReviewRepository.UpdateAsync(review);
+
+            // Map to response DTO
+            var response = mapper.Map<ContributionReviewUpdateResponse>(review);
+            return response;
         }
 
-        public async Task<ReviewDeleteResponse> DeleteReview(long reviewId)
+        public async Task<bool> DeleteReview(long reviewId)
         {
-            throw new NotImplementedException();
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            int currentUserId = int.Parse(accountIdClaim);
+
+            // Find the review
+            var review = await contributionReviewRepository.GetContributionReviewById(reviewId);
+
+            if (review == null)
+                throw new AppException(ErrorCode.REVIEW_NOT_FOUND);
+
+            // Optional: check ownership
+            if (review.UserId != currentUserId)
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            // Remove review
+            await contributionReviewRepository.DeleteContributionReviewWithRepliesAsync(review.Id);
+        
+            return true;
         }
 
         private ContributionReviewResponse MapReviewResponse(ContributionReview review, int? currentUserId)
