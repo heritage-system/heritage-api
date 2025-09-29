@@ -26,8 +26,8 @@ namespace Cultural_Heritage_System.Models
         [Column("end_at")]
         public DateTime EndAt { get; set; }
        
-        [Column("opens_used")]
-        public int OpensUsed { get; set; } = 0;
+        //[Column("opens_used")]
+        //public int OpensUsed { get; set; } = 0;
         [Required]
         [Column("status", TypeName = "nvarchar(20)")]
         public SubscriptionStatus Status { get; set; } = SubscriptionStatus.ACTIVE;

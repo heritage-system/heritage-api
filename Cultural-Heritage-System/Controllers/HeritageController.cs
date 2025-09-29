@@ -1,5 +1,6 @@
 ﻿using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Response;
+using Cultural_Heritage_System.Dtos.Response.Contribution;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.Authorization;
@@ -70,17 +71,8 @@ namespace Cultural_Heritage_System.Controllers
 
         [HttpPost("create")]
         //[Authorize(Roles ="ADMIN")]
-        public async Task<ApiResponse<HeritageResponse>> Create([FromForm] HeritageCreateRequest request)
-        {
-            if (!ModelState.IsValid)
-            {
-                return new ApiResponse<HeritageResponse>(
-                    code: 400,
-                    message: "Invalid model state",
-                    result: null
-                );
-            }
-
+        public async Task<ApiResponse<HeritageResponse>> Create([FromBody] HeritageCreateRequest request)
+        {        
             var newHeritage = await _heritageService.CreateAsync(request);
 
             return new ApiResponse<HeritageResponse>(
@@ -94,7 +86,7 @@ namespace Cultural_Heritage_System.Controllers
 
         [HttpPut("update")]
         //[Authorize(Roles ="ADMIN")]
-        public async Task<ApiResponse<HeritageResponse>> Update([FromQuery] long id, [FromBody] HeritageUpdateRequest request)
+        public async Task<ApiResponse<HeritageResponse>> Update([FromBody] HeritageUpdateRequest request)
         {
             if (!ModelState.IsValid)
             {
@@ -105,17 +97,8 @@ namespace Cultural_Heritage_System.Controllers
                 );
             }
 
-            var updatedHeritage = await _heritageService.UpdateAsync(id, request);
-
-            if (updatedHeritage == null)
-            {
-                return new ApiResponse<HeritageResponse>(
-                    code: 404,
-                    message: "Heritage not found",
-                    result: null
-                );
-            }
-
+            var updatedHeritage = await _heritageService.UpdateAsync(request);
+        
             return new ApiResponse<HeritageResponse>(
                 code: 200,
                 message: "Heritage updated successfully",

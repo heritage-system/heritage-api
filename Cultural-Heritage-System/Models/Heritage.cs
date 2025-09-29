@@ -19,11 +19,10 @@ namespace Cultural_Heritage_System.Models
         public int CategoryId { get; set; }
         public Category Category { get; set; }
 
-        [Column("map_url")]
-        public string MapUrl { get; set; }
 
         [Column("is_featured")]
-        public bool IsFeatured { get; set; }
+        public bool? IsFeatured { get; set; } = false;
+      
 
 
         public ICollection<HeritageOccurrence> HeritageOccurrences { get; set; } = new List<HeritageOccurrence>();

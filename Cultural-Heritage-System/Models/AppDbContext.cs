@@ -32,7 +32,7 @@ namespace Cultural_Heritage_System.Models
         public DbSet<Tag> Tags { get; set; }
         public DbSet<User> Users { get; set; }       
         public DbSet<Contributor> Contributors { get; set; }
-        public DbSet<RevenueShare> RevenueShares { get; set; }
+        //public DbSet<RevenueShare> RevenueShares { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
         public DbSet<HeritageMedia> HeritageMedias { get; set; }
@@ -134,23 +134,23 @@ namespace Cultural_Heritage_System.Models
                 .HasForeignKey(q => q.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            modelBuilder.Entity<RevenueShare>()
-                .HasOne(rs => rs.Contribution)
-                .WithMany()
-                .HasForeignKey(rs => rs.ContributionId)
-                .OnDelete(DeleteBehavior.Restrict);
+            //modelBuilder.Entity<RevenueShare>()
+            //    .HasOne(rs => rs.Contribution)
+            //    .WithMany()
+            //    .HasForeignKey(rs => rs.ContributionId)
+            //    .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<RevenueShare>()
-                .HasOne(rs => rs.Contributor)
-                .WithMany()
-                .HasForeignKey(rs => rs.ContributorId)
-                .OnDelete(DeleteBehavior.Restrict);
+            //modelBuilder.Entity<RevenueShare>()
+            //    .HasOne(rs => rs.Contributor)
+            //    .WithMany()
+            //    .HasForeignKey(rs => rs.ContributorId)
+            //    .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<RevenueShare>()
-                .HasOne(rs => rs.ContributionUnlock)
-                .WithMany()
-                .HasForeignKey(rs => rs.UnlockId)
-                .OnDelete(DeleteBehavior.Restrict);
+            //modelBuilder.Entity<RevenueShare>()
+            //    .HasOne(rs => rs.ContributionUnlock)
+            //    .WithMany()
+            //    .HasForeignKey(rs => rs.UnlockId)
+            //    .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.User)

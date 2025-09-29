@@ -194,6 +194,7 @@ public class ContributorService : IContributorService
             Expertise = request.Expertise,
             Verified = false,
             Status = ContributorStatus.APPLIED,
+            IsPremiumEligible = request.IsPremiumEligible,
             CreatedBy = accountIdClaim,
             UpdatedBy = accountIdClaim
         };
@@ -497,4 +498,22 @@ public class ContributorService : IContributorService
         return mapper.Map<ContributorResponse>(contributor);
     }
 
+    public async Task<bool> IsContributorPremiumEligible()
+    {
+        var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+        if (string.IsNullOrEmpty(accountIdClaim))
+        {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        var userId = int.Parse(accountIdClaim);     
+       
+        var contributor = await contributorRepository.GetContributorByUserId(userId);
+        if (contributor == null)
+        {
+            throw new AppException(ErrorCode.CONTRIBUTOR_NOT_EXISTED);
+        }
+      
+        return contributor.IsPremiumEligible;
+    }
 }

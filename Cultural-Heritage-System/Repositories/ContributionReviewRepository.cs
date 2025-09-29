@@ -31,6 +31,7 @@ namespace Cultural_Heritage_System.Repositories
                 .ThenInclude(u => u.Profile)
                 .Include(r => r.Likes)
                 .Where(r => r.ContributionId == contributionId && r.ParentReviewId == null)
+                .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
 
             foreach (var review in reviews)

@@ -29,13 +29,12 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly IMapper mapper;
         private readonly IMailService mailService;
         private readonly ILogger<ContributionService> logger;
-        private readonly ContributionAccessLogRepository contributionAccessLogRepository;
-        private readonly ContributionUnlockRepository contributionUnlockRepository;
+        private readonly ContributionAccessLogRepository contributionAccessLogRepository;        
         private readonly ContributionSaveRepository contributionSaveRepository;
         private readonly ContributionReviewRepository contributionReviewRepository;
         public ContributionReviewService(ContributorRepository contributorRepository, ContributionRepository contributionRepository, ILogger<ContributionService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor, SubscriptionRepository subscriptionRepository, 
-            ContributionAccessLogRepository contributionAccessLogRepository, ContributionUnlockRepository contributionUnlockRepository, 
+            ContributionAccessLogRepository contributionAccessLogRepository, 
             ContributionSaveRepository contributionSaveRepository, ContributionReviewRepository contributionReviewRepository)
         {
             this.contributorRepository = contributorRepository;
@@ -46,7 +45,6 @@ namespace Cultural_Heritage_System.Services.Impl
             this.httpContextAccessor = httpContextAccessor;
             this.subscriptionRepository = subscriptionRepository;
             this.contributionAccessLogRepository = contributionAccessLogRepository;
-            this.contributionUnlockRepository = contributionUnlockRepository;
             this.contributionSaveRepository = contributionSaveRepository;
             this.contributionReviewRepository = contributionReviewRepository;
         }
@@ -66,7 +64,9 @@ namespace Cultural_Heritage_System.Services.Impl
           
             await contributionReviewRepository.AddAsync(review);        
             var createdReview = await contributionReviewRepository.GetContributionReviewById(review.Id);         
-            return mapper.Map<ContributionReviewResponse>(createdReview);
+            var result =  mapper.Map<ContributionReviewResponse>(createdReview);
+            result.CreatedByMe = true;
+            return result;
         }
 
         public async Task<List<ContributionReviewResponse>> GetReviewsByContributionId(long contributionId)

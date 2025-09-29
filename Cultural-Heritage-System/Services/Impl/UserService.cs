@@ -19,9 +19,10 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly IMapper mapper;
         private readonly IMailService mailService;
         private readonly ILogger<UserService> logger;
-
+        private readonly SubscriptionRepository subscriptionRepository;
+        private readonly ContributorRepository contributorRepository;
         public UserService(UserRepository userRepository, RoleRepository roleRepository, ILogger<UserService> logger, IMailService mailService,
-            ProfileRepository profileRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+            ProfileRepository profileRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor, SubscriptionRepository subscriptionRepository, ContributorRepository contributorRepository)
         {
             this.userRepository = userRepository;
             this.roleRepository = roleRepository;
@@ -31,6 +32,8 @@ namespace Cultural_Heritage_System.Services.Impl
             this.mailService = mailService;
             this.mapper = mapper;
             this.httpContextAccessor = httpContextAccessor;
+            this.subscriptionRepository = subscriptionRepository;
+            this.contributorRepository = contributorRepository;
         }
 
         public async Task<UserCreationResponse> CreateUser(UserCreationRequest request)
@@ -128,6 +131,11 @@ namespace Cultural_Heritage_System.Services.Impl
             var response = mapper.Map<UpdateProfileResponse>(existingUser);
             mapper.Map(existingProfile, response);
 
+            var activeSub = await subscriptionRepository.GetActiveSubscription(accountId);
+            response.isPremium = activeSub?.Status == SubscriptionStatus.ACTIVE;
+
+            var currentContributor = await contributorRepository.GetContributorByUserId(accountId);
+            response.isContributor = currentContributor?.Status == ContributorStatus.ACTIVE;
             return response;
         }
 
@@ -154,7 +162,11 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 mapper.Map(existingProfile, response);
             }
+            var activeSub = await subscriptionRepository.GetActiveSubscription(accountId);
+            response.isPremium = activeSub?.Status == SubscriptionStatus.ACTIVE;
 
+            var currentContributor = await contributorRepository.GetContributorByUserId(accountId);
+            response.isContributor = currentContributor?.Status == ContributorStatus.ACTIVE;
             return response;
         }
     }

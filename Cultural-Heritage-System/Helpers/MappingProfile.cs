@@ -23,6 +23,7 @@ using Cultural_Heritage_System.Dtos.Response.Report;
 using Cultural_Heritage_System.Dtos.Response.Review;
 using Cultural_Heritage_System.Dtos.Response.Tag;
 using Cultural_Heritage_System.Models;
+using System.Text.Json;
 
 
 namespace Cultural_Heritage_System.Helpers
@@ -102,8 +103,9 @@ namespace Cultural_Heritage_System.Helpers
 
 
             //Heritage
-            CreateMap<HeritageCreateRequest, Heritage>();
-            //.ForMember(dest => dest.HeritageLocations, opt => opt.MapFrom(src => src.Locations))
+            CreateMap<HeritageCreateRequest, Heritage>()
+            .ForMember(dest => dest.Description,
+               opt => opt.MapFrom(src => JsonSerializer.Serialize(src.Description, (JsonSerializerOptions)null)));
             //.ForMember(dest => dest.Media, opt => opt.MapFrom(src => src.Media))
             //.ForMember(dest => dest.HeritageOccurrences, opt => opt.MapFrom(src => src.Occurrences))
             //.ForMember(dest => dest.HeritageTags, opt => opt.MapFrom(src => src.TagIds));
@@ -120,7 +122,7 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<Location, LocationResponse>();
             CreateMap<HeritageOccurrence, OccurrenceResponse>();
 
-            CreateMap<LocationRequest, HeritageLocation>();
+            CreateMap<LocationRequest, Location>();
             CreateMap<MediaRequest, HeritageMedia>();
             CreateMap<OccurrenceRequest, HeritageOccurrence>();
 
@@ -225,8 +227,7 @@ namespace Cultural_Heritage_System.Helpers
 
             CreateMap<Heritage, HeritageNameSearchResponse>();
 
-            CreateMap<Subscription, SubscriptionDto>()
-                .ForMember(sub => sub.MaxOpensPerMonth, opt => opt.MapFrom(src => src.Package.MaxOpensPerMonth));
+            CreateMap<Subscription, SubscriptionDto>();   
 
             CreateMap<ContributionSave, ContributionSaveResponse>()
                 .ForMember(dest => dest.ContributionId, opt => opt.MapFrom(src => src.Contribution.Id))
