@@ -1,4 +1,6 @@
-﻿using Cultural_Heritage_System.Models;
+﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Dtos.Models;
+using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,5 +39,37 @@ namespace Cultural_Heritage_System.Repositories
                .Include(c => c.ContributionSaves)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
+
+        public async Task<List<TrendingContributorDto>> GetTopContributorsAsync()
+        {
+            var topContributors = await _dbSet
+                //.Where(c => c.Status == ContributionStatus.APPROVED)
+                .GroupBy(c => new
+                {
+                    c.ContributorId,
+                    c.Contributor.User.UserName,
+                    c.Contributor.User.Profile.AvatarUrl 
+                })
+                .Select(g => new TrendingContributorDto
+                {
+                    ContributorId = g.Key.ContributorId,
+                    ContributorName = g.Key.UserName,
+                    AvatarUrl = g.Key.AvatarUrl,
+                    TotalPosts = g.Count(),
+                    TotalViews = g.Sum(c => c.ContributionAccessLogs.Count),
+                    TotalComments = g.Sum(c => c.Reviews.Count),
+                    TotalSaves = g.Sum(c => c.ContributionSaves.Count),
+                    Score =
+                        g.Sum(c => c.ContributionAccessLogs.Count) * 0.2 +
+                        g.Sum(c => c.Reviews.Count) * 0.5 +
+                        g.Sum(c => c.ContributionSaves.Count) * 1.0
+                })
+                .OrderByDescending(x => x.Score)
+                .Take(5)
+                .ToListAsync();
+
+            return topContributors;
+        }
+
     }
 }

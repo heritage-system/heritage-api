@@ -25,13 +25,14 @@ namespace Cultural_Heritage_System.Controllers
         /// Create a new review (with optional media and replies).
         /// </summary>
         [HttpPost("create_review")]
+        [Authorize]
         public async Task<ApiResponse<ContributionReviewResponse>> CreateContributionReview([FromForm] ContributionReviewCreateRequest request)
         {
 
             try
             {
                 var review = await reviewService.CreateReview(request);
-                return new ApiResponse<ContributionReviewResponse>(200, "Contribution Review created successfully", review);
+                return new ApiResponse<ContributionReviewResponse>(201, "Contribution Review created successfully", review);
             }
             catch (Exception ex)
             {
@@ -46,7 +47,7 @@ namespace Cultural_Heritage_System.Controllers
         /// </summary>
         [HttpGet("get_contribution_reviews")]
         [AllowAnonymous] // Anyone can view reviews
-        public async Task<ApiResponse<List<ContributionReviewResponse>>> GetContributionReviewsByHeritageId([FromQuery] int contributionId)
+        public async Task<ApiResponse<List<ContributionReviewResponse>>> GetContributionReviewsById([FromQuery] int contributionId)
         {
             var reviews = await reviewService.GetReviewsByContributionId(contributionId);
 
@@ -64,35 +65,38 @@ namespace Cultural_Heritage_System.Controllers
             var response = await reviewService.ToggleLikeAsync(request);
 
             return new ApiResponse<LikeReviewResponse>(
-                code: 200,
+                code: 201,
                 message: request.Like ? "Contribution Review liked" : "Contribution Review unliked",
                 result: response
             );
         }
-        
-        //[HttpPut]
-        //public async Task<ApiResponse<ContributionReviewUpdateResponse>> UpdateContributionReview([FromForm] ContributionReviewUpdateRequest request)
-        //{
-        //    // Toggle like/unlike
-        //    var response = await reviewService.UpdateContributionReview(request);
 
-        //    return new ApiResponse<ContributionReviewUpdateResponse>(
-        //        code: 200,
-        //message: "update ContributionReviews",
-        //        result: response
-        //    );
-        //}
-        //[HttpDelete]
-        //public async Task<ApiResponse<ContributionReviewDeleteResponse>> DeleteContributionReview([FromBody] ContributionReviewDeleteRequest request)
-        //{
-        //    // Toggle like/unlike
-        //    var response = await reviewService.DeleteContributionReview(request);
+        [HttpPut("update_review")]
+        [Authorize]
+        public async Task<ApiResponse<ContributionReviewUpdateResponse>> UpdateContributionReview([FromForm] ContributionReviewUpdateRequest request)
+        {
+          
+            var response = await reviewService.UpdateReview(request);
 
-        //    return new ApiResponse<ContributionReviewDeleteResponse>(
-        //        code: 200,
-        //message: response.message
-        //    );
-        //}
+            return new ApiResponse<ContributionReviewUpdateResponse>(
+                code: 202,
+                message: "Update contribution review successfully",
+                result: response
+            );
+        }
+        [HttpDelete("delete_review")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> DeleteContributionReview([FromQuery] long reviewId)
+        {
+            
+            var response = await reviewService.DeleteReview(reviewId);
+
+            return new ApiResponse<bool>(
+                code: 200,
+                message: "Delete contribution review successfully",
+                result: response
+            );
+        }
 
     }
 }

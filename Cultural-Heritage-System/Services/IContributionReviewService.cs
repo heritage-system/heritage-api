@@ -10,7 +10,7 @@ namespace Cultural_Heritage_System.Services
         Task<ContributionReviewResponse> CreateReview(ContributionReviewCreateRequest request);
         Task<List<ContributionReviewResponse>> GetReviewsByContributionId(long contributionId);
         Task<LikeReviewResponse> ToggleLikeAsync(LikeReviewRequest request);
-        Task<ReviewUpdateResponse> UpdateReview(ContributionReviewUpdateRequest request);
-        Task<ReviewDeleteResponse> DeleteReview(long reviewId);
+        Task<ContributionReviewUpdateResponse> UpdateReview(ContributionReviewUpdateRequest request);
+        Task<bool> DeleteReview(long reviewId);
     }
 }

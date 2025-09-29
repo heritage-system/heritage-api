@@ -142,5 +142,15 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
 
+        [HttpGet("is_contributor_premium_eligible")]
+        [Authorize(Roles = "CONTRIBUTOR")]
+        public async Task<ApiResponse<bool>> IsContributorPremiumEligible()
+        {
+            return new ApiResponse<bool>(
+                code: 200,
+                message: "Check successfully",
+                result: await contributorService.IsContributorPremiumEligible()
+            );
+        }
     }
 }

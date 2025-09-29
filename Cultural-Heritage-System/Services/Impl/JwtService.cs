@@ -24,7 +24,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
                 notBefore: DateTime.UtcNow,
-                expires: DateTime.UtcNow.AddMinutes(3),
+                expires: DateTime.UtcNow.AddDays(3),
                 signingCredentials: credentials
             );
 

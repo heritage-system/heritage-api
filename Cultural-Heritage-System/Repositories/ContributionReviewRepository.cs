@@ -17,6 +17,7 @@ namespace Cultural_Heritage_System.Repositories
         {
             return _dbSet
                 .Include(r => r.User)
+                .ThenInclude(u => u.Profile)
                 .Include(r => r.Contribution)               
                 .Include(r => r.Likes).ThenInclude(l => l.User)             
                 .Include(r => r.Replies).ThenInclude(reply => reply.User)              
@@ -26,9 +27,11 @@ namespace Cultural_Heritage_System.Repositories
         public async Task<List<ContributionReview>> GetContributionReviewReviewsHierarchy(long contributionId)
         {
             var reviews = await _dbSet
-                .Include(r => r.User)               
+                .Include(r => r.User)       
+                .ThenInclude(u => u.Profile)
                 .Include(r => r.Likes)
                 .Where(r => r.ContributionId == contributionId && r.ParentReviewId == null)
+                .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
 
             foreach (var review in reviews)

@@ -17,5 +17,6 @@ namespace Cultural_Heritage_System.Services
         Task<ContributorResponse> ApplyContributor(ContributorApplyRequest request);
         Task<ContributorApplyResponse?> GetContributorApplication();
         Task<ContributorResponse> ReActivateContributor(int id);
+        Task<bool> IsContributorPremiumEligible();
     }
 }

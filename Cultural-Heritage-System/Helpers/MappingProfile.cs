@@ -1,6 +1,8 @@
-﻿using Cultural_Heritage_System.Dtos.Models;
+﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Dtos.Models;
 using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.Category;
+using Cultural_Heritage_System.Dtos.Request.ContribtutionReport;
 using Cultural_Heritage_System.Dtos.Request.Contributor;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Request.Location;
@@ -11,6 +13,7 @@ using Cultural_Heritage_System.Dtos.Request.Review;
 using Cultural_Heritage_System.Dtos.Request.Tag;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Category;
+using Cultural_Heritage_System.Dtos.Response.Contribution;
 using Cultural_Heritage_System.Dtos.Response.Contributor;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Location;
@@ -20,6 +23,7 @@ using Cultural_Heritage_System.Dtos.Response.Report;
 using Cultural_Heritage_System.Dtos.Response.Review;
 using Cultural_Heritage_System.Dtos.Response.Tag;
 using Cultural_Heritage_System.Models;
+using System.Text.Json;
 
 
 namespace Cultural_Heritage_System.Helpers
@@ -99,8 +103,9 @@ namespace Cultural_Heritage_System.Helpers
 
 
             //Heritage
-            CreateMap<HeritageCreateRequest, Heritage>();
-            //.ForMember(dest => dest.HeritageLocations, opt => opt.MapFrom(src => src.Locations))
+            CreateMap<HeritageCreateRequest, Heritage>()
+            .ForMember(dest => dest.Description,
+               opt => opt.MapFrom(src => JsonSerializer.Serialize(src.Description, (JsonSerializerOptions)null)));
             //.ForMember(dest => dest.Media, opt => opt.MapFrom(src => src.Media))
             //.ForMember(dest => dest.HeritageOccurrences, opt => opt.MapFrom(src => src.Occurrences))
             //.ForMember(dest => dest.HeritageTags, opt => opt.MapFrom(src => src.TagIds));
@@ -117,7 +122,7 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<Location, LocationResponse>();
             CreateMap<HeritageOccurrence, OccurrenceResponse>();
 
-            CreateMap<LocationRequest, HeritageLocation>();
+            CreateMap<LocationRequest, Location>();
             CreateMap<MediaRequest, HeritageMedia>();
             CreateMap<OccurrenceRequest, HeritageOccurrence>();
 
@@ -203,7 +208,7 @@ namespace Cultural_Heritage_System.Helpers
              .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl))
              .ForMember(dest => dest.View,
                     opt => opt.MapFrom(src => src.ContributionAccessLogs != null ? src.ContributionAccessLogs.Count : 0));
-            
+
 
             CreateMap<ContributionHeritageTag, HeritageNameSearchResponse>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
@@ -212,12 +217,17 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<Contribution, ContributionSearchResponse>()
              .ForMember(d => d.ContributorName, o => o.MapFrom(s => s.Contributor.User.UserName))
              .ForMember(d => d.AvatarUrl, o => o.MapFrom(s => s.Contributor.User.Profile.AvatarUrl))
-             .ForMember(d => d.PostedAt, o => o.MapFrom(s => s.UpdatedAt));
+             .ForMember(dest => dest.View,
+                    opt => opt.MapFrom(src => src.ContributionAccessLogs != null ? src.ContributionAccessLogs.Count : 0))
+            .ForMember(dest => dest.Comments,
+                    opt => opt.MapFrom(src => src.Reviews != null ? src.Reviews.Count : 0))
+            .ForMember(dest => dest.IsPremium, opt => opt.MapFrom(src =>
+                src.PremiumType != PremiumType.FREE));
+
 
             CreateMap<Heritage, HeritageNameSearchResponse>();
 
-            CreateMap<Subscription, SubscriptionDto>()
-                .ForMember(sub => sub.MaxOpensPerMonth, opt => opt.MapFrom(src => src.Package.MaxOpensPerMonth));
+            CreateMap<Subscription, SubscriptionDto>();   
 
             CreateMap<ContributionSave, ContributionSaveResponse>()
                 .ForMember(dest => dest.ContributionId, opt => opt.MapFrom(src => src.Contribution.Id))
@@ -243,6 +253,16 @@ namespace Cultural_Heritage_System.Helpers
                 opt => opt.Ignore());
 
             CreateMap<ContributionReviewCreateRequest, ContributionReview>();
+
+
+            CreateMap<ContributionReview, LikeReviewResponse>()
+                  .ForMember(dest => dest.ReviewId, opt => opt.MapFrom(src => src.Id))
+                  .ForMember(dest => dest.LikeCount, opt => opt.MapFrom(src => src.Likes != null ? src.Likes.Count : 0))
+                  .ForMember(dest => dest.LikedByMe, opt => opt.Ignore());
+            CreateMap<ContributionReviewUpdateRequest, ContributionReview>();
+            CreateMap<ContributionReview, ContributionReviewUpdateResponse>();
+
+            CreateMap<ContributionReportCreationRequest, ContributionReport>();
 
             CreateMap<Contributor, ContributorResponse>()
              .ForMember(dest => dest.UserFullName,

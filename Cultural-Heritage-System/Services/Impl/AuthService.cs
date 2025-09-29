@@ -109,7 +109,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
             logger.LogInformation("SignIn success for userId: {UserId}", user.Id);
 
-            return new SignInResponse(accessToken, refreshToken, user.Role.Name, "Bearer", TwoFaStep.NONE);
+            return new SignInResponse(accessToken, refreshToken, user.Role.Name, "Bearer", TwoFaStep.NONE, user.UserName,user.Profile.AvatarUrl);
         }
 
         public async Task<SignInResponse> SignInWithGoogle(string code)
@@ -169,7 +169,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
             logger.LogInformation("SignIn Google success for userId: {UserId}", user.Id);
 
-            return new SignInResponse(accessToken, refreshToken, user.Role.Name, "Bearer", TwoFaStep.NONE);
+            return new SignInResponse(accessToken, refreshToken, user.Role.Name, "Bearer", TwoFaStep.NONE,user.UserName,user.Profile.AvatarUrl);
         }
 
 
@@ -279,7 +279,9 @@ namespace Cultural_Heritage_System.Services.Impl
                 newRefreshToken,
                 user.Role?.Name ?? "User",
                 "Bearer",
-                stepEnum
+                stepEnum,
+                user.UserName,
+                user.Profile.AvatarUrl
             );
         }
 

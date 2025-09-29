@@ -69,6 +69,50 @@ namespace Cultural_Heritage_System.Helpers
             return JsonConvert.SerializeObject(new { ops = previewOps });
         }
 
+        public static string ExtractFirstLongParagraph(string contentDeltaJson, int minLength = 120)
+        {
+            if (string.IsNullOrEmpty(contentDeltaJson))
+                return string.Empty;
+
+            var root = JsonConvert.DeserializeObject<Dictionary<string, object>>(contentDeltaJson);
+            if (root == null || !root.ContainsKey("ops"))
+                return string.Empty;
+
+            var ops = JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(root["ops"].ToString());
+            if (ops == null || ops.Count == 0)
+                return string.Empty;
+
+            var builder = new StringBuilder();
+            foreach (var op in ops)
+            {
+                if (!op.ContainsKey("insert")) continue;
+
+                var insert = op["insert"];
+                if (insert is string text)
+                {
+                    // Cắt theo dòng
+                    var lines = text.Split(new[] { '\n' }, StringSplitOptions.None);
+                    foreach (var line in lines)
+                    {
+                        var cleaned = line.Trim();
+                        if (!string.IsNullOrEmpty(cleaned))
+                        {
+                            if (builder.Length > 0)
+                                builder.Append(" "); 
+
+                            builder.Append(cleaned);
+                           
+                            if (builder.Length >= minLength)
+                                return builder.ToString();
+                        }
+                    }
+                }
+            }
+
+            return builder.ToString(); 
+        }
+
+
         private static int GetOpLength(Dictionary<string, object> op)
         {
             if (op.ContainsKey("insert") && op["insert"] is string text)

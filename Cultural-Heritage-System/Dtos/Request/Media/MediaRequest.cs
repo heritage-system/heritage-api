@@ -1,17 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Cultural_Heritage_System.Common;
+using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cultural_Heritage_System.Dtos.Request.Media
 {
 
     public class MediaRequest
     {
-        [FromForm(Name = "File")]   // 👈 clarify binding name
-        public IFormFile? File { get; set; }
-
-        [FromForm(Name = "Type")]
-        public string? Type { get; set; }
-
-        [FromForm(Name = "Description")]
+        public string Url { get; set; }
+        public MediaType MediaType { get; set; }           
         public string? Description { get; set; }
     }
 

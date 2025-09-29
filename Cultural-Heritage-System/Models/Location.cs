@@ -18,10 +18,10 @@ namespace Cultural_Heritage_System.Models
         [Column("addressDetail")]
         public string? AddressDetail { get; set; }
 
-        [Column("latitude")]
+        [Column("latitude", TypeName = "decimal(18,10)")]
         public decimal Latitude { get; set; }
 
-        [Column("longitude")]
+        [Column("longitude", TypeName = "decimal(18,10)")]
         public decimal Longitude { get; set; }
 
         [JsonIgnore]

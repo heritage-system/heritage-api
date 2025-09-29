@@ -9,8 +9,8 @@ namespace Cultural_Heritage_System.Dtos.Models
     {      
         public int UserId { get; set; }    
         public int PackageId { get; set; }
-        public int MaxOpensPerMonth { get; set; }      
-        public int OpensUsed { get; set; } = 0;
+        ////public int MaxOpensPerMonth { get; set; }      
+        //public int OpensUsed { get; set; } = 0;
         
     }
 

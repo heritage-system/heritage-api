@@ -10,6 +10,7 @@ namespace Cultural_Heritage_System.Dtos.Response.Contributor
         public string? DocumentsUrl { get; set; }
         public string Status { get; set; }
 
+        public bool IsPremiumEligible { get; set; }
         public int UserId { get; set; }
         public string? UserFullName { get; set; }
         public string? UserEmail { get; set; }
