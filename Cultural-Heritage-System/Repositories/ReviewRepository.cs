@@ -1,4 +1,5 @@
-﻿using Cultural_Heritage_System.Models;
+﻿using Azure.Core;
+using Cultural_Heritage_System.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cultural_Heritage_System.Repositories
@@ -22,6 +23,7 @@ namespace Cultural_Heritage_System.Repositories
         {
             return _dbSet
                 .Include(r => r.User)
+                .ThenInclude(u => u.Profile)
                 .Include(r => r.Heritage)
                 .Include(r => r.ReviewMedias)
                 .Include(r => r.Likes).ThenInclude(l => l.User)
@@ -34,6 +36,7 @@ namespace Cultural_Heritage_System.Repositories
         {
             var reviews = await _dbSet
                 .Include(r => r.User)
+                .ThenInclude(u => u.Profile)
                 .Include(r => r.ReviewMedias)
                 .Include(r => r.Likes)
                 .Where(r => r.HeritageId == heritageId && r.ParentReviewId == null)
@@ -53,6 +56,7 @@ namespace Cultural_Heritage_System.Repositories
                 .Collection(r => r.Replies)
                 .Query()
                 .Include(r => r.User)
+                .ThenInclude(u => u.Profile)
                 .Include(r => r.ReviewMedias)
                 .Include(r => r.Likes)
                 .LoadAsync();
@@ -86,6 +90,20 @@ namespace Cultural_Heritage_System.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<Review?> GetReviewById(long id)
+        {
+            return await _dbSet
+                .Include(r => r.User)
+                .ThenInclude(u => u.Profile)
+                .Include(r => r.Heritage)
+                .Include(r => r.ReviewMedias)
+                .Include(r => r.Likes).ThenInclude(l => l.User)
+                .Include(r => r.Reports).ThenInclude(rep => rep.User)
+                .Include(r => r.Replies).ThenInclude(reply => reply.User)
+                .Include(r => r.Replies).ThenInclude(reply => reply.ReviewMedias)
+                .Include(r => r.Replies).ThenInclude(reply => reply.Likes)
+                .FirstOrDefaultAsync(r => r.Id == id);
+        }
 
     }
 }

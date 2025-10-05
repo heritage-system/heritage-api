@@ -99,7 +99,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IMailService, MailService>();
             builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
             builder.Services.AddScoped<IFavoriteService, FavoriteService>();
-            builder.Services.AddScoped<ITestSearchService, TestSearchService>();
+           
             //builder.Services.AddScoped<IProfileService, ProfileService>();
             builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
             builder.Services.AddScoped<IHeritageService, HeritageService>();

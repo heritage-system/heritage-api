@@ -41,42 +41,16 @@ namespace Cultural_Heritage_System.Services.Impl
             var review = mapper.Map<Review>(request);
             review.CreatedBy = accountIdClaim;
             review.UserId = int.Parse(accountIdClaim);
-
-            // luôn khởi tạo list trống
-            review.ReviewMedias = new List<ReviewMedia>();
-
-            if (request.Media?.Any() == true)
-            {
-                foreach (var media in request.Media)
-                {
-                    if (media.File == null)
-                        throw new ArgumentException("File is required for media upload.");
-
-                    using var stream = media.File.OpenReadStream();
-
-                    var uploadedUrl = media.Type switch
-                    {
-                        MediaType.IMAGE => await cloudinaryService.UploadImageAsync(stream, media.File.FileName),
-                        MediaType.VIDEO => await cloudinaryService.UploadVideoAsync(stream, media.File.FileName),
-                        MediaType.DOCUMENT => await cloudinaryService.UploadDocumentAsync(stream, media.File.FileName),
-                        _ => throw new ArgumentException("Invalid media type")
-                    };
-
-                    review.ReviewMedias.Add(new ReviewMedia
-                    {
-                        Url = uploadedUrl,
-                        MediaType = media.Type
-                    });
-                }
-            }
-
+            review.ReviewMedias = mapper.Map<List<ReviewMedia>>(request.Media);
+          
+           
 
             // 3. Save review
             await reviewRepository.AddAsync(review);
 
             // 4. Reload entity with navigation props => change to Repository
             var createdReview = await reviewRepository.GetReviewsWithIncludes()
-     .FirstAsync(r => r.Id == review.Id);
+                .FirstAsync(r => r.Id == review.Id);
             // 5. Map entity -> response
             return mapper.Map<ReviewResponse>(createdReview);
         }
@@ -85,11 +59,10 @@ namespace Cultural_Heritage_System.Services.Impl
         {
             var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
             int? currentUserId = string.IsNullOrEmpty(accountIdClaim) ? null : int.Parse(accountIdClaim);
-
-            // ✅ Use hierarchy loader instead of flat include
+           
             var reviews = await reviewRepository.GetReviewsHierarchy(heritageId);
 
-            return reviews.Select(r => MapReviewResponse(r, currentUserId)).ToList();
+            return reviews.Select(r => MapReviewResponse(r, currentUserId)).OrderByDescending(r => r.CreatedAt).ToList();
         }
 
 
@@ -184,12 +157,10 @@ namespace Cultural_Heritage_System.Services.Impl
             if (string.IsNullOrEmpty(accountIdClaim))
                 throw new AppException(ErrorCode.UNAUTHORIZED);
 
-            var review = await reviewRepository.GetReviewsQueryable()
-                .Include(r => r.ReviewMedias)
-                .FirstOrDefaultAsync(r => r.Id == request.Id);
+            var review = await reviewRepository.GetReviewById(request.Id);
 
             if (review == null)
-                throw new KeyNotFoundException("Review not found");
+                throw new AppException(ErrorCode.FORBIDDEN);
 
             if (review.UserId != int.Parse(accountIdClaim))
                 throw new AppException(ErrorCode.FORBIDDEN);
@@ -197,34 +168,7 @@ namespace Cultural_Heritage_System.Services.Impl
             // Update basic properties via AutoMapper
             mapper.Map(request, review); // Maps Comment and other simple fields
 
-            // Handle media update if any
-            if (request.Media != null && request.Media.Any())
-            {
-                review.ReviewMedias.Clear(); // remove old media
-
-                foreach (var media in request.Media)
-                {
-                    if (media.File == null)
-                        throw new ArgumentException("File is required for media upload.");
-
-                    using var stream = media.File.OpenReadStream();
-
-                    // media.Type is already MediaType enum
-                    var uploadedUrl = media.Type switch
-                    {
-                        MediaType.IMAGE => await cloudinaryService.UploadImageAsync(stream, media.File.FileName),
-                        MediaType.VIDEO => await cloudinaryService.UploadVideoAsync(stream, media.File.FileName),
-                        MediaType.DOCUMENT => await cloudinaryService.UploadDocumentAsync(stream, media.File.FileName),
-                        _ => throw new ArgumentException("Invalid media type")
-                    };
-
-                    review.ReviewMedias.Add(new ReviewMedia
-                    {
-                        Url = uploadedUrl,
-                        MediaType = media.Type
-                    });
-                }
-            }
+           
             var vnTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
             review.UpdatedAt = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, vnTimeZone);
             await reviewRepository.UpdateAsync(review);

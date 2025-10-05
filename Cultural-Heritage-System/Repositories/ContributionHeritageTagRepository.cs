@@ -17,7 +17,8 @@ namespace Cultural_Heritage_System.Repositories
         public IQueryable<ContributionHeritageTag> GetContributionHeritageTagsQueryable()
         {
             return _dbSet
-                .Include(h => h.Heritage)                    
+                .Include(h => h.Heritage)     
+                .Include(h => h.Contribution)
                 .AsQueryable();
         }
      

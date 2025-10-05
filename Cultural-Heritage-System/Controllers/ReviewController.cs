@@ -25,7 +25,7 @@ namespace Cultural_Heritage_System.Controllers
         /// Create a new review (with optional media and replies).
         /// </summary>
         [HttpPost("create_review")]
-        public async Task<ApiResponse<ReviewResponse>> CreateReview([FromForm] ReviewCreateRequest request)
+        public async Task<ApiResponse<ReviewResponse>> CreateReview([FromBody] ReviewCreateRequest request)
         {
 
             try
@@ -45,7 +45,7 @@ namespace Cultural_Heritage_System.Controllers
         /// Get all reviews by Heritage ID (with replies, likes, media).
         /// </summary>
         [HttpGet("reviewByheritage")]
-        [AllowAnonymous] // Anyone can view reviews
+        
         public async Task<ApiResponse<List<ReviewResponse>>> GetReviewsByHeritageId([FromQuery] long heritageId)
         {
             var reviews = await reviewService.GetReviewsByHeritageId(heritageId);

@@ -21,24 +21,22 @@ namespace Cultural_Heritage_System.Controllers
     {
 
         private readonly IContributionService contributionService;
-        private readonly ITestSearchService testSearchService;
+       
 
-        public ContributionsController(IContributionService contributionService, ITestSearchService testSearchService)
+        public ContributionsController(IContributionService contributionService)
         {
-            this.contributionService = contributionService;
-            this.testSearchService = testSearchService;
+            this.contributionService = contributionService;       
         }
 
         [HttpPost]
         [AllowAnonymous]
         public async Task<ApiResponse<ContributionResponse>> CreateContribution([FromBody] ContributionCreationRequest request)
         {
-            var users = await contributionService.PostContribution(request);
-
+      
             return new ApiResponse<ContributionResponse>(
                 code: 201,
-                message: "Created contribution",
-                result: users
+                message: "Created contribution successfully",
+                result: await contributionService.PostContribution(request)
             );
         }
 
@@ -77,15 +75,13 @@ namespace Cultural_Heritage_System.Controllers
 
         [HttpGet("get_contribution_save")]
         public async Task<ApiResponse<PageResponse<ContributionSaveResponse>>> GetContributionSaves(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? searchName = null)
+            [FromQuery] ContributionSearchRequest request)
         {                  
 
             return new ApiResponse<PageResponse<ContributionSaveResponse>>(
                 code: 200,
                 message: "Get list contribution save successfully",
-                result: await contributionService.GetContributionSave(page, pageSize, searchName)
+                result: await contributionService.GetContributionSave(request)
             );
            
         }
@@ -158,6 +154,53 @@ namespace Cultural_Heritage_System.Controllers
                 code = 200,
                 result = await contributionService.GetContributionRelated(request)
             };
+        }
+
+        [HttpGet("get_contribution_overview")]
+        public async Task<ApiResponse<ContributionOverviewResponse>> GetContributionOverview(int id)
+        {
+            var result = await contributionService.GetContributionOverview(id);
+            return new ApiResponse<ContributionOverviewResponse>(
+                code: 200,
+                message: "Get contribution overview successfully",
+                result: result
+            );
+        }
+
+        [HttpGet("get_list_contribution_overview")]
+        public async Task<ApiResponse<PageResponse<ContributionOverviewListItemResponse>>> GetListContributionsOverview(
+           [FromQuery] ContributionOverviewSearchRequest request)
+
+        {
+            return new ApiResponse<PageResponse<ContributionOverviewListItemResponse>>
+            {
+                code = 200,
+                result = await contributionService.GetListContributionsOverview(request)
+            };
+        }
+
+        [HttpGet("get_contribution_updated")]
+        public async Task<ApiResponse<ContributionDetailUpdatedResponse>> GetContributionDetailUpdated(int id)
+        {
+            var result = await contributionService.GetContributionDetailForUpdated(id);
+            return new ApiResponse<ContributionDetailUpdatedResponse>(
+                code: 200,
+                message: "Get contribution detail successfully",
+                result: result
+            );
+        }
+
+        [HttpPut("updated_contribution")]
+        [AllowAnonymous]
+        public async Task<ApiResponse<ContributionResponse>> UpdateContribution([FromBody] ContributionUpdateRequest request)
+        {
+            var users = await contributionService.UpdateContribution(request);
+
+            return new ApiResponse<ContributionResponse>(
+                code: 200,
+                message: "Updated contribution successfully",
+                result: users
+            );
         }
     }
 }
