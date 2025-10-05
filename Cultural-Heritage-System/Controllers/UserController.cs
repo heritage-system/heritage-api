@@ -16,12 +16,11 @@ namespace Cultural_Heritage_System.Controllers
     {
 
         private readonly IUserService userService;
-        private readonly ITestSearchService testSearchService;
-
-        public UsersController(IUserService userService, ITestSearchService testSearchService)
+      
+        public UsersController(IUserService userService)
         {
             this.userService = userService;
-            this.testSearchService = testSearchService;
+           
         }
 
         [HttpPost]
@@ -74,28 +73,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
 
-        [HttpGet("search_heritage")]
-        public async Task<ApiResponse<PageResponse<HeritageSearchResponse>>> GetAllWithSearch(
-           [FromQuery] HeritageSearchRequest request)
-
-        {
-            return new ApiResponse<PageResponse<HeritageSearchResponse>>
-            {
-                code = 200,
-                result = await testSearchService.SearchHeritagesAsync(request)
-            };
-        }
-
-        [HttpGet("heritageDetail")]     
-        public async Task<ApiResponse<HeritageSearchResponse>> GetHeritageDetail(long id)
-        {
-            var result = await testSearchService.GetHeritageDetail(id);
-            return new ApiResponse<HeritageSearchResponse>(
-                code: 200,
-                message: "Get heritage details successfully",
-                result: result
-            );
-        }
+              
 
     }
 }

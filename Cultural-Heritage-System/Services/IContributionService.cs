@@ -15,15 +15,19 @@ namespace Cultural_Heritage_System.Services
     {
         Task<ContributionResponse> PostContribution(ContributionCreationRequest request);
         Task<ContributionResponse> GetContributionDetail(int id);
+        Task<ContributionOverviewResponse> GetContributionOverview(int id);
         Task<PageResponse<ContributionSearchResponse>> SearchContributionsAsync(ContributionSearchRequest request);
         //Task<ContributionResponse> UnlockContribution(int contributionId);
         Task<bool> AddContributionSave(int contributionId);
-        Task<PageResponse<ContributionSaveResponse>> GetContributionSave(int page, int pageSize, string? searchName);      
+        Task<PageResponse<ContributionSaveResponse>> GetContributionSave(ContributionSearchRequest request);      
         Task<bool> RemoveContributionSave(int contributionId);
         Task<List<TopContributionHeritageTagResponse>> GetTrendingContributionHeritageTag();
         Task<List<TrendingContributorDto>> GetTrendingContributor();
         Task<bool> CreateContributionReport(ContributionReportCreationRequest request);
         Task<List<ContributionSearchResponse>> GetContributionRelated(ContributionRelatedRequest request);
+        Task<PageResponse<ContributionOverviewListItemResponse>> GetListContributionsOverview(ContributionOverviewSearchRequest request);
+        Task<ContributionDetailUpdatedResponse> GetContributionDetailForUpdated(int id);
+        Task<ContributionResponse> UpdateContribution(ContributionUpdateRequest request);
     }
 }
 

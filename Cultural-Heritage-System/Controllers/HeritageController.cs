@@ -2,6 +2,8 @@
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Contribution;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
+using Cultural_Heritage_System.Models;
+using Cultural_Heritage_System.Services;
 using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -36,7 +38,7 @@ namespace Cultural_Heritage_System.Controllers
 
         [HttpGet("get_list_heritage_name")]
         //[Authorize(Roles = "CONTRIBUTOR")]
-        public async Task<ApiResponse<List<HeritageNameSearchResponse>>> GetListHeritageName([FromQuery] string keyword)
+        public async Task<ApiResponse<List<HeritageNameSearchResponse>>> GetListHeritageName([FromQuery] string? keyword)
         {
             var heritages = await _heritageService.SearchListHeritageName(keyword);
 
@@ -129,6 +131,39 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
 
+        [HttpGet("search_heritage")]
+        public async Task<ApiResponse<PageResponse<HeritageSearchResponse>>> GetAllWithSearch(
+           [FromQuery] HeritageSearchRequest request)
 
+        {
+            return new ApiResponse<PageResponse<HeritageSearchResponse>>
+            {
+                code = 200,
+                result = await _heritageService.SearchHeritagesAsync(request)
+            };
+        }
+
+        [HttpGet("heritage_detail")]
+        public async Task<ApiResponse<HeritageDetailResponse>> GetHeritageDetail(long id)
+        {
+            var result = await _heritageService.GetHeritageDetail(id);
+            return new ApiResponse<HeritageDetailResponse>(
+                code: 200,
+                message: "Get heritage details successfully",
+                result: result
+            );
+        }
+
+        [HttpGet("heritage_related")]
+        public async Task<ApiResponse<List<HeritageRelatedResponse>>> GetContributionRelated(
+          [FromQuery] HeritageRelatedRequest request)
+
+        {
+            return new ApiResponse<List<HeritageRelatedResponse>>
+            {
+                code = 200,
+                result = await _heritageService.GetHeritageRelated(request)
+            };
+        }
     }
 }

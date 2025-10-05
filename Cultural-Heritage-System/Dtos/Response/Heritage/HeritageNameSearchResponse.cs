@@ -9,6 +9,7 @@ namespace Cultural_Heritage_System.Dtos.Response.Heritage
     public class HeritageNameSearchResponse
     {
         public long Id { get; set; }      
-        public string Name { get; set; }            
+        public string Name { get; set; }
+        public string NameUnsigned { get; set; }
     }
 }

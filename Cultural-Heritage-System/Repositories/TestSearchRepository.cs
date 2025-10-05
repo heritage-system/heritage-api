@@ -20,27 +20,7 @@ namespace Cultural_Heritage_System.Repositories
             _logger = logger;
         }
 
-        public IQueryable<Heritage> GetHeritagesQueryable()
-        {
-            return _context.Heritages
-                .Include(h => h.Category)
-                .Include(h => h.HeritageTags).ThenInclude(ht => ht.Tag)
-                .Include(h => h.HeritageOccurrences)
-                .Include(h => h.Media)
-                .Include(h => h.HeritageLocations).ThenInclude(hl => hl.Location)             
-                .AsQueryable();
-        }
-
-        public async Task<Heritage?> GetHeritageById(long id)
-        {
-            return await _dbSet
-                .Include(h => h.Category)
-                .Include(h => h.HeritageTags).ThenInclude(ht => ht.Tag)
-                .Include(h => h.HeritageOccurrences)
-                .Include(h => h.Media)
-                .Include(h => h.HeritageLocations).ThenInclude(hl => hl.Location)
-                .FirstOrDefaultAsync(u => u.Id == id);
-        }
+        
 
     }
 }

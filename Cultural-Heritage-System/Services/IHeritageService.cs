@@ -12,6 +12,9 @@ namespace Cultural_Heritage_System.Services.Impl
         Task<HeritageResponse> CreateAsync(HeritageCreateRequest request);
         Task<HeritageResponse> UpdateAsync(HeritageUpdateRequest request);
         Task<long?> DeleteAsync(long id);
-        Task<List<HeritageNameSearchResponse>> SearchListHeritageName(string keyword);
+        Task<List<HeritageNameSearchResponse>> SearchListHeritageName(string? keyword);
+        Task<PageResponse<HeritageSearchResponse>> SearchHeritagesAsync(HeritageSearchRequest request);
+        Task<HeritageDetailResponse> GetHeritageDetail(long id);
+        Task<List<HeritageRelatedResponse>> GetHeritageRelated(HeritageRelatedRequest request);
     }
 }
