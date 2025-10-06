@@ -18,24 +18,24 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly ILogger<AuthenticationService> logger;
         private readonly IJwtService jwtService;
         private readonly PasswordHasher<User> passwordHasher;
-        private readonly UserRepository userRepository;
-        private readonly RoleRepository roleRepository;
+        private readonly IUserRepository userRepository;
+        private readonly IRoleRepository roleRepository;
         private readonly GoogleAuthClient googleAuthClient;
         private readonly GoogleUserInfoClient googleUserInfoClient;
-        private readonly ProfileRepository profileRepository;
-        private readonly RefreshTokenRepository refreshTokenRepository;
+        private readonly IProfileRepository profileRepository;
+        private readonly IRefreshTokenRepository refreshTokenRepository;
         //private readonly FacebookAuthClient facebookAuthClient;
         //private readonly FacebookUserInfoClient facebookUserInfoClient;
 
         public AuthService(
             ILogger<AuthenticationService> logger,
             IJwtService jwtService,
-            UserRepository userRepository,
-            RoleRepository roleRepository,
+            IUserRepository userRepository,
+            IRoleRepository roleRepository,
             GoogleAuthClient googleAuthClient,
             GoogleUserInfoClient googleUserInfoClient,
-            ProfileRepository profileRepository,
-            RefreshTokenRepository refreshTokenRepository,
+            IProfileRepository profileRepository,
+            IRefreshTokenRepository refreshTokenRepository,
             IHttpContextAccessor httpContextAccessor
             )
         {

@@ -5,10 +5,10 @@ namespace Cultural_Heritage_System.Services.Impl
 {
     public class ReportReplyService : IReportReplyService
     {
-        private readonly ReportReplyRepository _replyRepository;
+        private readonly IReportReplyRepository _replyRepository;
         private readonly ILogger<ReportReplyService> _logger;
 
-        public ReportReplyService(ReportReplyRepository replyRepository, ILogger<ReportReplyService> logger)
+        public ReportReplyService(IReportReplyRepository replyRepository, ILogger<ReportReplyService> logger)
         {
             _replyRepository = replyRepository;
             _logger = logger;

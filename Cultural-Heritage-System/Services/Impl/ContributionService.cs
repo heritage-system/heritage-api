@@ -28,20 +28,21 @@ namespace Cultural_Heritage_System.Services.Impl
     public class ContributionService : IContributionService
     {
         private readonly IHttpContextAccessor httpContextAccessor;
-        private readonly ContributorRepository contributorRepository;
-        private readonly ContributionRepository contributionRepository;
-        private readonly SubscriptionRepository subscriptionRepository;
+        private readonly IContributorRepository contributorRepository;
+        private readonly IContributionRepository contributionRepository;
+        private readonly ISubscriptionRepository subscriptionRepository;
         private readonly IMapper mapper;
         private readonly IMailService mailService;
         private readonly ILogger<ContributionService> logger;
-        private readonly ContributionAccessLogRepository contributionAccessLogRepository;     
-        private readonly ContributionSaveRepository contributionSaveRepository;
-        private readonly ContributionHeritageTagRepository contributionHeritageTagRepository;
-        private readonly ContributionReportRepository contributionReportRepository;
-        public ContributionService(ContributorRepository contributorRepository, ContributionRepository contributionRepository, ILogger<ContributionService> logger, IMailService mailService,
-            IMapper mapper, IHttpContextAccessor httpContextAccessor, SubscriptionRepository subscriptionRepository,
-            ContributionAccessLogRepository contributionAccessLogRepository,
-            ContributionSaveRepository contributionSaveRepository, ContributionHeritageTagRepository contributionHeritageTagRepository, ContributionReportRepository contributionReportRepository)
+        private readonly IContributionAccessLogRepository contributionAccessLogRepository;     
+        private readonly IContributionSaveRepository contributionSaveRepository;
+        private readonly IContributionHeritageTagRepository contributionHeritageTagRepository;
+        private readonly IContributionReportRepository contributionReportRepository;
+        private readonly IStaffRepository staffRepository;
+        public ContributionService(IContributorRepository contributorRepository, IContributionRepository contributionRepository, ILogger<ContributionService> logger, IMailService mailService,
+            IMapper mapper, IHttpContextAccessor httpContextAccessor, ISubscriptionRepository subscriptionRepository,
+            IContributionAccessLogRepository contributionAccessLogRepository,
+            IContributionSaveRepository contributionSaveRepository, IContributionHeritageTagRepository contributionHeritageTagRepository, IContributionReportRepository contributionReportRepository, IStaffRepository staffRepository)
         {
             this.contributorRepository = contributorRepository;
             this.logger = logger;
@@ -54,6 +55,7 @@ namespace Cultural_Heritage_System.Services.Impl
             this.contributionSaveRepository = contributionSaveRepository;
             this.contributionHeritageTagRepository = contributionHeritageTagRepository;
             this.contributionReportRepository = contributionReportRepository;
+            this.staffRepository = staffRepository;
         }
 
         public async Task<PageResponse<ContributionSearchResponse>> SearchContributionsAsync(ContributionSearchRequest request)
@@ -164,6 +166,16 @@ namespace Cultural_Heritage_System.Services.Impl
             contribution.PreviewContent = DeltaHelper.GeneratePreviewDelta(contribution.Content);
 
             contribution.FirstContent = DeltaHelper.ExtractFirstLongParagraph(contribution.Content);
+
+            var nextStaffId = await GetNextStaffForContributionAsync();
+            if (nextStaffId != null)
+            {
+                contribution.ContributionAcceptances.Add(new ContributionAcceptance
+                {
+                    StaffId = nextStaffId.Value,                 
+                    Note = "Bài viết mới, chờ duyệt"
+                });
+            }
 
 
             await contributionRepository.AddAsync(contribution);
@@ -767,5 +779,43 @@ namespace Cultural_Heritage_System.Services.Impl
             return mapper.Map<ContributionResponse>(contribution);
         }
 
+        private async Task<int?> GetNextStaffForContributionAsync()
+        {
+            var staffList = await staffRepository.GetActiveReviewersAsync();
+            if (!staffList.Any()) return null;
+
+            // Đếm số pending contribution của từng staff
+            var staffLoad = staffList
+                .Select(s => new
+                {
+                    StaffId = s.Id,
+                    PendingCount = s.ContributionAcceptances
+                                    .Count(ca => ca.Status == ContributionStatus.PENDING)
+                })
+                .ToList();
+
+            var minPending = staffLoad.Min(x => x.PendingCount);
+
+            var candidateStaff = staffLoad
+                .Where(x => x.PendingCount == minPending)
+                .Select(x => x.StaffId)
+                .OrderBy(x => x)
+                .ToList();
+
+            var lastAssignedStaffId = await staffRepository.GetLastAssignedStaffIdAsync();
+
+            int selectedStaffId;
+            if (lastAssignedStaffId != null && candidateStaff.Contains(lastAssignedStaffId.Value))
+            {
+                var idx = candidateStaff.IndexOf(lastAssignedStaffId.Value);
+                selectedStaffId = candidateStaff[(idx + 1) % candidateStaff.Count];
+            }
+            else
+            {
+                selectedStaffId = candidateStaff.First();
+            }
+
+            return selectedStaffId;
+        }
     }
 }

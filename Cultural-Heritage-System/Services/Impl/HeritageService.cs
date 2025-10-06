@@ -21,23 +21,23 @@ namespace Cultural_Heritage_System.Services.Impl
 {
     public class HeritageService : IHeritageService
     {
-        private readonly HeritageRepository _heritageRepository;
+        private readonly IHeritageRepository _heritageRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
         private readonly ILogger<HeritageService> _logger;
-        private readonly UserRepository _userRepository;
-        private readonly LocationRepository _locationRepository;
-        private readonly HeritageLocationRepository _heritageLocationRepository;
-        private readonly HeritageOccurrenceRepository _heritageOccurrenceRepository;
-        private readonly HeritageMediaRepository _heritageMediaRepository;
-        private readonly HeritageTagRepository _heritageTagRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly ILocationRepository _locationRepository;
+        private readonly IHeritageLocationRepository _heritageLocationRepository;
+        private readonly IHeritageOccurrenceRepository _heritageOccurrenceRepository;
+        private readonly IHeritageMediaRepository _heritageMediaRepository;
+        private readonly IHeritageTagRepository _heritageTagRepository;
         private readonly ICloudinaryService _cloudinaryService;
-        private readonly FavoriteRepository _favoriteRepository;
-        public HeritageService(HeritageRepository heritageRepository, IHttpContextAccessor httpContextAccessor , 
-            IMapper mapper, ILogger<HeritageService> logger, LocationRepository locationRepository,
-            HeritageLocationRepository heritageLocationRepository, HeritageOccurrenceRepository heritageOccurrenceRepository,
-            HeritageMediaRepository heritageMediaRepository, HeritageTagRepository heritageTagRepository, 
-            ICloudinaryService cloudinaryService,UserRepository userRepository, FavoriteRepository favoriteRepository)
+        private readonly IFavoriteRepository _favoriteRepository;
+        public HeritageService(IHeritageRepository heritageRepository, IHttpContextAccessor httpContextAccessor , 
+            IMapper mapper, ILogger<HeritageService> logger, ILocationRepository locationRepository,
+            IHeritageLocationRepository heritageLocationRepository, IHeritageOccurrenceRepository heritageOccurrenceRepository,
+            IHeritageMediaRepository heritageMediaRepository, IHeritageTagRepository heritageTagRepository, 
+            ICloudinaryService cloudinaryService,IUserRepository userRepository, IFavoriteRepository favoriteRepository)
         {
             _heritageRepository = heritageRepository;
             _httpContextAccessor = httpContextAccessor;

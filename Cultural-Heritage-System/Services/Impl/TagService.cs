@@ -13,13 +13,13 @@ namespace Cultural_Heritage_System.Services.Impl
     public class TagService : ITagService
     {
         private readonly IHttpContextAccessor httpContextAccessor;
-        private readonly TagRepository tagRepository;
-        private readonly UserRepository userRepository;
+        private readonly ITagRepository tagRepository;
+        private readonly IUserRepository userRepository;
         private readonly IMapper mapper;
 
         private readonly ILogger<TagService> logger;
 
-        public TagService(TagRepository tagRepository, UserRepository userRepository, ILogger<TagService> logger, IMailService mailService,
+        public TagService(ITagRepository tagRepository, IUserRepository userRepository, ILogger<TagService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             this.tagRepository = tagRepository;
