@@ -13,13 +13,13 @@ namespace Cultural_Heritage_System.Services.Impl
     public class ReviewService : IReviewService
     {
         private readonly IHttpContextAccessor httpContextAccessor;
-        private readonly ReviewRepository reviewRepository;
-        private readonly UserRepository userRepository;
+        private readonly IReviewRepository reviewRepository;
+        private readonly IUserRepository userRepository;
         private readonly IMapper mapper;
         private readonly ICloudinaryService cloudinaryService;
         private readonly ILogger<ReviewService> logger;
 
-        public ReviewService(ReviewRepository reviewRepository, UserRepository userRepository, ILogger<ReviewService> logger, IMailService mailService,
+        public ReviewService(IReviewRepository reviewRepository, IUserRepository userRepository, ILogger<ReviewService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor, ICloudinaryService cloudinaryService)
         {
             this.reviewRepository = reviewRepository;

@@ -2,6 +2,7 @@
 using Cultural_Heritage_System.Helpers;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Cultural_Heritage_System.Models
 {
@@ -55,7 +56,7 @@ namespace Cultural_Heritage_System.Models
         [Column("reviewed_by")]
         [ForeignKey(nameof(Reviewer))]
         public int? ReviewedBy { get; set; }
-        public User Reviewer { get; set; }
+        public Staff Reviewer { get; set; }
 
         [Column("approved_at")]
         public DateTimeOffset? ApprovedAt { get; set; }
@@ -77,6 +78,8 @@ namespace Cultural_Heritage_System.Models
         public ICollection<ContributionSave> ContributionSaves { get; set; } = new List<ContributionSave>();
         public ICollection<ContributionReport> ContributionReports { get; set; } = new List<ContributionReport>();
         public ICollection<ContributionReview> Reviews { get; set; } = new List<ContributionReview>();
+        [JsonIgnore]
+        public ICollection<ContributionAcceptance> ContributionAcceptances { get; set; } = new List<ContributionAcceptance>();
         public void GenerateUnsignedFields()
         {
             TitleUnsigned = StringHelper.RemoveDiacritics(Title).ToLowerInvariant();

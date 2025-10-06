@@ -23,19 +23,19 @@ namespace Cultural_Heritage_System.Services.Impl
     public class ContributionReviewService : IContributionReviewService
     {
         private readonly IHttpContextAccessor httpContextAccessor;
-        private readonly ContributorRepository contributorRepository;
-        private readonly ContributionRepository contributionRepository;
-        private readonly SubscriptionRepository subscriptionRepository;
+        private readonly IContributorRepository contributorRepository;
+        private readonly IContributionRepository contributionRepository;
+        private readonly ISubscriptionRepository subscriptionRepository;
         private readonly IMapper mapper;
         private readonly IMailService mailService;
         private readonly ILogger<ContributionService> logger;
-        private readonly ContributionAccessLogRepository contributionAccessLogRepository;        
-        private readonly ContributionSaveRepository contributionSaveRepository;
-        private readonly ContributionReviewRepository contributionReviewRepository;
-        public ContributionReviewService(ContributorRepository contributorRepository, ContributionRepository contributionRepository, ILogger<ContributionService> logger, IMailService mailService,
-            IMapper mapper, IHttpContextAccessor httpContextAccessor, SubscriptionRepository subscriptionRepository, 
-            ContributionAccessLogRepository contributionAccessLogRepository, 
-            ContributionSaveRepository contributionSaveRepository, ContributionReviewRepository contributionReviewRepository)
+        private readonly IContributionAccessLogRepository contributionAccessLogRepository;        
+        private readonly IContributionSaveRepository contributionSaveRepository;
+        private readonly IContributionReviewRepository contributionReviewRepository;
+        public ContributionReviewService(IContributorRepository contributorRepository, IContributionRepository contributionRepository, ILogger<ContributionService> logger, IMailService mailService,
+            IMapper mapper, IHttpContextAccessor httpContextAccessor, ISubscriptionRepository subscriptionRepository, 
+            IContributionAccessLogRepository contributionAccessLogRepository, 
+            IContributionSaveRepository contributionSaveRepository, IContributionReviewRepository contributionReviewRepository)
         {
             this.contributorRepository = contributorRepository;
             this.logger = logger;

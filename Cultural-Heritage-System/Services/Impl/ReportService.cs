@@ -13,14 +13,14 @@ namespace Cultural_Heritage_System.Services.Impl
 {
     public class ReportService : IReportService
     {
-        private readonly ReportRepository _reportRepository;
+        private readonly IReportRepository _reportRepository;
         private readonly IMapper _mapper;
-        private readonly UserRepository _userRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IMailService _mailService;
-        private readonly ReportReplyRepository _reportReplyRepository;
+        private readonly IReportReplyRepository _reportReplyRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ReportService(ReportRepository reportRepository, IMapper mapper, UserRepository userRepository, IMailService mailService, ReportReplyRepository reportReplyRepository, IHttpContextAccessor httpContextAccessor)
+        public ReportService(IReportRepository reportRepository, IMapper mapper, IUserRepository userRepository, IMailService mailService, IReportReplyRepository reportReplyRepository, IHttpContextAccessor httpContextAccessor)
         {
             _reportRepository = reportRepository;
             _mapper = mapper;

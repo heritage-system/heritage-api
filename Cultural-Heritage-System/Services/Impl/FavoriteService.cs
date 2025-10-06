@@ -17,15 +17,15 @@ namespace Cultural_Heritage_System.Services.Impl
 {
     public class FavoriteService : IFavoriteService
     {
-        private readonly FavoriteRepository favoriteRepository;
-        private readonly HeritageRepository heritageRepository;
+        private readonly IFavoriteRepository favoriteRepository;
+        private readonly IHeritageRepository heritageRepository;
         private readonly IMapper mapper;
         private readonly ILogger<FavoriteService> logger;
         private readonly IHttpContextAccessor httpContextAccessor;
 
         public FavoriteService(
-            FavoriteRepository favoriteRepository,
-            HeritageRepository heritageRepository,
+            IFavoriteRepository favoriteRepository,
+            IHeritageRepository heritageRepository,
             IMapper mapper,
             ILogger<FavoriteService> logger,
             IHttpContextAccessor httpContextAccessor)

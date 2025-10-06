@@ -13,16 +13,16 @@ namespace Cultural_Heritage_System.Services.Impl
 {
     public class PasswordResetService : IPasswordResetService
     {
-        private readonly UserRepository userRepository;
-        private readonly PasswordResetRepository resetRepository;
+        private readonly IUserRepository userRepository;
+        private readonly IPasswordResetRepository resetRepository;
         private readonly PasswordHasher<User> passwordHasher;
         private readonly IMailService mailService;
         private readonly IMapper mapper;
         private readonly string pepper = "SECRET_PEPPER"; 
 
         public PasswordResetService(
-            UserRepository userRepository,
-            PasswordResetRepository resetRepository,         
+            IUserRepository userRepository,
+            IPasswordResetRepository resetRepository,         
             IMailService mailService, IMapper mapper)
         {
             this.userRepository = userRepository;

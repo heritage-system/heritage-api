@@ -6,17 +6,20 @@ namespace Cultural_Heritage_System.Models
 {
     public class SystemLog: BaseEntity<long>
     {
-        [Required]
+      
         [Column("user_id")]
         [ForeignKey("User")]       
-        public int UserId { get; set; }
-        public User User { get; set; }
+        public int? UserId { get; set; }
+        public User? User { get; set; }
 
         [Column("action")]
-        public string Action { get; set; }
+        public SystemLogAction Action { get; set; }
 
         [Column("details")]
-        public string Details { get; set; }
+        public string? Details { get; set; }
+
+        [Column("ip_address")]
+        public string? IpAddress { get; set; }
 
     }
 

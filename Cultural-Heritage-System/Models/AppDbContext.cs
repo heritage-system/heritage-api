@@ -1,12 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Cultural_Heritage_System.Common;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace Cultural_Heritage_System.Models
 {
     public class AppDbContext : DbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        private readonly IHttpContextAccessor _httpContext;
+        public AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor httpContext) : base(options)
         {
-
+            _httpContext = httpContext;
         }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Contribution> Contributions { get; set; }
@@ -50,11 +54,139 @@ namespace Cultural_Heritage_System.Models
             return base.SaveChanges();
         }
 
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             ApplyUnsignedFields();
-            return base.SaveChangesAsync(cancellationToken);
+
+            var entries = ChangeTracker.Entries()
+                .Where(e => e.State == EntityState.Added
+                         || e.State == EntityState.Modified
+                         || e.State == EntityState.Deleted)
+                .ToList(); // ép ToList() để snapshot collection
+
+            var logs = new List<SystemLog>();
+
+            foreach (var entry in entries)
+            {
+                logs.Add(new SystemLog
+                {
+                    UserId = TryGetUserId(),
+                    Action = MapAction(entry),
+                    Details = $"{entry.Entity.GetType().Name} {entry.State}",
+                    IpAddress = _httpContext.HttpContext?.Connection?.RemoteIpAddress?.ToString()
+                });
+            }
+
+            if (logs.Any())
+            {
+                SystemLogs.AddRange(logs);
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
         }
+
+
+
+        private int? TryGetUserId()
+        {
+            var claim = _httpContext.HttpContext?.User?.FindFirst("userId")?.Value;
+            return claim != null ? int.Parse(claim) : null;
+        }
+
+        private SystemLogAction MapAction(EntityEntry entry)
+        {
+            return entry.Entity switch
+            {
+                // 👤 User
+                User => entry.State switch
+                {
+                    EntityState.Added => SystemLogAction.USER_REGISTER,
+                    EntityState.Modified => SystemLogAction.USER_PROFILE_UPDATED,
+                    EntityState.Deleted => SystemLogAction.USER_STATUS_CHANGED, // hoặc USER_DELETED nếu anh muốn
+                    _ => SystemLogAction.ADMIN_ACTION
+                },
+
+                // 👮 Staff
+                Staff => entry.State switch
+                {
+                    EntityState.Added => SystemLogAction.STAFF_CREATED,
+                    EntityState.Modified => SystemLogAction.STAFF_UPDATED,
+                    EntityState.Deleted => SystemLogAction.STAFF_DELETED,
+                    _ => SystemLogAction.ADMIN_ACTION
+                },
+
+                // 📰 Contribution
+                Contribution => entry.State switch
+                {
+                    EntityState.Added => SystemLogAction.CONTRIBUTION_CREATED,
+                    EntityState.Modified => SystemLogAction.CONTRIBUTION_UPDATED,
+                    EntityState.Deleted => SystemLogAction.CONTRIBUTION_DELETED,
+                    _ => SystemLogAction.ADMIN_ACTION
+                },
+
+                // 🏛️ Heritage
+                Heritage => entry.State switch
+                {
+                    EntityState.Added => SystemLogAction.HERITAGE_CREATED,
+                    EntityState.Modified => SystemLogAction.HERITAGE_UPDATED,
+                    EntityState.Deleted => SystemLogAction.HERITAGE_DELETED,
+                    _ => SystemLogAction.ADMIN_ACTION
+                },
+
+                // Các entity khác (Review, Favorite, Report…)
+                Review => entry.State switch
+                {
+                    EntityState.Added => SystemLogAction.REVIEW_CREATED,
+                    EntityState.Modified => SystemLogAction.REVIEW_UPDATED,
+                    EntityState.Deleted => SystemLogAction.REVIEW_DELETED,
+                    _ => SystemLogAction.ADMIN_ACTION
+                },
+
+                Favorite => entry.State switch
+                {
+                    EntityState.Added => SystemLogAction.FAVORITE_ADDED,
+                    EntityState.Deleted => SystemLogAction.FAVORITE_REMOVED,
+                    _ => SystemLogAction.ADMIN_ACTION
+                },
+
+                Report => entry.State switch
+                {
+                    EntityState.Added => SystemLogAction.REPORT_SUBMITTED,
+                    EntityState.Modified => SystemLogAction.REPORT_RESOLVED,
+                    _ => SystemLogAction.ADMIN_ACTION
+                },
+
+                Wallet => entry.State switch
+                {
+                    EntityState.Added => SystemLogAction.WALLET_CREATED,
+                    _ => SystemLogAction.ADMIN_ACTION
+                },
+
+                WalletTransaction => entry.State switch
+                {
+                    EntityState.Added => SystemLogAction.WALLET_TRANSACTION_ADDED,
+                    EntityState.Deleted => SystemLogAction.WALLET_TRANSACTION_FAILED,
+                    _ => SystemLogAction.ADMIN_ACTION
+                },
+
+                Subscription => entry.State switch
+                {
+                    EntityState.Added => SystemLogAction.SUBSCRIPTION_PURCHASED,
+                    EntityState.Deleted => SystemLogAction.SUBSCRIPTION_CANCELED,
+                    _ => SystemLogAction.ADMIN_ACTION
+                },
+
+                Notification => entry.State switch
+                {
+                    EntityState.Added => SystemLogAction.NOTIFICATION_SENT,
+                    EntityState.Modified => SystemLogAction.NOTIFICATION_READ,
+                    _ => SystemLogAction.ADMIN_ACTION
+                },
+
+                _ => SystemLogAction.ADMIN_ACTION
+            };
+        }
+
 
         private void ApplyUnsignedFields()
         {
@@ -120,12 +252,6 @@ namespace Cultural_Heritage_System.Models
                 .HasOne(c => c.Contributor)
                 .WithMany(u => u.Contributions)
                 .HasForeignKey(c => c.ContributorId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Contribution>()
-                .HasOne(c => c.Reviewer)
-                .WithMany(u => u.ReviewedContributions)
-                .HasForeignKey(c => c.ReviewedBy)
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<QuizResult>()
@@ -295,6 +421,25 @@ namespace Cultural_Heritage_System.Models
                 .WithMany(u => u.ContributionReports)
                 .HasForeignKey(l => l.ContributionId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Staff>()
+               .HasOne(s => s.User)
+               .WithOne(u => u.Staff) 
+               .HasForeignKey<Staff>(s => s.UserId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+
+            modelBuilder.Entity<ContributionAcceptance>()
+               .HasOne(ca => ca.Staff)
+               .WithMany(s => s.ContributionAcceptances)
+               .HasForeignKey(ca => ca.StaffId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ContributionAcceptance>()
+                .HasOne(ca => ca.Contribution)
+                .WithMany(c => c.ContributionAcceptances)
+                .HasForeignKey(ca => ca.ContributionId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
