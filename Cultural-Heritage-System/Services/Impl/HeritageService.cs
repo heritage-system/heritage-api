@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Azure.Core;
 using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
@@ -9,28 +10,34 @@ using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.Globalization;
+using System.Linq;
+using static StackExchange.Redis.Role;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
     public class HeritageService : IHeritageService
     {
-        private readonly HeritageRepository _heritageRepository;
+        private readonly IHeritageRepository _heritageRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMapper _mapper;
         private readonly ILogger<HeritageService> _logger;
-        private readonly UserRepository _userRepository;
-        private readonly LocationRepository _locationRepository;
-        private readonly HeritageLocationRepository _heritageLocationRepository;
-        private readonly HeritageOccurrenceRepository _heritageOccurrenceRepository;
-        private readonly HeritageMediaRepository _heritageMediaRepository;
-        private readonly HeritageTagRepository _heritageTagRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly ILocationRepository _locationRepository;
+        private readonly IHeritageLocationRepository _heritageLocationRepository;
+        private readonly IHeritageOccurrenceRepository _heritageOccurrenceRepository;
+        private readonly IHeritageMediaRepository _heritageMediaRepository;
+        private readonly IHeritageTagRepository _heritageTagRepository;
         private readonly ICloudinaryService _cloudinaryService;
-
-        public HeritageService(HeritageRepository heritageRepository, IHttpContextAccessor httpContextAccessor , 
-            IMapper mapper, ILogger<HeritageService> logger, LocationRepository locationRepository,
-            HeritageLocationRepository heritageLocationRepository, HeritageOccurrenceRepository heritageOccurrenceRepository,
-            HeritageMediaRepository heritageMediaRepository, HeritageTagRepository heritageTagRepository, ICloudinaryService cloudinaryService,UserRepository userRepository)
+        private readonly IFavoriteRepository _favoriteRepository;
+        public HeritageService(IHeritageRepository heritageRepository, IHttpContextAccessor httpContextAccessor , 
+            IMapper mapper, ILogger<HeritageService> logger, ILocationRepository locationRepository,
+            IHeritageLocationRepository heritageLocationRepository, IHeritageOccurrenceRepository heritageOccurrenceRepository,
+            IHeritageMediaRepository heritageMediaRepository, IHeritageTagRepository heritageTagRepository, 
+            ICloudinaryService cloudinaryService,IUserRepository userRepository, IFavoriteRepository favoriteRepository)
         {
             _heritageRepository = heritageRepository;
             _httpContextAccessor = httpContextAccessor;
@@ -43,6 +50,7 @@ namespace Cultural_Heritage_System.Services.Impl
             _heritageTagRepository = heritageTagRepository;
             _cloudinaryService = cloudinaryService;
             _userRepository = userRepository;
+            _favoriteRepository = favoriteRepository;
         }
 
         public async Task<PageResponse<HeritageResponse>> GetAllAsync(int page,int pageSize, string? keyword = null,int? categoryId = null,int? tagId = null)
@@ -223,7 +231,7 @@ namespace Cultural_Heritage_System.Services.Impl
             return id;
         }
 
-        public async Task<List<HeritageNameSearchResponse>> SearchListHeritageName(string keyword)
+        public async Task<List<HeritageNameSearchResponse>> SearchListHeritageName(string? keyword)
         {
             var query = _heritageRepository.GetAllQuery();
 
@@ -241,6 +249,501 @@ namespace Cultural_Heritage_System.Services.Impl
             return _mapper.Map<List<HeritageNameSearchResponse>>(list);
         }
 
+        public async Task<List<HeritageRelatedResponse>> GetHeritageRelated(HeritageRelatedRequest request)
+        {
+            try
+            {
+                var initQuery = _heritageRepository.GetHeritagesQueryable();
 
+                // Loại bỏ heritage hiện tại
+                var baseQuery = initQuery.Where(c => c.Id != request.HeritageId);
+
+                List<HeritageRelatedResponse> related = new();
+
+                // 1. Ưu tiên Category
+                if (request.CategoryIds > 0)
+                {
+                    var categoryQuery = baseQuery
+                        .Where(c => c.CategoryId == request.CategoryIds)
+                        .ProjectTo<HeritageRelatedResponse>(_mapper.ConfigurationProvider)
+                        .OrderBy(x => Guid.NewGuid());
+               
+                    related = await categoryQuery.Take(request.Quantity).ToListAsync();
+
+                    if (related.Count >= request.Quantity)
+                        return related;
+                }
+
+                // 2. Nếu chưa đủ thì check TagIds
+                if ((request.TagIds != null && request.TagIds.Any()) && related.Count < request.Quantity)
+                {
+                    var tagQuery = baseQuery
+                        .Where(c => c.ContributionHeritageTags.Any(tag => request.TagIds.Contains((int)tag.HeritageId)))
+                        .ProjectTo<HeritageRelatedResponse>(_mapper.ConfigurationProvider)
+                        .OrderBy(x => Guid.NewGuid());
+                
+                    var tagRelated = await tagQuery.Take(request.Quantity - related.Count).ToListAsync();
+                    related.AddRange(tagRelated);
+
+                    if (related.Count >= request.Quantity)
+                        return related;
+                }
+
+                // 3. Nếu chưa đủ thì check keyword
+                if (!string.IsNullOrWhiteSpace(request.Keyword) && related.Count < request.Quantity)
+                {
+                    var keyword = request.Keyword.Trim().ToLower();
+                    var unsignedKeyword = StringHelper.RemoveDiacritics(keyword);
+
+                    var keywordQuery = baseQuery
+                        .Where(c =>
+                            c.Name.ToLower().Contains(keyword) ||
+                            c.NameUnsigned.Contains(unsignedKeyword))
+                        .ProjectTo<HeritageRelatedResponse>(_mapper.ConfigurationProvider)
+                        .OrderBy(x => Guid.NewGuid());
+
+                    var keywordRelated = await keywordQuery.Take(request.Quantity - related.Count).ToListAsync();
+                    related.AddRange(keywordRelated);
+
+                    if (related.Count >= request.Quantity)
+                        return related;
+                }
+
+                // 4. Nếu vẫn chưa đủ thì fallback random
+                if (related.Count < request.Quantity)
+                {
+                    var excludeIds = related.Select(r => r.Id).ToList();                   
+                    excludeIds.Add((int)request.HeritageId);
+
+                    var fallbackQuery = baseQuery
+                        .Where(c => !excludeIds.Contains((int)c.Id))
+                        .ProjectTo<HeritageRelatedResponse>(_mapper.ConfigurationProvider)
+                        .OrderBy(x => Guid.NewGuid());
+
+                    var fallback = await fallbackQuery.Take(request.Quantity - related.Count).ToListAsync();
+                    related.AddRange(fallback);
+                }
+
+                return related;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting related contributions");
+                throw;
+            }
+        }
+
+
+        public async Task<PageResponse<HeritageSearchResponse>> SearchHeritagesAsync(HeritageSearchRequest request)
+        {
+            try
+            {
+                var query = _heritageRepository.GetHeritagesQueryable();
+
+                // Keyword search
+                if (!string.IsNullOrEmpty(request.Keyword))
+                {
+                    var searchTerm = request.Keyword.Trim().ToLower();
+                    var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
+
+                    query = query.Where(h =>
+                        h.Name.ToLower().Contains(searchTerm) ||
+                        h.Description.ToLower().Contains(searchTerm) ||
+                        h.NameUnsigned.Contains(unsignedTerm) ||
+                        h.DescriptionUnsigned.Contains(unsignedTerm));
+                }
+
+                // Location filter
+                if (request.Locations != null && request.Locations.Any())
+                {
+                    request.Locations = request.Locations
+                                               .Select(loc => StringHelper.RemoveDiacritics(loc))
+                                               .ToList();
+
+                    query = query.Where(h => h.HeritageLocations
+                                               .Any(hl => request.Locations.Contains(hl.Location.ProvinceUnsigned)));
+                }
+
+                // Category filter
+                if (request.CategoryIds != null && request.CategoryIds.Any())
+                {
+                    query = query.Where(h => request.CategoryIds.Contains(h.CategoryId));
+                }
+
+                // Tag filter
+                if (request.TagIds != null && request.TagIds.Any())
+                {
+                    query = query.Where(h => h.HeritageTags.Any(t => request.TagIds.Contains(t.TagId)));
+                }
+
+                // ---- XỬ LÝ DATE FILTER ----
+                int targetYear = DateTime.Now.Year;
+                bool hasDateFilter = (request.StartDay.HasValue && request.StartMonth.HasValue) ||
+                                     (request.EndDay.HasValue && request.EndMonth.HasValue);
+
+                if (hasDateFilter)
+                {
+                    // Convert Occurrences & filter trước khi phân trang
+                    query = query.AsEnumerable()
+                        .Select(h =>
+                        {
+                            ConvertOccurrencesToRequestCalendarType(h.HeritageOccurrences, request.CalendarType, targetYear);
+                            return h;
+                        })
+                        .Where(h =>
+                        {
+                            var filterStart = request.StartDay.HasValue && request.StartMonth.HasValue
+                                ? new DateTime(targetYear, request.StartMonth.Value, request.StartDay.Value)
+                                : new DateTime(targetYear, 1, 1);
+
+                            var filterEnd = request.EndDay.HasValue && request.EndMonth.HasValue
+                                ? new DateTime(targetYear, request.EndMonth.Value, request.EndDay.Value)
+                                : new DateTime(targetYear, 12, 31);
+
+                            return h.HeritageOccurrences.Any(o =>
+                            {
+                                var occStart = o.StartDay.HasValue && o.StartMonth.HasValue
+                                    ? new DateTime(targetYear, o.StartMonth.Value, o.StartDay.Value)
+                                    : new DateTime(targetYear, 1, 1);
+
+                                var occEnd = o.EndDay.HasValue && o.EndMonth.HasValue
+                                    ? new DateTime(targetYear, o.EndMonth.Value, o.EndDay.Value)
+                                    : occStart;
+
+                                return IsInRange(occStart, filterStart, filterEnd);
+                            });
+                        })
+                        .AsQueryable();
+                }
+
+                // ---- SORT ----
+                switch (request.SortBy)
+                {
+                    case SortBy.IDASC:
+                        query = query.OrderBy(h => h.Id);
+                        break;
+                    case SortBy.IDDESC:
+                        query = query.OrderByDescending(h => h.Id);
+                        break;
+                    case SortBy.NAMEASC:
+                        query = query.OrderBy(h => h.Name);
+                        break;
+                    case SortBy.NAMEDESC:
+                        query = query.OrderByDescending(h => h.Name);
+                        break;
+                    default:
+                        query = query.OrderBy(h => h.Name);
+                        break;
+                }
+
+                // ---- MAP + PHÂN TRANG ----
+                var dtoQuery = query.ProjectTo<HeritageSearchResponse>(_mapper.ConfigurationProvider);
+                var response = dtoQuery.ToPagedResponse(request.Page, request.PageSize);
+
+
+                if (!hasDateFilter)
+                {
+                    foreach (var item in response.Items)
+                    {
+                        ConvertOccurrencesDtoToRequestCalendarType(item.HeritageOccurrences, request.CalendarType, targetYear);
+                    }
+                }
+
+                // ---- Gán IsSave cho từng heritage ----
+                var accountIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+                if (!string.IsNullOrEmpty(accountIdClaim) && response.Items != null)
+                {
+                    var userId = int.Parse(accountIdClaim);
+
+                    foreach (var item in response.Items)
+                    {
+                        item.IsSave = await _favoriteRepository.IsFavoriteExistsAsync(userId, item.Id);
+                    }
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching heritages");
+                throw;
+            }
+        }
+
+
+        public async Task<HeritageDetailResponse> GetHeritageDetail(long id)
+        {
+
+            var existingHeritage = await _heritageRepository.GetHeritageById(id);
+
+            if (existingHeritage == null)
+            {
+                throw new AppException(ErrorCode.HERITAGE_NOT_FOUND);
+            }
+
+            var response = _mapper.Map<HeritageDetailResponse>(existingHeritage);
+
+            var accountIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (accountIdClaim != null)
+            {
+                response.IsSave = await _favoriteRepository.IsFavoriteExistsAsync(int.Parse(accountIdClaim), id);
+            }
+
+            return response;
+        }
+
+        private const double EarthRadiusKm = 6371.0;
+
+        private double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+        {
+            double dLat = ToRadians(lat2 - lat1);
+            double dLon = ToRadians(lon2 - lon1);
+
+            lat1 = ToRadians(lat1);
+            lat2 = ToRadians(lat2);
+
+            double a = Math.Pow(Math.Sin(dLat / 2), 2) +
+                       Math.Cos(lat1) * Math.Cos(lat2) *
+                       Math.Pow(Math.Sin(dLon / 2), 2);
+
+            double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+            return EarthRadiusKm * c;
+        }
+
+        private double ToRadians(double angle) => Math.PI * angle / 180.0;
+
+        private DateTime? ToReferenceDate(HeritageOccurrence occ, int targetYear, CalendarType requestType)
+        {
+            if (!occ.StartDay.HasValue || !occ.StartMonth.HasValue)
+                return null;
+
+            int month = occ.StartMonth.Value;
+            int day = occ.StartDay.Value;
+
+            var lunarCal = new ChineseLunisolarCalendar();
+
+
+            if (occ.CalendarType == requestType)
+            {
+                if (occ.CalendarType == CalendarType.LUNAR)
+                {
+                    try
+                    {
+                        return lunarCal.ToDateTime(targetYear, month, day, 0, 0, 0, 0);
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    return new DateTime(targetYear, month, day);
+                }
+            }
+
+
+            if (occ.CalendarType == CalendarType.LUNAR && requestType == CalendarType.SOLAR)
+            {
+
+                try
+                {
+                    return lunarCal.ToDateTime(targetYear, month, day, 0, 0, 0, 0);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+            else if (occ.CalendarType == CalendarType.SOLAR && requestType == CalendarType.LUNAR)
+            {
+
+                try
+                {
+                    var solarDate = new DateTime(targetYear, month, day);
+                    int lunarYear = lunarCal.GetYear(solarDate);
+                    int lunarMonth = lunarCal.GetMonth(solarDate);
+                    int lunarDay = lunarCal.GetDayOfMonth(solarDate);
+
+
+                    return lunarCal.ToDateTime(lunarYear, lunarMonth, lunarDay, 0, 0, 0, 0);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            return null;
+        }
+
+        private DateTime? ToReferenceDateDto(HeritageOccurrenceDto occ, int targetYear, CalendarType requestType)
+        {
+            if (!occ.StartDay.HasValue || !occ.StartMonth.HasValue)
+                return null;
+
+            int month = occ.StartMonth.Value;
+            int day = occ.StartDay.Value;
+
+            var lunarCal = new ChineseLunisolarCalendar();
+
+
+            if (occ.CalendarTypeName == requestType.ToString())
+            {
+                if (occ.CalendarTypeName == CalendarType.LUNAR.ToString())
+                {
+                    try
+                    {
+                        return lunarCal.ToDateTime(targetYear, month, day, 0, 0, 0, 0);
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    return new DateTime(targetYear, month, day);
+                }
+            }
+
+
+            if (occ.CalendarTypeName == CalendarType.LUNAR.ToString() && requestType == CalendarType.SOLAR)
+            {
+
+                try
+                {
+                    return lunarCal.ToDateTime(targetYear, month, day, 0, 0, 0, 0);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+            else if (occ.CalendarTypeName == CalendarType.SOLAR.ToString() && requestType == CalendarType.LUNAR)
+            {
+
+                try
+                {
+                    var solarDate = new DateTime(targetYear, month, day);
+                    int lunarYear = lunarCal.GetYear(solarDate);
+                    int lunarMonth = lunarCal.GetMonth(solarDate);
+                    int lunarDay = lunarCal.GetDayOfMonth(solarDate);
+
+
+                    return lunarCal.ToDateTime(lunarYear, lunarMonth, lunarDay, 0, 0, 0, 0);
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            return null;
+        }
+
+
+        private DateTime? ToDateTime(int? day, int? month, CalendarType? calendarType, int year = 2025)
+        {
+            if (!day.HasValue || !month.HasValue) return null;
+
+            if (calendarType == CalendarType.LUNAR)
+            {
+                // Convert lunar -> solar 
+                return LunarToSolar(day.Value, month.Value, year);
+            }
+
+            return new DateTime(year, month.Value, day.Value);
+        }
+
+        private DateTime LunarToSolar(int day, int month, int year)
+        {
+
+            var cal = new System.Globalization.ChineseLunisolarCalendar();
+            return cal.ToDateTime(year, month, day, 0, 0, 0, 0);
+        }
+
+        private bool IsInRange(DateTime date, DateTime start, DateTime end)
+        {
+            if (start <= end)
+            {
+                return date >= start && date <= end;
+            }
+            else // qua năm mới
+            {
+                return date >= start || date <= end;
+            }
+        }
+
+        private void ConvertOccurrencesToRequestCalendarType(IEnumerable<HeritageOccurrence> occurrences, CalendarType targetType, int year)
+        {
+            if (occurrences == null) return;
+
+            foreach (var occ in occurrences)
+            {
+                if (occ.CalendarType != targetType)
+                {
+                    var start = ToReferenceDate(occ, year, targetType);
+                    var end = occ.EndDay.HasValue && occ.EndMonth.HasValue
+                        ? ToReferenceDate(new HeritageOccurrence
+                        {
+                            StartDay = occ.EndDay,
+                            StartMonth = occ.EndMonth,
+                            CalendarType = occ.CalendarType
+                        }, year, targetType)
+                        : start;
+
+                    if (start.HasValue)
+                    {
+                        occ.StartDay = start.Value.Day;
+                        occ.StartMonth = start.Value.Month;
+                        occ.CalendarType = targetType;
+                    }
+
+                    if (end.HasValue)
+                    {
+                        occ.EndDay = end.Value.Day;
+                        occ.EndMonth = end.Value.Month;
+                        occ.CalendarType = targetType;
+                    }
+                }
+            }
+        }
+
+        private void ConvertOccurrencesDtoToRequestCalendarType(IEnumerable<HeritageOccurrenceDto> occurrences, CalendarType targetType, int year)
+        {
+            if (occurrences == null) return;
+
+            foreach (var occ in occurrences)
+            {
+                if (occ.CalendarTypeName != targetType.ToString())
+                {
+                    var start = ToReferenceDateDto(occ, year, targetType);
+                    var end = occ.EndDay.HasValue && occ.EndMonth.HasValue
+                        ? ToReferenceDateDto(new HeritageOccurrenceDto
+                        {
+                            StartDay = occ.EndDay,
+                            StartMonth = occ.EndMonth,
+                            CalendarTypeName = occ.CalendarTypeName
+                        }, year, targetType)
+                        : start;
+
+                    if (start.HasValue)
+                    {
+                        occ.StartDay = start.Value.Day;
+                        occ.StartMonth = start.Value.Month;
+                        occ.CalendarTypeName = targetType.ToString();
+                    }
+
+                    if (end.HasValue)
+                    {
+                        occ.EndDay = end.Value.Day;
+                        occ.EndMonth = end.Value.Month;
+                        occ.CalendarTypeName = targetType.ToString();
+                    }
+                }
+            }
+        }
     }
 }

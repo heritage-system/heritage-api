@@ -12,23 +12,23 @@ using Microsoft.EntityFrameworkCore;
 
 public class ContributorService : IContributorService
 {
-    private readonly ContributorRepository contributorRepository;
+    private readonly IContributorRepository contributorRepository;
     private readonly ILogger<ContributorService> logger;
     private readonly IMapper mapper;
     private readonly IHttpContextAccessor httpContextAccessor;
-    private readonly ProfileRepository profileRepository;
-    private readonly UserRepository userRepository;
-    private readonly RoleRepository roleRepository;
+    private readonly IProfileRepository profileRepository;
+    private readonly IUserRepository userRepository;
+    private readonly IRoleRepository roleRepository;
     private readonly IUserCacheService userCacheService;
 
     public ContributorService(
-        ContributorRepository contributorRepository,
+        IContributorRepository contributorRepository,
         ILogger<ContributorService> logger,
         IMapper mapper,
         IHttpContextAccessor httpContextAccessor,
-        ProfileRepository profileRepository,
-        UserRepository userRepository,
-        RoleRepository roleRepository,
+        IProfileRepository profileRepository,
+        IUserRepository userRepository,
+        IRoleRepository roleRepository,
         IUserCacheService userCacheService
     )
     {

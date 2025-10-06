@@ -42,16 +42,28 @@ namespace Cultural_Heritage_System.Helpers
             .ForMember(dest => dest.CategoryName,
                 opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : string.Empty))
             .ForMember(dest => dest.HeritageTags,
-                opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag.Name)))
-            .ForMember(dest => dest.HeritageTagIds,
-                opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag.Id)))
+                opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag.Name)))            
             .ForMember(dest => dest.HeritageOccurrences,
                 opt => opt.MapFrom(src => src.HeritageOccurrences))
             .ForMember(dest => dest.Media,
-                opt => opt.MapFrom(src => src.Media))
+                       opt => opt.MapFrom(src =>
+                           src.Media.FirstOrDefault(m => m.MediaType == MediaType.IMAGE)))
             .ForMember(dest => dest.HeritageLocations,
                 opt => opt.MapFrom(src => src.HeritageLocations.Select(hl => hl.Location)));
 
+            CreateMap<Heritage, HeritageDetailResponse>()
+           .ForMember(dest => dest.CategoryName,
+               opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : string.Empty))
+           .ForMember(dest => dest.HeritageTags,
+               opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag.Name)))
+           .ForMember(dest => dest.HeritageTagIds,
+               opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag.Id)))
+           .ForMember(dest => dest.HeritageOccurrences,
+               opt => opt.MapFrom(src => src.HeritageOccurrences))
+           .ForMember(dest => dest.Media,
+               opt => opt.MapFrom(src => src.Media))
+           .ForMember(dest => dest.HeritageLocations,
+               opt => opt.MapFrom(src => src.HeritageLocations.Select(hl => hl.Location)));
 
             // HeritageOccurrence → HeritageOccurrenceDto
             CreateMap<HeritageOccurrence, HeritageOccurrenceDto>()
@@ -148,12 +160,14 @@ namespace Cultural_Heritage_System.Helpers
         .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.User.UserName))
         .ForMember(dest => dest.UserImageUrl, opt => opt.MapFrom(src => src.User.Profile.AvatarUrl))
         .ForMember(dest => dest.Likes, opt => opt.MapFrom(src => src.Likes != null ? src.Likes.Count : 0))
-        .ForMember(dest => dest.LikedByMe, opt => opt.Ignore()) // ✅ manual later
-        .ForMember(dest => dest.CreatedByMe, opt => opt.Ignore()) // ✅ prevent reset
+        .ForMember(dest => dest.LikedByMe, opt => opt.Ignore()) 
+        .ForMember(dest => dest.CreatedByMe, opt => opt.Ignore()) 
         .ForMember(dest => dest.ReviewMedias, opt => opt.MapFrom(src => src.ReviewMedias))
         .ForMember(dest => dest.Replies, opt => opt.Ignore())
         .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
-         .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
+         .ForMember(dest => dest.IsUpdated,
+            opt => opt.MapFrom(src => src.UpdatedAt != null
+                && (src.UpdatedAt - src.CreatedAt).TotalSeconds > 1));
 
             CreateMap<ReviewResponse, Review>();
             // ReviewMedia → ReviewMediaResponse
@@ -165,16 +179,11 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<ReviewCreateRequest, Review>()
                 .ForMember(dest => dest.HeritageId, opt => opt.MapFrom(src => src.HeritageId))
                 .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment))
-                .ForMember(dest => dest.ParentReviewId, opt => opt.MapFrom(src => src.ParentReviewId))
-                .ForMember(dest => dest.ReviewMedias, opt => opt.Ignore()) // handled manually after file upload
-                .ForMember(dest => dest.Likes, opt => opt.Ignore())
-                .ForMember(dest => dest.Reports, opt => opt.Ignore())
-                .ForMember(dest => dest.Replies, opt => opt.Ignore());
+                .ForMember(dest => dest.ParentReviewId, opt => opt.MapFrom(src => src.ParentReviewId));             
 
             // ReviewMediaRequest → ReviewMedia
-            CreateMap<ReviewMediaRequest, ReviewMedia>()
-                .ForMember(dest => dest.Url, opt => opt.Ignore()) // file upload decides the URL
-                .ForMember(dest => dest.MediaType, opt => opt.MapFrom(src => src.Type));
+            CreateMap<ReviewMediaRequest, ReviewMedia>();
+               
 
 
             // Map from Review entity to LikeReviewResponse DTO
@@ -211,7 +220,7 @@ namespace Cultural_Heritage_System.Helpers
 
 
             CreateMap<ContributionHeritageTag, HeritageNameSearchResponse>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.HeritageId))
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Heritage.Name));
 
             CreateMap<Contribution, ContributionSearchResponse>()
@@ -282,6 +291,42 @@ namespace Cultural_Heritage_System.Helpers
                 .ForMember(dest => dest.Status,
                     opt => opt.MapFrom(src => src.Status.ToString()));
 
+            CreateMap<Contribution, ContributionOverviewResponse>()
+                .ForMember(dest => dest.View,
+                    opt => opt.MapFrom(src => src.ContributionAccessLogs != null ? src.ContributionAccessLogs.Count : 0))
+                .ForMember(dest => dest.Save,
+                    opt => opt.MapFrom(src => src.ContributionSaves != null ? src.ContributionSaves.Count : 0))
+            .ForMember(dest => dest.Reports,
+                    opt => opt.MapFrom(src => src.ContributionReports != null ? src.ContributionReports.Count : 0))
+            .ForMember(dest => dest.Comments,
+                    opt => opt.MapFrom(src => src.Reviews != null ? src.Reviews.Count : 0))
+            .ForMember(dest => dest.IsPremium, opt => opt.MapFrom(src =>
+                src.PremiumType != PremiumType.FREE));
+
+            CreateMap<Contribution, ContributionOverviewListItemResponse>()          
+             .ForMember(dest => dest.View,
+                    opt => opt.MapFrom(src => src.ContributionAccessLogs != null ? src.ContributionAccessLogs.Count : 0))
+             .ForMember(dest => dest.Comments,
+                    opt => opt.MapFrom(src => src.Reviews != null ? src.Reviews.Count : 0))
+             .ForMember(dest => dest.Saves,
+                    opt => opt.MapFrom(src => src.ContributionSaves != null ? src.ContributionSaves.Count : 0))
+            .ForMember(dest => dest.IsPremium, opt => opt.MapFrom(src =>
+                src.PremiumType != PremiumType.FREE));
+
+            CreateMap<Contribution, ContributionDetailUpdatedResponse>()              
+                .ForMember(dest => dest.IsPremium, opt => opt.MapFrom(src =>
+                src.PremiumType != PremiumType.FREE));
+
+            CreateMap<Heritage, HeritageRelatedResponse>()
+            .ForMember(dest => dest.CategoryName,
+                opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : string.Empty))
+            .ForMember(dest => dest.HeritageTags,
+                opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag.Name)))           
+            .ForMember(dest => dest.Media,
+                       opt => opt.MapFrom(src =>
+                           src.Media.FirstOrDefault(m => m.MediaType == MediaType.IMAGE)))
+            .ForMember(dest => dest.HeritageLocations,
+                opt => opt.MapFrom(src => src.HeritageLocations.Select(hl => hl.Location)));
         }
 
     }

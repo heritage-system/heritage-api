@@ -21,26 +21,28 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OfficeOpenXml.Packaging.Ionic.Zlib;
+using System.Threading.Tasks;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
     public class ContributionService : IContributionService
     {
         private readonly IHttpContextAccessor httpContextAccessor;
-        private readonly ContributorRepository contributorRepository;
-        private readonly ContributionRepository contributionRepository;
-        private readonly SubscriptionRepository subscriptionRepository;
+        private readonly IContributorRepository contributorRepository;
+        private readonly IContributionRepository contributionRepository;
+        private readonly ISubscriptionRepository subscriptionRepository;
         private readonly IMapper mapper;
         private readonly IMailService mailService;
         private readonly ILogger<ContributionService> logger;
-        private readonly ContributionAccessLogRepository contributionAccessLogRepository;     
-        private readonly ContributionSaveRepository contributionSaveRepository;
-        private readonly ContributionHeritageTagRepository contributionHeritageTagRepository;
-        private readonly ContributionReportRepository contributionReportRepository;
-        public ContributionService(ContributorRepository contributorRepository, ContributionRepository contributionRepository, ILogger<ContributionService> logger, IMailService mailService,
-            IMapper mapper, IHttpContextAccessor httpContextAccessor, SubscriptionRepository subscriptionRepository,
-            ContributionAccessLogRepository contributionAccessLogRepository,
-            ContributionSaveRepository contributionSaveRepository, ContributionHeritageTagRepository contributionHeritageTagRepository, ContributionReportRepository contributionReportRepository)
+        private readonly IContributionAccessLogRepository contributionAccessLogRepository;     
+        private readonly IContributionSaveRepository contributionSaveRepository;
+        private readonly IContributionHeritageTagRepository contributionHeritageTagRepository;
+        private readonly IContributionReportRepository contributionReportRepository;
+        private readonly IStaffRepository staffRepository;
+        public ContributionService(IContributorRepository contributorRepository, IContributionRepository contributionRepository, ILogger<ContributionService> logger, IMailService mailService,
+            IMapper mapper, IHttpContextAccessor httpContextAccessor, ISubscriptionRepository subscriptionRepository,
+            IContributionAccessLogRepository contributionAccessLogRepository,
+            IContributionSaveRepository contributionSaveRepository, IContributionHeritageTagRepository contributionHeritageTagRepository, IContributionReportRepository contributionReportRepository, IStaffRepository staffRepository)
         {
             this.contributorRepository = contributorRepository;
             this.logger = logger;
@@ -53,13 +55,14 @@ namespace Cultural_Heritage_System.Services.Impl
             this.contributionSaveRepository = contributionSaveRepository;
             this.contributionHeritageTagRepository = contributionHeritageTagRepository;
             this.contributionReportRepository = contributionReportRepository;
+            this.staffRepository = staffRepository;
         }
 
         public async Task<PageResponse<ContributionSearchResponse>> SearchContributionsAsync(ContributionSearchRequest request)
         {
             try
             {
-                var query = contributionRepository.GetContributionsQueryable();
+                var query = contributionRepository.GetApprovedContributionsQueryable();
 
 
                 // Keyword search
@@ -164,6 +167,16 @@ namespace Cultural_Heritage_System.Services.Impl
 
             contribution.FirstContent = DeltaHelper.ExtractFirstLongParagraph(contribution.Content);
 
+            var nextStaffId = await GetNextStaffForContributionAsync();
+            if (nextStaffId != null)
+            {
+                contribution.ContributionAcceptances.Add(new ContributionAcceptance
+                {
+                    StaffId = nextStaffId.Value,                 
+                    Note = "Bài viết mới, chờ duyệt"
+                });
+            }
+
 
             await contributionRepository.AddAsync(contribution);
 
@@ -172,7 +185,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
         public async Task<ContributionResponse> GetContributionDetail(int id)
         {
-            var existingContribution = await contributionRepository.GetContributionById(id);
+            var existingContribution = await contributionRepository.GetContributionByIdAndStatus(id, ContributionStatus.APPROVED);
 
             if (existingContribution == null)
                 throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
@@ -318,7 +331,7 @@ namespace Cultural_Heritage_System.Services.Impl
         //    return result;
         //}
 
-        public async Task<PageResponse<ContributionSaveResponse>> GetContributionSave(int page, int pageSize, string? searchName)
+        public async Task<PageResponse<ContributionSaveResponse>> GetContributionSave(ContributionSearchRequest request)
         {
             try
             {
@@ -332,9 +345,9 @@ namespace Cultural_Heritage_System.Services.Impl
                 var query = contributionSaveRepository.GetContributionSavesQueryByUserId(userId);
 
                 // Apply search filter if searchName is provided
-                if (!string.IsNullOrEmpty(searchName))
+                if (!string.IsNullOrEmpty(request.Keyword))
                 {
-                    var searchTerm = searchName.Trim().ToLower();
+                    var searchTerm = request.Keyword.Trim().ToLower();
                     var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
 
                     query = query.Where(f =>
@@ -344,7 +357,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
                 var dtoQuery = query.ProjectTo<ContributionSaveResponse>(mapper.ConfigurationProvider);
 
-                return await dtoQuery.ToPagedResponseAsync(page, pageSize);
+                return await dtoQuery.ToPagedResponseAsync(request.Page, request.PageSize);
 
             }
             catch (Exception ex)
@@ -367,7 +380,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 }
 
 
-                var existingContribution = await contributionRepository.GetContributionById(contributionId);
+                var existingContribution = await contributionRepository.GetContributionByIdAndStatus(contributionId, ContributionStatus.APPROVED);
                 if (existingContribution == null)
                 {
 
@@ -411,7 +424,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 }
 
 
-                var existingContribution = await contributionRepository.GetContributionById(contributionId);
+                var existingContribution = await contributionRepository.GetContributionByIdAndStatus(contributionId,ContributionStatus.APPROVED);
                 if (existingContribution == null)
                 {
 
@@ -440,6 +453,7 @@ namespace Cultural_Heritage_System.Services.Impl
         {
             var topHeritages = await contributionHeritageTagRepository
                 .GetContributionHeritageTagsQueryable()
+                .Where(h => h.Contribution.Status == ContributionStatus.APPROVED)
                 .GroupBy(x => new { x.HeritageId, x.Heritage.Name })
                 .Select(g => new TopContributionHeritageTagResponse
                 {
@@ -470,7 +484,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
 
-            var existingContribution = await contributionRepository.GetContributionById(request.ContributionId);
+            var existingContribution = await contributionRepository.GetContributionByIdAndStatus(request.ContributionId,ContributionStatus.APPROVED);
             if (existingContribution == null)
             {
 
@@ -487,9 +501,9 @@ namespace Cultural_Heritage_System.Services.Impl
         {
             try
             {
-                var query = contributionRepository.GetContributionsQueryable();
+                var initQuery = contributionRepository.GetApprovedContributionsQueryable();
 
-                // Loại bỏ chính bài hiện tại
+                var query = initQuery;
                 if (request.contributionId.HasValue)
                 {
                     query = query.Where(c => c.Id != request.contributionId.Value);
@@ -517,10 +531,10 @@ namespace Cultural_Heritage_System.Services.Impl
                         c.TitleUnsigned.Contains(unsignedKeyword));
                 }
 
-                // Project sang DTO
+               
                 var dtoQuery = query.ProjectTo<ContributionSearchResponse>(mapper.ConfigurationProvider);
 
-                // Random order
+               
                 dtoQuery = dtoQuery.OrderBy(x => Guid.NewGuid());
 
                 // Lấy các bài liên quan trước
@@ -535,7 +549,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
                     var remainingNeeded = request.Quantity - related.Count;
 
-                    var fallbackQuery = contributionRepository.GetContributionsQueryable()
+                    var fallbackQuery = initQuery
                         .Where(c => !excludeIds.Contains(c.Id))
                         .ProjectTo<ContributionSearchResponse>(mapper.ConfigurationProvider)
                         .OrderBy(x => Guid.NewGuid());
@@ -554,5 +568,254 @@ namespace Cultural_Heritage_System.Services.Impl
             }
         }
 
+        public async Task<ContributionOverviewResponse> GetContributionOverview(int id)
+        {
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+
+            if (accountIdClaim == null)
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+      
+            var currentContributor = await contributorRepository.GetContributorByUserId(int.Parse(accountIdClaim));
+            if (currentContributor == null)
+            {
+                throw new AppException(ErrorCode.CONTRIBUTOR_NOT_EXISTED);
+            }
+
+            var existingContribution = await contributionRepository.GetContributionById(id);
+
+            if (existingContribution == null)
+                throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
+
+            if(existingContribution.ContributorId != currentContributor.Id)
+            {
+                throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
+            }
+
+            var response = mapper.Map<ContributionOverviewResponse>(existingContribution);
+
+            var monthlyViews = existingContribution.ContributionAccessLogs
+                .GroupBy(log => new { log.CreatedAt.Year, log.CreatedAt.Month })
+                .Select(g => new MonthlyViewStat
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    Views = g.Count()
+                })
+                .OrderByDescending(x => x.Year)
+                .ThenByDescending(x => x.Month)
+                .Take(6)
+                .OrderBy(x => x.Year).ThenBy(x => x.Month) 
+                .ToList();
+
+            response.MonthlyViews = monthlyViews;
+
+            return response;
+        }
+
+        public async Task<PageResponse<ContributionOverviewListItemResponse>> GetListContributionsOverview(ContributionOverviewSearchRequest request)
+        {
+            try
+            {        
+                var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+
+                if (accountIdClaim == null)
+                {
+                    throw new AppException(ErrorCode.UNAUTHORIZED);
+                }
+
+                var currentContributor = await contributorRepository.GetContributorByUserId(int.Parse(accountIdClaim));
+                if (currentContributor == null)
+                {
+                    throw new AppException(ErrorCode.CONTRIBUTOR_NOT_EXISTED);
+                }
+
+                var query = contributionRepository.GetContributionsByContributorIdQueryable(currentContributor.Id);
+
+                if (request.ContributionStatus.HasValue)
+                {
+                    query = query.Where(h => h.Status == request.ContributionStatus);
+                }
+
+                // Keyword search
+                if (!string.IsNullOrEmpty(request.Keyword))
+                {
+                    var searchTerm = request.Keyword.Trim().ToLower();
+                    var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
+
+                    query = query.Where(h =>
+                      
+                        h.Title.ToLower().Contains(searchTerm) ||
+                        h.TitleUnsigned.Contains(unsignedTerm) ||
+
+                     
+                        h.Contributor.User.UserName.ToLower().Contains(searchTerm) ||
+                        h.Contributor.User.UserNameUnsigned.Contains(unsignedTerm) ||
+                     
+                        h.ContributionHeritageTags.Any(tag =>
+                            tag.Heritage.Name.ToLower().Contains(searchTerm) ||
+                            tag.Heritage.NameUnsigned.Contains(unsignedTerm)
+                        )
+                    );
+                }
+
+
+                switch (request.SortBy)
+                {
+                    case SortBy.IDASC:
+                        query = query.OrderBy(h => h.Id);
+                        break;
+                    case SortBy.IDDESC:
+                        query = query.OrderByDescending(h => h.Id);
+                        break;
+                    case SortBy.NAMEASC:
+                        query = query.OrderBy(h => h.Title);
+                        break;
+                    case SortBy.NAMEDESC:
+                        query = query.OrderByDescending(h => h.Title);
+                        break;
+                    default:
+                        query = query.OrderByDescending(h => h.CreatedAt);
+                        break;
+                }
+
+
+                var dtoQuery = query.ProjectTo<ContributionOverviewListItemResponse>(mapper.ConfigurationProvider);
+
+                // Pagination
+                var response = await dtoQuery.ToPagedResponseAsync(request.Page, request.PageSize);
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error searching contributions");
+                throw;
+            }
+        }
+
+        public async Task<ContributionDetailUpdatedResponse> GetContributionDetailForUpdated(int id)
+        {
+            var existingContribution = await contributionRepository.GetContributionByIdAndStatus(id, ContributionStatus.PENDING);
+            if (existingContribution == null)
+                throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
+
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+
+            if (accountIdClaim == null)
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+
+            var currentContributor = await contributorRepository.GetContributorByUserId(int.Parse(accountIdClaim));
+            if (currentContributor == null)
+            {
+                throw new AppException(ErrorCode.CONTRIBUTOR_NOT_EXISTED);
+            }
+            if (existingContribution.ContributorId != currentContributor.Id)
+            {
+                throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
+            }
+
+            var response = mapper.Map<ContributionDetailUpdatedResponse>(existingContribution);
+               
+            return response;
+        }
+
+        public async Task<ContributionResponse> UpdateContribution(ContributionUpdateRequest request)
+        {
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            var currentContributor = await contributorRepository
+                .GetContributorByUserId(int.Parse(accountIdClaim));
+            if (currentContributor == null)
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            var contribution = await contributionRepository.GetContributionByIdAndStatus(request.Id, ContributionStatus.PENDING);
+            if (contribution == null)
+                throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
+
+         
+            if (contribution.ContributorId != currentContributor.Id)
+                throw new AppException(ErrorCode.FORBIDDEN);
+
+
+            if (!currentContributor.IsPremiumEligible &&
+                request.PremiumType == PremiumType.SUBSCRIPTIONONLY)
+            {
+                throw new AppException(ErrorCode.CONTRIBUTOR_IS_NOT_PREMIUM_ELIGIBLE);
+            }
+
+            // Update fields
+            contribution.Title = request.Title;
+            contribution.Content = request.Content;
+            contribution.MediaUrl = request.MediaUrl;
+            contribution.PremiumType = request.PremiumType;
+
+            // Regenerate
+            contribution.PreviewContent = DeltaHelper.GeneratePreviewDelta(contribution.Content);
+            contribution.FirstContent = DeltaHelper.ExtractFirstLongParagraph(contribution.Content);
+            contribution.GenerateUnsignedFields();
+
+            // Update tags
+            contribution.ContributionHeritageTags.Clear();
+            if (request.TagHeritageIds?.Any() == true)
+            {
+                foreach (var heritageId in request.TagHeritageIds)
+                {
+                    contribution.ContributionHeritageTags.Add(new ContributionHeritageTag
+                    {
+                        HeritageId = heritageId,
+                        ContributionId = contribution.Id
+                    });
+                }
+            }
+
+            await contributionRepository.UpdateAsync(contribution);
+
+            return mapper.Map<ContributionResponse>(contribution);
+        }
+
+        private async Task<int?> GetNextStaffForContributionAsync()
+        {
+            var staffList = await staffRepository.GetActiveReviewersAsync();
+            if (!staffList.Any()) return null;
+
+            // Đếm số pending contribution của từng staff
+            var staffLoad = staffList
+                .Select(s => new
+                {
+                    StaffId = s.Id,
+                    PendingCount = s.ContributionAcceptances
+                                    .Count(ca => ca.Status == ContributionStatus.PENDING)
+                })
+                .ToList();
+
+            var minPending = staffLoad.Min(x => x.PendingCount);
+
+            var candidateStaff = staffLoad
+                .Where(x => x.PendingCount == minPending)
+                .Select(x => x.StaffId)
+                .OrderBy(x => x)
+                .ToList();
+
+            var lastAssignedStaffId = await staffRepository.GetLastAssignedStaffIdAsync();
+
+            int selectedStaffId;
+            if (lastAssignedStaffId != null && candidateStaff.Contains(lastAssignedStaffId.Value))
+            {
+                var idx = candidateStaff.IndexOf(lastAssignedStaffId.Value);
+                selectedStaffId = candidateStaff[(idx + 1) % candidateStaff.Count];
+            }
+            else
+            {
+                selectedStaffId = candidateStaff.First();
+            }
+
+            return selectedStaffId;
+        }
     }
 }

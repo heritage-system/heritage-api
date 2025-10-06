@@ -12,17 +12,17 @@ namespace Cultural_Heritage_System.Services.Impl
     public class UserService : IUserService
     {
         private readonly IHttpContextAccessor httpContextAccessor;
-        private readonly UserRepository userRepository;
-        private readonly ProfileRepository profileRepository;
-        private readonly RoleRepository roleRepository;
+        private readonly IUserRepository userRepository;
+        private readonly IProfileRepository profileRepository;
+        private readonly IRoleRepository roleRepository;
         private readonly PasswordHasher<User> passwordHasher;
         private readonly IMapper mapper;
         private readonly IMailService mailService;
         private readonly ILogger<UserService> logger;
-        private readonly SubscriptionRepository subscriptionRepository;
-        private readonly ContributorRepository contributorRepository;
-        public UserService(UserRepository userRepository, RoleRepository roleRepository, ILogger<UserService> logger, IMailService mailService,
-            ProfileRepository profileRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor, SubscriptionRepository subscriptionRepository, ContributorRepository contributorRepository)
+        private readonly ISubscriptionRepository subscriptionRepository;
+        private readonly IContributorRepository contributorRepository;
+        public UserService(IUserRepository userRepository, IRoleRepository roleRepository, ILogger<UserService> logger, IMailService mailService,
+            IProfileRepository profileRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor, ISubscriptionRepository subscriptionRepository, IContributorRepository contributorRepository)
         {
             this.userRepository = userRepository;
             this.roleRepository = roleRepository;
