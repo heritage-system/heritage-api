@@ -61,6 +61,8 @@ namespace Cultural_Heritage_System.Middlewares
         public static readonly ErrorCode INVALID_STATUS = new ErrorCode(403, "Invalid contributor status.", HttpStatusCode.BadRequest);
 
         public static readonly ErrorCode REVIEW_NOT_FOUND = new ErrorCode(404, "Review not found", HttpStatusCode.NotFound);
+        public static readonly ErrorCode ACCEPTANCE_NOT_FOUND = new(404, "Acceptance not found", HttpStatusCode.NotFound);
+        public static readonly ErrorCode NOTE_REQUIRED_WHEN_REJECT = new(400, "Note is required when rejecting a contribution", HttpStatusCode.BadRequest);
     }
 
 }

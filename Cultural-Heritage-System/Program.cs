@@ -89,6 +89,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<ContributionHeritageTagDAO>();
             builder.Services.AddScoped<ContributionReportDAO>();
             builder.Services.AddScoped<StaffDAO>();
+            builder.Services.AddScoped<ContributionAcceptanceDAO>();
 
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -118,6 +119,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IContributionHeritageTagRepository, ContributionHeritageTagRepository>();
             builder.Services.AddScoped<IContributionReportRepository, ContributionReportRepository>();
             builder.Services.AddScoped<IStaffRepository, StaffRepository>();
+            builder.Services.AddScoped<IContributionAcceptanceRepository, ContributionAcceptanceRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();
@@ -138,6 +140,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IContributionService, ContributionService>();
             builder.Services.AddScoped<IContributionReviewService, ContributionReviewService>();
             builder.Services.AddScoped<IUserCacheService, UserCacheService>();
+            builder.Services.AddScoped<IContributionAcceptanceService, ContributionAcceptanceService>();
 
             // Redis
             builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>

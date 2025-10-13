@@ -58,5 +58,13 @@ namespace Cultural_Heritage_System.DataAccessObjects
                 .Select(l => (int?)l.UserId) 
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<Staff?> GetByUserIdAsync(int userId)
+        {
+            return await _dbSet
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(s => s.UserId == userId);
+        }
+
     }
 }
