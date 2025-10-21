@@ -3,6 +3,7 @@ using Cultural_Heritage_System.DataAccessObjects;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 using Microsoft.EntityFrameworkCore;
+using SendGrid.Helpers.Mail;
 
 namespace Cultural_Heritage_System.Repositories.Impl
 {
@@ -39,5 +40,11 @@ namespace Cultural_Heritage_System.Repositories.Impl
         {
             return await _entityDAO.GetLastAssignedStaffIdAsync();
         }
+
+        public async Task<Staff?> GetByUserIdAsync(int userId)
+        {
+            return  await _entityDAO.GetByUserIdAsync(userId);
+        }
+
     }
 }

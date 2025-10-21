@@ -17,6 +17,11 @@ namespace Cultural_Heritage_System.Models
         public int Saves { get; set; }
         public bool IsPremium { get; set; } = false;
         public string Status { get; set; }
+        public long AcceptanceId { get; set; }
+        public DateTimeOffset? ApprovedAt { get; set; }
+        public DateTimeOffset? PublishedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
+
     }
 
 }

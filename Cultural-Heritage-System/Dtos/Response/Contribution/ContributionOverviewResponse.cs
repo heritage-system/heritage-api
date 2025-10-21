@@ -22,6 +22,8 @@ namespace Cultural_Heritage_System.Models
         public int Reports { get; set; }
         public bool IsPremium { get; set; } = false;
         public List<MonthlyViewStat> MonthlyViews { get; set; } = new();
+        public long AcceptanceId { get; set; }
+        public string? Note { get; set; }
     }
 
 }

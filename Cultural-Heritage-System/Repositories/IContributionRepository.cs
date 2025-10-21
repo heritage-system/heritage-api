@@ -13,6 +13,8 @@ namespace Cultural_Heritage_System.Repositories
         Task<Contribution?> GetContributionById(long id);
         Task<Contribution?> GetContributionByIdAndStatus(long id, ContributionStatus contributionStatus);
         Task<List<TrendingContributorDto>> GetTopContributorsAsync();
-        IQueryable<Contribution> GetContributionsByContributorIdQueryable(int contributorId);      
+        IQueryable<Contribution> GetContributionsByContributorIdQueryable(int contributorId);
+        IQueryable<Contribution> GetContributionsByStaffIdQueryable(int staffId);
+        Task<Contribution?> GetContributionForStaffAsync(long contributionId, int staffId);
     }
 }

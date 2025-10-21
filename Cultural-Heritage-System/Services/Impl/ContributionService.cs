@@ -595,6 +595,10 @@ namespace Cultural_Heritage_System.Services.Impl
 
             var response = mapper.Map<ContributionOverviewResponse>(existingContribution);
 
+            response.Note = existingContribution.ContributionAcceptances?
+                .OrderByDescending(a => a.CreatedAt)
+                .FirstOrDefault()?.Note;
+
             var monthlyViews = existingContribution.ContributionAccessLogs
                 .GroupBy(log => new { log.CreatedAt.Year, log.CreatedAt.Month })
                 .Select(g => new MonthlyViewStat

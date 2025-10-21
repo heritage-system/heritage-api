@@ -46,5 +46,16 @@ namespace Cultural_Heritage_System.Repositories.Impl
         {
             return _entityDAO.GetContributionsByContributorIdQueryable(contributorId);
         }
+
+        public IQueryable<Contribution> GetContributionsByStaffIdQueryable(int staffId)
+        {
+            return _entityDAO.GetContributionsByStaffIdQueryable(staffId);
+        }
+
+        public Task<Contribution?> GetContributionForStaffAsync(long contributionId, int staffId)
+        {
+            return _entityDAO.GetContributionForStaffAsync(contributionId, staffId);
+        }
+             
     }
 }

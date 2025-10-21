@@ -107,7 +107,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<ContributionHeritageTagDAO>();
             builder.Services.AddScoped<ContributionReportDAO>();
             builder.Services.AddScoped<StaffDAO>();
-            builder.Services.AddScoped<QuizDAO>();
+            builder.Services.AddScoped<ContributionAcceptanceDAO>();
+           builder.Services.AddScoped<QuizDAO>();
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
@@ -136,6 +137,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IContributionHeritageTagRepository, ContributionHeritageTagRepository>();
             builder.Services.AddScoped<IContributionReportRepository, ContributionReportRepository>();
             builder.Services.AddScoped<IStaffRepository, StaffRepository>();
+            builder.Services.AddScoped<IContributionAcceptanceRepository, ContributionAcceptanceRepository>();
             builder.Services.AddScoped<IQuizRepository, QuizRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
@@ -156,6 +158,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IContributionService, ContributionService>();
             builder.Services.AddScoped<IContributionReviewService, ContributionReviewService>();
             builder.Services.AddScoped<IUserCacheService, UserCacheService>();
+            builder.Services.AddScoped<IContributionAcceptanceService, ContributionAcceptanceService>();
             builder.Services.AddScoped<IQuizService, QuizService>();
 
             // Redis

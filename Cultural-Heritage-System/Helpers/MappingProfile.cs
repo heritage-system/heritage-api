@@ -1,8 +1,10 @@
 ﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.DataAccessObjects;
 using Cultural_Heritage_System.Dtos.Models;
 using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.Category;
 using Cultural_Heritage_System.Dtos.Request.ContribtutionReport;
+using Cultural_Heritage_System.Dtos.Request.Contribution;
 using Cultural_Heritage_System.Dtos.Request.Contributor;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Request.Location;
@@ -302,7 +304,15 @@ namespace Cultural_Heritage_System.Helpers
             .ForMember(dest => dest.Comments,
                     opt => opt.MapFrom(src => src.Reviews != null ? src.Reviews.Count : 0))
             .ForMember(dest => dest.IsPremium, opt => opt.MapFrom(src =>
-                src.PremiumType != PremiumType.FREE));
+                src.PremiumType != PremiumType.FREE))
+            .ForMember(dest => dest.AcceptanceId, opt => opt.MapFrom(src =>
+                src.ContributionAcceptances
+                    .OrderByDescending(a => a.CreatedAt)
+                    .FirstOrDefault() != null
+                        ? src.ContributionAcceptances
+                            .OrderByDescending(a => a.CreatedAt)
+                            .First().Id
+                        : 0));
 
             CreateMap<Contribution, ContributionOverviewListItemResponse>()          
              .ForMember(dest => dest.View,
@@ -312,7 +322,15 @@ namespace Cultural_Heritage_System.Helpers
              .ForMember(dest => dest.Saves,
                     opt => opt.MapFrom(src => src.ContributionSaves != null ? src.ContributionSaves.Count : 0))
             .ForMember(dest => dest.IsPremium, opt => opt.MapFrom(src =>
-                src.PremiumType != PremiumType.FREE));
+                src.PremiumType != PremiumType.FREE))
+            .ForMember(dest => dest.AcceptanceId, opt => opt.MapFrom(src =>
+                src.ContributionAcceptances
+                    .OrderByDescending(a => a.CreatedAt)
+                    .FirstOrDefault() != null
+                        ? src.ContributionAcceptances
+                            .OrderByDescending(a => a.CreatedAt)
+                            .First().Id
+                        : 0));
 
             CreateMap<Contribution, ContributionDetailUpdatedResponse>()              
                 .ForMember(dest => dest.IsPremium, opt => opt.MapFrom(src =>
@@ -330,6 +348,9 @@ namespace Cultural_Heritage_System.Helpers
                 opt => opt.MapFrom(src => src.HeritageLocations.Select(hl => hl.Location)));
 
             CreateMap<QuizQuestion, QuizQuestionResponse>();
+
+            
+            
         }
 
     }
