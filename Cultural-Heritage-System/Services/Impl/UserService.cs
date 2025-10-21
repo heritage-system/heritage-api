@@ -48,11 +48,11 @@ namespace Cultural_Heritage_System.Services.Impl
             User user = mapper.Map<User>(request);
             user.PasswordHash = passwordHasher.HashPassword(user, request.Password.Trim());
 
-            var role = await roleRepository.FindByRoleName(DefinitionRole.MEMBER);
+            var role = await roleRepository.FindByRoleName(DefinitionRole.STAFF);
             if (role == null)
             {
                 role = new Role();
-                role.Name = DefinitionRole.MEMBER;
+                role.Name = DefinitionRole.STAFF;
                 await roleRepository.CreateRole(role);
             }
             user.RoleId = role.Id;

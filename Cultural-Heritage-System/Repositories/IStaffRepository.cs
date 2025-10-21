@@ -12,6 +12,6 @@ namespace Cultural_Heritage_System.Repositories
         Task<Staff?> GetStaffByUserId(int id);
         Task<List<Staff>> GetActiveReviewersAsync();
         Task<int?> GetLastAssignedStaffIdAsync();
-     
+        Task<Staff?> GetByUserIdAsync(int userId);
     }
 }
