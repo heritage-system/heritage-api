@@ -24,10 +24,8 @@ namespace Cultural_Heritage_System.Models
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<PasswordReset> PasswordResets { get; set; }
         public DbSet<Profile> Profiles { get; set; }
-        public DbSet<Quiz> Quiz { get; set; }
-        public DbSet<QuizCategory> QuizCategories { get; set; }
-        public DbSet<QuizQuestion> QuizQuestions { get; set; }
-        public DbSet<QuizRank> QuizRanks { get; set; }
+        public DbSet<Quiz> Quiz { get; set; } 
+        public DbSet<QuizQuestion> QuizQuestions { get; set; }    
         public DbSet<QuizResult> QuizResults { get; set; }
         public DbSet<Report> Reports { get; set; }
         public DbSet<Review> Reviews { get; set; }

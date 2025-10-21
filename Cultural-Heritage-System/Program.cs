@@ -1,6 +1,7 @@
-
+﻿
 using Cultural_Heritage_System.Configuration;
 using Cultural_Heritage_System.DataAccessObjects;
+using Cultural_Heritage_System.GameHubs;
 using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
@@ -38,6 +39,7 @@ namespace Cultural_Heritage_System
                 client.BaseAddress = new Uri("https://www.googleapis.com/");
             });
 
+
             //builder.Services.AddHttpClient<FacebookAuthClient>(client =>
             //{
             //    client.BaseAddress = new Uri("https://graph.facebook.com/");
@@ -47,12 +49,28 @@ namespace Cultural_Heritage_System
             //{
             //    client.BaseAddress = new Uri("https://graph.facebook.com/");
             //});
+            builder.Services.AddSignalR();
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowReactApp", policy =>
+                {
+                    policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "https://heritage-web-ashy.vercel.app")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowCredentials(); 
+                });
+            });
 
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddDbContext<AppDbContext>(options =>
-               options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions => sqlOptions.CommandTimeout(120)
+    )
+);
+
 
             builder.Services.AddCustomJwtAuthentication(builder.Configuration); // JWT
             CorsConfiguration.ConfigureServices(builder.Services); // CORS
@@ -89,7 +107,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<ContributionHeritageTagDAO>();
             builder.Services.AddScoped<ContributionReportDAO>();
             builder.Services.AddScoped<StaffDAO>();
-
+            builder.Services.AddScoped<QuizDAO>();
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
@@ -118,6 +136,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IContributionHeritageTagRepository, ContributionHeritageTagRepository>();
             builder.Services.AddScoped<IContributionReportRepository, ContributionReportRepository>();
             builder.Services.AddScoped<IStaffRepository, StaffRepository>();
+            builder.Services.AddScoped<IQuizRepository, QuizRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();
@@ -126,8 +145,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IMailService, MailService>();
             builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
-            builder.Services.AddScoped<IFavoriteService, FavoriteService>();
-           
+            builder.Services.AddScoped<IFavoriteService, FavoriteService>();           
             //builder.Services.AddScoped<IProfileService, ProfileService>();
             builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
             builder.Services.AddScoped<IHeritageService, HeritageService>();
@@ -138,6 +156,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IContributionService, ContributionService>();
             builder.Services.AddScoped<IContributionReviewService, ContributionReviewService>();
             builder.Services.AddScoped<IUserCacheService, UserCacheService>();
+            builder.Services.AddScoped<IQuizService, QuizService>();
 
             // Redis
             builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
@@ -178,7 +197,8 @@ namespace Cultural_Heritage_System
             //}
 
             app.UseHttpsRedirection();
-            app.UseCors("AllowAll");
+            app.UseCors("AllowReactApp");
+
 
             app.UseMiddleware<ExceptionMiddleware>();
             app.UseAuthentication();
@@ -188,6 +208,7 @@ namespace Cultural_Heritage_System
 
             app.MapControllers();
 
+            app.MapHub<GameHub>("/gamehub");
             app.Run();
         }
     }

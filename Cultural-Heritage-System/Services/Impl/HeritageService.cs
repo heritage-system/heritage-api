@@ -15,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Globalization;
 using System.Linq;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static StackExchange.Redis.Role;
 
 namespace Cultural_Heritage_System.Services.Impl
@@ -334,7 +335,7 @@ namespace Cultural_Heritage_System.Services.Impl
         }
 
 
-        public async Task<PageResponse<HeritageSearchResponse>> SearchHeritagesAsync(HeritageSearchRequest request)
+        public async Task<PageResponse<HeritageSearchResponse>> SearchHeritagesAsync1(HeritageSearchRequest request)
         {
             try
             {
@@ -470,6 +471,203 @@ namespace Cultural_Heritage_System.Services.Impl
             }
         }
 
+        public async Task<PageResponse<HeritageSearchResponse>> SearchHeritagesAsync(HeritageSearchRequest request)
+        {
+            try
+            {
+                var baseQuery = _heritageRepository.GetHeritagesQueryable();
+
+                // ===== 1) SQL-first filters (dịch được sang SQL) =====
+                if (!string.IsNullOrWhiteSpace(request.Keyword))
+                {
+                    var searchTerm = request.Keyword.Trim().ToLower();
+                    var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm).ToLower();
+
+                    baseQuery = baseQuery.Where(h =>
+                        h.Name.ToLower().Contains(searchTerm) ||
+                        h.Description.ToLower().Contains(searchTerm) ||
+                        h.NameUnsigned.Contains(unsignedTerm) ||
+                        h.DescriptionUnsigned.Contains(unsignedTerm));
+                }
+
+                if (request.Locations != null && request.Locations.Any())
+                {
+                    var unsignedLocations = request.Locations
+                        .Select(loc => StringHelper.RemoveDiacritics(loc))
+                        .Select(loc =>
+                        {
+                            loc = loc.ToLower().Trim();                         
+                            loc = loc
+                                .Replace("thanh pho ", "")  
+                                .Replace("tp. ", "")       
+                                .Replace("tp ", "")      
+                                .Replace("tinh ", "");  
+
+                            return loc.Trim();
+                        })
+                        .ToList();
+
+                    baseQuery = baseQuery.Where(h =>
+                        h.HeritageLocations.Any(hl =>
+                            unsignedLocations.Contains(hl.Location.ProvinceUnsigned.ToLower())));
+                }
+
+
+                if (request.CategoryIds != null && request.CategoryIds.Any())
+                {
+                    baseQuery = baseQuery.Where(h => request.CategoryIds.Contains(h.CategoryId));
+                }
+
+                if (request.TagIds != null && request.TagIds.Any())
+                {
+                    baseQuery = baseQuery.Where(h => h.HeritageTags.Any(t => request.TagIds.Contains(t.TagId)));
+                }
+
+                // ===== 2) Date filter logic =====
+                int targetYear = DateTime.Now.Year;
+                bool hasDateFilter =
+                    (request.StartDay.HasValue && request.StartMonth.HasValue) ||
+                    (request.EndDay.HasValue && request.EndMonth.HasValue);
+
+                // Tập id sau khi áp các filter SQL ở trên
+                var candidateIds = await baseQuery.Select(h => h.Id).ToListAsync();
+
+                HashSet<long> eligibleIds;
+
+                if (hasDateFilter)
+                {
+                    // 2A. Tính khoảng lọc ngày
+                    var filterStart = request.StartDay.HasValue && request.StartMonth.HasValue
+                        ? new DateTime(targetYear, request.StartMonth.Value, request.StartDay.Value)
+                        : new DateTime(targetYear, 1, 1);
+
+                    var filterEnd = request.EndDay.HasValue && request.EndMonth.HasValue
+                        ? new DateTime(targetYear, request.EndMonth.Value, request.EndDay.Value)
+                        : new DateTime(targetYear, 12, 31);
+
+                    // 2B. Duyệt theo lô để không kéo quá nhiều dữ liệu vào RAM
+                    const int CHUNK = 1000;
+                    eligibleIds = new HashSet<long>();
+
+                    for (int i = 0; i < candidateIds.Count; i += CHUNK)
+                    {
+                        var chunk = candidateIds.Skip(i).Take(CHUNK).ToList();
+
+                        // Chỉ nạp Occurrences cần thiết cho lô id
+                        var occByHeritage = await _heritageOccurrenceRepository.QueryOccurrences()
+                            .AsNoTracking()
+                            .Where(o => chunk.Contains(o.HeritageId))
+                            .Select(o => new
+                            {
+                                o.HeritageId,
+                                o.StartDay,
+                                o.StartMonth,
+                                o.EndDay,
+                                o.EndMonth,
+                                o.CalendarType
+                            })
+                            .ToListAsync();
+
+                        // Nhóm theo HeritageId
+                        var group = occByHeritage.GroupBy(o => o.HeritageId);
+
+                        foreach (var g in group)
+                        {
+                            // convert âm/dương theo request trước khi so khớp
+                            bool match = false;
+                            foreach (var o in g)
+                            {
+                                var occModel = new HeritageOccurrence
+                                {
+                                    StartDay = o.StartDay,
+                                    StartMonth = o.StartMonth,
+                                    EndDay = o.EndDay,
+                                    EndMonth = o.EndMonth,
+                                    CalendarType = o.CalendarType
+                                };
+
+                                // chuyển về hệ lịch người dùng yêu cầu
+                                ConvertOccurrencesToRequestCalendarType(
+                                    new[] { occModel }, request.CalendarType, targetYear);
+
+                                if (occModel.StartDay.HasValue && occModel.StartMonth.HasValue)
+                                {
+                                    var occStart = new DateTime(targetYear, occModel.StartMonth.Value, occModel.StartDay.Value);
+                                    var occEnd = (occModel.EndDay.HasValue && occModel.EndMonth.HasValue)
+                                        ? new DateTime(targetYear, occModel.EndMonth.Value, occModel.EndDay.Value)
+                                        : occStart;
+
+                                    if (IsInRange(occStart, filterStart, filterEnd))
+                                    {
+                                        match = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (match) eligibleIds.Add(g.Key);
+                        }
+                    }
+                }
+                else
+                {
+                    // Không có date filter: tất cả id đang là ứng viên hợp lệ
+                    eligibleIds = new HashSet<long>(candidateIds);
+                }
+
+                // Nếu rỗng → trả trang rỗng sớm
+                if (eligibleIds.Count == 0)
+                {
+                    return new PageResponse<HeritageSearchResponse>
+                    {
+                        Items = new List<HeritageSearchResponse>(),
+                        TotalElements = 0,
+                        CurrentPages = request.Page,
+                        PageSizes = request.PageSize
+                    };
+                }
+
+                // ===== 3) Áp eligibleIds -> Sort + Paginate trong SQL =====
+                var finalQuery = _heritageRepository.GetHeritagesQueryable().AsNoTracking()
+                    .Where(h => eligibleIds.Contains(h.Id));
+
+                switch (request.SortBy)
+                {
+                    case SortBy.IDASC: finalQuery = finalQuery.OrderBy(h => h.Id); break;
+                    case SortBy.IDDESC: finalQuery = finalQuery.OrderByDescending(h => h.Id); break;
+                    case SortBy.NAMEASC: finalQuery = finalQuery.OrderBy(h => h.Name); break;
+                    case SortBy.NAMEDESC: finalQuery = finalQuery.OrderByDescending(h => h.Name); break;
+                    default: finalQuery = finalQuery.OrderBy(h => h.Name); break;
+                }
+
+                var dtoQuery = finalQuery.ProjectTo<HeritageSearchResponse>(_mapper.ConfigurationProvider);
+                var response = dtoQuery.ToPagedResponse(request.Page, request.PageSize);
+
+
+                foreach (var item in response.Items)
+                {
+                    ConvertOccurrencesDtoToRequestCalendarType(item.HeritageOccurrences, request.CalendarType, targetYear);
+                }
+           
+                // ===== 4) IsSave cho từng heritage =====
+                var accountIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+                if (!string.IsNullOrEmpty(accountIdClaim))
+                {
+                    var userId = int.Parse(accountIdClaim);
+                    foreach (var item in response.Items)
+                    {
+                        item.IsSave = await _favoriteRepository.IsFavoriteExistsAsync(userId, item.Id);
+                    }
+                }
+
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching heritages");
+                throw;
+            }
+        }
 
         public async Task<HeritageDetailResponse> GetHeritageDetail(long id)
         {
@@ -520,63 +718,63 @@ namespace Cultural_Heritage_System.Services.Impl
 
             int month = occ.StartMonth.Value;
             int day = occ.StartDay.Value;
-
             var lunarCal = new ChineseLunisolarCalendar();
 
-
-            if (occ.CalendarType == requestType)
+            try
             {
-                if (occ.CalendarType == CalendarType.LUNAR)
+                // Khi cùng loại lịch
+                if (occ.CalendarType == requestType)
                 {
-                    try
+                    if (occ.CalendarType == CalendarType.LUNAR)
                     {
+                        // ⚙️ Xử lý tháng nhuận trước khi convert
+                        int leapMonth = lunarCal.GetLeapMonth(targetYear);
+                        if (leapMonth > 0 && month >= leapMonth / 2)
+                            month++;
+
                         return lunarCal.ToDateTime(targetYear, month, day, 0, 0, 0, 0);
                     }
-                    catch
+                    else
                     {
-                        return null;
+                        return new DateTime(targetYear, month, day);
                     }
                 }
-                else
+
+                // 🌙 ÂM → DƯƠNG
+                if (occ.CalendarType == CalendarType.LUNAR && requestType == CalendarType.SOLAR)
                 {
-                    return new DateTime(targetYear, month, day);
-                }
-            }
+                    int leapMonth = lunarCal.GetLeapMonth(targetYear);
+                    if (leapMonth > 0 && month >= leapMonth / 2)
+                        month++;
 
-
-            if (occ.CalendarType == CalendarType.LUNAR && requestType == CalendarType.SOLAR)
-            {
-
-                try
-                {
                     return lunarCal.ToDateTime(targetYear, month, day, 0, 0, 0, 0);
                 }
-                catch
-                {
-                    return null;
-                }
-            }
-            else if (occ.CalendarType == CalendarType.SOLAR && requestType == CalendarType.LUNAR)
-            {
 
-                try
+                // ☀️ DƯƠNG → ÂM
+                if (occ.CalendarType == CalendarType.SOLAR && requestType == CalendarType.LUNAR)
                 {
                     var solarDate = new DateTime(targetYear, month, day);
+
                     int lunarYear = lunarCal.GetYear(solarDate);
                     int lunarMonth = lunarCal.GetMonth(solarDate);
                     int lunarDay = lunarCal.GetDayOfMonth(solarDate);
 
+                    // ⚙️ Xử lý lại tháng nhuận ngược
+                    int leapMonth = lunarCal.GetLeapMonth(lunarYear);
+                    if (leapMonth > 0 && lunarMonth > leapMonth / 2)
+                        lunarMonth--;
 
                     return lunarCal.ToDateTime(lunarYear, lunarMonth, lunarDay, 0, 0, 0, 0);
                 }
-                catch
-                {
-                    return null;
-                }
+            }
+            catch
+            {
+                return null;
             }
 
             return null;
         }
+
 
         private DateTime? ToReferenceDateDto(HeritageOccurrenceDto occ, int targetYear, CalendarType requestType)
         {
@@ -585,59 +783,58 @@ namespace Cultural_Heritage_System.Services.Impl
 
             int month = occ.StartMonth.Value;
             int day = occ.StartDay.Value;
-
             var lunarCal = new ChineseLunisolarCalendar();
 
-
-            if (occ.CalendarTypeName == requestType.ToString())
+            try
             {
-                if (occ.CalendarTypeName == CalendarType.LUNAR.ToString())
+                // Khi cùng loại lịch
+                if (occ.CalendarTypeName == requestType.ToString())
                 {
-                    try
+                    if (occ.CalendarTypeName == CalendarType.LUNAR.ToString())
                     {
+                        // ⚙️ Xử lý tháng nhuận trước khi convert
+                        int leapMonth = lunarCal.GetLeapMonth(targetYear);
+                        if (leapMonth > 0 && month >= leapMonth / 2)
+                            month++;
+
                         return lunarCal.ToDateTime(targetYear, month, day, 0, 0, 0, 0);
                     }
-                    catch
+                    else
                     {
-                        return null;
+                        return new DateTime(targetYear, month, day);
                     }
                 }
-                else
+
+                // 🌙 ÂM → DƯƠNG
+                if (occ.CalendarTypeName == CalendarType.LUNAR.ToString() && requestType == CalendarType.SOLAR)
                 {
-                    return new DateTime(targetYear, month, day);
-                }
-            }
+                    int leapMonth = lunarCal.GetLeapMonth(targetYear);
+                    if (leapMonth > 0 && month >= leapMonth / 2)
+                        month++;
 
-
-            if (occ.CalendarTypeName == CalendarType.LUNAR.ToString() && requestType == CalendarType.SOLAR)
-            {
-
-                try
-                {
                     return lunarCal.ToDateTime(targetYear, month, day, 0, 0, 0, 0);
                 }
-                catch
-                {
-                    return null;
-                }
-            }
-            else if (occ.CalendarTypeName == CalendarType.SOLAR.ToString() && requestType == CalendarType.LUNAR)
-            {
 
-                try
+                // ☀️ DƯƠNG → ÂM
+                if (occ.CalendarTypeName == CalendarType.SOLAR.ToString() && requestType == CalendarType.LUNAR)
                 {
                     var solarDate = new DateTime(targetYear, month, day);
+
                     int lunarYear = lunarCal.GetYear(solarDate);
                     int lunarMonth = lunarCal.GetMonth(solarDate);
                     int lunarDay = lunarCal.GetDayOfMonth(solarDate);
 
+                    // ⚙️ Xử lý lại tháng nhuận ngược
+                    int leapMonth = lunarCal.GetLeapMonth(lunarYear);
+                    if (leapMonth > 0 && lunarMonth > leapMonth / 2)
+                        lunarMonth--;
 
                     return lunarCal.ToDateTime(lunarYear, lunarMonth, lunarDay, 0, 0, 0, 0);
                 }
-                catch
-                {
-                    return null;
-                }
+            }
+            catch
+            {
+                return null;
             }
 
             return null;

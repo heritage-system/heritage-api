@@ -19,6 +19,7 @@ using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Location;
 using Cultural_Heritage_System.Dtos.Response.Media;
 using Cultural_Heritage_System.Dtos.Response.Occurence;
+using Cultural_Heritage_System.Dtos.Response.QuizQuestion;
 using Cultural_Heritage_System.Dtos.Response.Report;
 using Cultural_Heritage_System.Dtos.Response.Review;
 using Cultural_Heritage_System.Dtos.Response.Tag;
@@ -327,6 +328,8 @@ namespace Cultural_Heritage_System.Helpers
                            src.Media.FirstOrDefault(m => m.MediaType == MediaType.IMAGE)))
             .ForMember(dest => dest.HeritageLocations,
                 opt => opt.MapFrom(src => src.HeritageLocations.Select(hl => hl.Location)));
+
+            CreateMap<QuizQuestion, QuizQuestionResponse>();
         }
 
     }

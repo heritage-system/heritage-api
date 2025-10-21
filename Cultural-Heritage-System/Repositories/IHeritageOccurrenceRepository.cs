@@ -6,5 +6,6 @@ namespace Cultural_Heritage_System.Repositories
     public interface IHeritageOccurrenceRepository
     {
         Task AddRangeAsync(IEnumerable<HeritageOccurrence> entities);
+        IQueryable<HeritageOccurrence> QueryOccurrences();
     }
 }
