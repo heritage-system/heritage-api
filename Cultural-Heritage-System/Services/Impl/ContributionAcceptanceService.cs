@@ -73,6 +73,7 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 contribution.Status = ContributionStatus.APPROVED;
                 contribution.ApprovedAt = DateTimeOffset.UtcNow;
+                contribution.PublishedAt = contribution.ApprovedAt;
             }
             else
             {
@@ -101,6 +102,12 @@ namespace Cultural_Heritage_System.Services.Impl
                 ?? throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
 
             var response = _mapper.Map<ContributionOverviewResponse>(contribution);
+
+            var acceptance = await _contributionRepository.GetContributionForStaffAsync(contributionId, currentStaff.Id);
+            if (acceptance?.ContributionAcceptances?.FirstOrDefault() != null)
+            {
+                response.Note = acceptance.ContributionAcceptances.FirstOrDefault()?.Note;
+            }
 
             var monthlyViews = contribution.ContributionAccessLogs
                 .GroupBy(log => new { log.CreatedAt.Year, log.CreatedAt.Month })

@@ -51,6 +51,8 @@ namespace Cultural_Heritage_System.DataAccessObjects
                .Include(c => c.ContributionSaves)
                .Include(c => c.Reviews)
                .Include(c => c.ContributionReports)
+               .Include(c => c.ContributionAcceptances)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
@@ -135,11 +137,10 @@ namespace Cultural_Heritage_System.DataAccessObjects
                     .ThenInclude(con => con.User)
                         .ThenInclude(u => u.Profile)
                 .Include(c => c.ContributionAccessLogs)
+                .Include(c => c.ContributionAcceptances)
                 .AsSplitQuery()
-                .FirstOrDefaultAsync(c =>
-                    c.Id == contributionId &&
-                    c.ContributionAcceptances.Any(a => a.StaffId == staffId)
-                );
+                .FirstOrDefaultAsync(c => c.Id == contributionId);
         }
+
     }
 }
