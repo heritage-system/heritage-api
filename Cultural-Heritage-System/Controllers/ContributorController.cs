@@ -1,6 +1,7 @@
 ﻿using Cultural_Heritage_System.Dtos.Request.Contributor;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Contributor;
+using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -20,7 +21,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("search")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<PageResponse<ContributorResponse>>> SearchContributors([FromQuery] ContributorSearchRequest request)
         {
             return new ApiResponse<PageResponse<ContributorResponse>>(200, "Search Contributors",
@@ -28,7 +29,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<ContributorResponse>> GetDetail(int id)
         {
             var result = await contributorService.GetContributorDetail(id);
@@ -40,7 +41,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<ContributorResponse>> Create([FromBody] ContributorCreateRequest request)
         {
             var result = await contributorService.CreateContributor(request);
@@ -52,7 +53,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<ContributorResponse>> Update(int id, [FromBody] ContributorUpdateRequest request)
         {
             var result = await contributorService.UpdateContributor(id, request);
@@ -64,7 +65,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("{id}/disable")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<object>> Disable(int id)
         {
             await contributorService.DisableContributor(id);
@@ -75,7 +76,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("dropdown-users")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<List<DropdownUserResponse>>> SearchDropdownUser([FromQuery] string? keyword)
         {
             var result = await contributorService.SearchDropdownUserAsync(keyword);
@@ -83,7 +84,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("{id}/approve")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<ContributorResponse>> Approve(int id)
         {
             var result = await contributorService.ApproveContributor(id);
@@ -95,7 +96,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("{id}/reject")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<ContributorResponse>> Reject(int id)
         {
             var result = await contributorService.RejectContributor(id);

@@ -129,7 +129,9 @@ namespace Cultural_Heritage_System.Helpers
             .ForMember(dest => dest.Media, opt => opt.MapFrom(src => src.Media))
             .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag)))
             .ForMember(dest => dest.Locations, opt => opt.MapFrom(src => src.HeritageLocations.Select(hl => hl.Location)))
-            .ForMember(dest => dest.Occurrences, opt => opt.MapFrom(src => src.HeritageOccurrences));
+            .ForMember(dest => dest.Occurrences, opt => opt.MapFrom(src => src.HeritageOccurrences))
+            .ForMember(dest => dest.Content, opt => opt.Ignore())
+            .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content));
 
             CreateMap<HeritageMedia, MediaResponse>();
             CreateMap<Tag, TagResponse>();
@@ -137,7 +139,8 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<HeritageOccurrence, OccurrenceResponse>();
 
             CreateMap<LocationRequest, Location>();
-            CreateMap<MediaRequest, HeritageMedia>();
+            CreateMap<MediaRequest, HeritageMedia>()
+                .ForMember(dest => dest.MediaType, opt => opt.MapFrom(src => src.MediaType));
             CreateMap<OccurrenceRequest, HeritageOccurrence>();
 
             CreateMap(typeof(PageResponse<>), typeof(PageResponse<>));

@@ -1,4 +1,5 @@
-﻿using Cultural_Heritage_System.Dtos.Response.Location;
+﻿using Cultural_Heritage_System.Dtos.Models;
+using Cultural_Heritage_System.Dtos.Response.Location;
 using Cultural_Heritage_System.Dtos.Response.Media;
 using Cultural_Heritage_System.Dtos.Response.Occurence;
 using Cultural_Heritage_System.Dtos.Response.Tag;
@@ -13,7 +14,10 @@ namespace Cultural_Heritage_System.Dtos.Response.Heritage
 
         public string Description { get; set; }
 
+        public string Content { get; set; }
+
         public int CategoryId { get; set; }
+
         public string CategoryName { get; set; }
 
         public string MapUrl { get; set; }
@@ -21,6 +25,7 @@ namespace Cultural_Heritage_System.Dtos.Response.Heritage
         public bool IsFeatured { get; set; }
 
         public DateTime CreatedAt { get; set; }
+
         public DateTime? UpdatedAt { get; set; }
 
         public List<MediaResponse> Media { get; set; } = new List<MediaResponse>();

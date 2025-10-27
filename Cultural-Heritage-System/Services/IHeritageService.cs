@@ -7,7 +7,7 @@ namespace Cultural_Heritage_System.Services.Impl
 {
     public interface IHeritageService
     {
-        Task<PageResponse<HeritageResponse>> GetAllAsync(int page,int pageSize,string? keyword = null,int? categoryId = null,int? tagId = null);
+        Task<PageResponse<HeritageResponse>> GetAllAsync(HeritageOverviewSearchRequest request);
         Task<HeritageResponse> GetByIdAsync(long id);
         Task<HeritageResponse> CreateAsync(HeritageCreateRequest request);
         Task<HeritageResponse> UpdateAsync(HeritageUpdateRequest request);
@@ -16,5 +16,6 @@ namespace Cultural_Heritage_System.Services.Impl
         Task<PageResponse<HeritageSearchResponse>> SearchHeritagesAsync(HeritageSearchRequest request);
         Task<HeritageDetailResponse> GetHeritageDetail(long id);
         Task<List<HeritageRelatedResponse>> GetHeritageRelated(HeritageRelatedRequest request);
+        Task<byte[]> ExportHeritagesToCsvAsync(HeritageOverviewSearchRequest request);
     }
 }
