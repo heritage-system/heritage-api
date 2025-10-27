@@ -18,5 +18,9 @@ namespace Cultural_Heritage_System.DataAccessObjects
             await _dbSet.AddRangeAsync(entities);
             await SaveChangesAsync();
         }
+
+        public IQueryable<HeritageOccurrence> QueryOccurrences()
+        =>  _dbSet.AsQueryable();
+
     }
 }

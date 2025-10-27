@@ -63,6 +63,9 @@ namespace Cultural_Heritage_System.Middlewares
         public static readonly ErrorCode REVIEW_NOT_FOUND = new ErrorCode(404, "Review not found", HttpStatusCode.NotFound);
         public static readonly ErrorCode ACCEPTANCE_NOT_FOUND = new(404, "Acceptance not found", HttpStatusCode.NotFound);
         public static readonly ErrorCode NOTE_REQUIRED_WHEN_REJECT = new(400, "Note is required when rejecting a contribution", HttpStatusCode.BadRequest);
-    }
 
+        public static readonly ErrorCode QUIZ_NOT_FOUND = new ErrorCode(404, "Quiz not found", HttpStatusCode.NotFound);
+        public static readonly ErrorCode QUIZ_QUESTION_NOT_FOUND = new ErrorCode(404, "Quiz question not found", HttpStatusCode.NotFound);
+    }
 }
+

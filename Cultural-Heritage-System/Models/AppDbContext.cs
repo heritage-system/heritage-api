@@ -24,10 +24,8 @@ namespace Cultural_Heritage_System.Models
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<PasswordReset> PasswordResets { get; set; }
         public DbSet<Profile> Profiles { get; set; }
-        public DbSet<Quiz> Quiz { get; set; }
-        public DbSet<QuizCategory> QuizCategories { get; set; }
-        public DbSet<QuizQuestion> QuizQuestions { get; set; }
-        public DbSet<QuizRank> QuizRanks { get; set; }
+        public DbSet<Quiz> Quiz { get; set; } 
+        public DbSet<QuizQuestion> QuizQuestions { get; set; }    
         public DbSet<QuizResult> QuizResults { get; set; }
         public DbSet<Report> Reports { get; set; }
         public DbSet<Review> Reviews { get; set; }
@@ -254,11 +252,23 @@ namespace Cultural_Heritage_System.Models
                 .HasForeignKey(c => c.ContributorId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            modelBuilder.Entity<Quiz>()
+                .HasMany(q => q.Questions)
+                .WithOne(qq => qq.Quiz)
+                .HasForeignKey(qq => qq.QuizId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Quiz>()
+                .HasMany(q => q.Results)
+                .WithOne(r => r.Quiz)
+                .HasForeignKey(r => r.QuizId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             modelBuilder.Entity<QuizResult>()
                 .HasOne(q => q.User)
                 .WithMany(u => u.QuizResults)
                 .HasForeignKey(q => q.UserId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Restrict);
 
             //modelBuilder.Entity<RevenueShare>()
             //    .HasOne(rs => rs.Contribution)

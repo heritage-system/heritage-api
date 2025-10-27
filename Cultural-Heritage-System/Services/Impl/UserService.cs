@@ -62,6 +62,7 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 UserId = user.Id,
                 FullName = request.FullName,
+                AvatarUrl = "https://res.cloudinary.com/dea92gqx4/image/upload/v1761033759/Windows_10_Default_Profile_Picture.svg_x71ugm.png"
             };
 
             await profileRepository.AddAsync(profile);
