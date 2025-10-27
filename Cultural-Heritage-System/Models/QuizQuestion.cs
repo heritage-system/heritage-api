@@ -30,10 +30,10 @@ namespace Cultural_Heritage_System.Models
         [Column("correct_option")]
         public string CorrectOption { get; set; }
             
-        [Column("quiz_category")]       
+        [Column("quiz_category", TypeName = "nvarchar(50)")]       
         public QuizCategory? QuizCategory { get; set; }
 
-        [Column("quiz_level")]
+        [Column("quiz_level", TypeName = "nvarchar(50)")]
         public QuizLevel? QuizLevel { get; set; }
 
         public string[] ToOptionsArray()

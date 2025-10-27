@@ -13,11 +13,23 @@ namespace Cultural_Heritage_System.DataAccessObjects
         {
             _logger = logger;
         }
-
-        public IQueryable<QuizQuestion> GetQuizQuestionQueryable()
+        public IQueryable<Quiz> GetQuizQueryable()
         {
-            return _context.QuizQuestions.AsQueryable();
+            return _dbSet
+                .Include(q => q.Questions)
+                .Include(q => q.Results)
+                .ThenInclude(r => r.User)
+                .ThenInclude(u => u.Profile)
+                .AsQueryable();
         }
 
+        public async Task<Quiz?> GetQuizById(long id)
+        {
+            return await _dbSet
+               .Include(h => h.Questions)
+               .Include(h => h.Results)
+               .FirstOrDefaultAsync(u => u.Id == id);
+        }
+     
     }
 }

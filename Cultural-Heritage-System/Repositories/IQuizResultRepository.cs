@@ -4,10 +4,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Cultural_Heritage_System.Repositories
 {
-    public interface IQuizRepository : IBaseRepository<Quiz>
-    {    
-        IQueryable<Quiz> GetQuizQueryable();
-        Task<Quiz?> GetQuizById(long id);
-       
+    public interface IQuizResultRepository : IBaseRepository<QuizResult>
+    {
+        Task<QuizResult?> GetQuizResult(long quizId, int userId);
     }
 }

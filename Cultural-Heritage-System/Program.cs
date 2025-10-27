@@ -108,7 +108,9 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<ContributionReportDAO>();
             builder.Services.AddScoped<StaffDAO>();
             builder.Services.AddScoped<ContributionAcceptanceDAO>();
-           builder.Services.AddScoped<QuizDAO>();
+            builder.Services.AddScoped<QuizDAO>();
+            builder.Services.AddScoped<QuizResultDAO>();
+            builder.Services.AddScoped<QuizQuestionDAO>();
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
@@ -139,6 +141,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IStaffRepository, StaffRepository>();
             builder.Services.AddScoped<IContributionAcceptanceRepository, ContributionAcceptanceRepository>();
             builder.Services.AddScoped<IQuizRepository, QuizRepository>();
+            builder.Services.AddScoped<IQuizResultRepository, QuizResultRepository>();
+            builder.Services.AddScoped<IQuizQuestionRepository, QuizQuestionRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();

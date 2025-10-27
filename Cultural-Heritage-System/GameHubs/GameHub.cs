@@ -1,5 +1,6 @@
 ﻿using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Models;
+using Cultural_Heritage_System.Dtos.Response.QuizQuestion;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 using Cultural_Heritage_System.Services;
@@ -12,6 +13,7 @@ namespace Cultural_Heritage_System.GameHubs
         private readonly IHubContext<GameHub> _hubContext;
         private static readonly Dictionary<string, GameSession> Sessions = new();
         private static readonly List<WaitingPlayer> WaitingPlayers = new();
+        private static readonly Dictionary<string, List<QuizQuestionResponse>> PreGeneratedQuestions = new();
         private readonly IQuizService _quizService;
 
         private const int QUESTION_TIME = 10; // giây
@@ -52,7 +54,7 @@ namespace Cultural_Heritage_System.GameHubs
                 AvatarUrl = avatarUrl,
                 ConnectionId = connectionId
             };
-
+            await Clients.Caller.SendAsync("WaitingForOpponent");
             // 🧩 Nếu đang chờ ai khác — ghép
             if (WaitingPlayers.Count > 0)
             {
@@ -61,7 +63,23 @@ namespace Cultural_Heritage_System.GameHubs
                 {
                     // Không có ai khác -> thêm mới
                     WaitingPlayers.Add(new WaitingPlayer { ConnectionId = connectionId, Player = player });
-                    await Clients.Caller.SendAsync("WaitingForOpponent");
+
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            var preQuestions = await _quizService.GenerateQuestionSet(10);
+                            PreGeneratedQuestions[connectionId] = preQuestions;
+                            Console.WriteLine($"🧩 Pre-generated questions for {username}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"⚠️ Failed to pre-generate questions for {username}: {ex.Message}");
+                        }
+                    });
+
+
+                    
                     return;
                 }
 
@@ -73,10 +91,15 @@ namespace Cultural_Heritage_System.GameHubs
                     Id = Guid.Parse(roomId),
                     Name = $"Match {roomId}",
                     Players = new List<Player> { waiting.Player, player },
-                    Questions = await _quizService.GenerateQuestionSet(5),
+                    Questions = PreGeneratedQuestions.ContainsKey(waiting.ConnectionId)
+                                ? PreGeneratedQuestions[waiting.ConnectionId]
+                                : await _quizService.GenerateQuestionSet(10),
                     CurrentQuestionIndex = 0
                 };
                 Sessions[roomId] = session;
+
+                PreGeneratedQuestions.Remove(waiting.ConnectionId);
+                PreGeneratedQuestions.Remove(connectionId);
 
                 await Groups.AddToGroupAsync(waiting.ConnectionId, roomId);
                 await Groups.AddToGroupAsync(connectionId, roomId);
@@ -115,7 +138,7 @@ namespace Cultural_Heritage_System.GameHubs
                 id = q.Id,
                 question = q.Question,
                 options = q.ToOptionsArray(),
-                difficulty = q.QuizLevel.ToString(),
+                difficulty = q.QuizLevel,
                 readingDuration = READING_TIME,
                 answerDuration = QUESTION_TIME,
                 startTimeUtcMs = startTime
@@ -195,9 +218,9 @@ namespace Cultural_Heritage_System.GameHubs
             // 🎯 Xác định điểm tối đa theo cấp độ
             int maxPoints = q.QuizLevel switch
             {
-                QuizLevel.EASY => 100,
-                QuizLevel.MEDIUM => 200,
-                QuizLevel.HARD => 300,
+                "EASY" => 100,
+                "MEDIUM" => 200,
+                "HARD" => 300,
                 _ => 100
             };
 

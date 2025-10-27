@@ -10,12 +10,17 @@ namespace Cultural_Heritage_System.Models
 
         [Column("title")]
         public string Title { get; set; }
-
-        public ICollection<QuizQuestion> Questions { get; set; } = new List<QuizQuestion>();
-        public ICollection<QuizResult> Results { get; set; } = new List<QuizResult>();
+        [Column("banner_url")]
+        public string BannerUrl { get; set; }
+       
+        [Column("premium_type", TypeName = "nvarchar(30)")]
+        public PremiumType PremiumType { get; set; } = PremiumType.FREE;
 
         [Column("title_unsigned")]
         public string TitleUnsigned { get; set; }
+        public ICollection<QuizQuestion> Questions { get; set; } = new List<QuizQuestion>();
+        public ICollection<QuizResult> Results { get; set; } = new List<QuizResult>();
+
         public void GenerateUnsignedFields()
         {
             TitleUnsigned = StringHelper.RemoveDiacritics(Title).ToLower();         

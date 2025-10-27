@@ -14,8 +14,8 @@ namespace Cultural_Heritage_System.Dtos.Response.QuizQuestion
         public string OptionC { get; set; }  
         public string OptionD { get; set; }
         public string CorrectOption { get; set; }
-        public QuizCategory? QuizCategory { get; set; }
-        public QuizLevel? QuizLevel { get; set; }
+        public string? QuizCategory { get; set; }
+        public string? QuizLevel { get; set; }
 
         public string[] ToOptionsArray()
         {

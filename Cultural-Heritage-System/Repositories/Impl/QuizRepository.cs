@@ -14,11 +14,15 @@ namespace Cultural_Heritage_System.Repositories.Impl
             _quizDAO = QuizDAO;
         }
 
-
-        public IQueryable<QuizQuestion> GetQuizQuestionQueryable()
+        public Task<Quiz?> GetQuizById(long id)
         {
-            return _quizDAO.GetQuizQuestionQueryable();
+            return _quizDAO.GetQuizById(id);
         }
 
+        public IQueryable<Quiz> GetQuizQueryable()
+        {
+            return _quizDAO.GetQuizQueryable();
+        }
+     
     }
 }
