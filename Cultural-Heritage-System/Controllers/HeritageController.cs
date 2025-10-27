@@ -23,11 +23,10 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("all")]
-        [Authorize(Roles = "MEMBER")]
-        public async Task<ApiResponse<PageResponse<HeritageResponse>>> GetAll([FromQuery] int page,[FromQuery] int pageSize,[FromQuery] string? keyword = null,
-                                                                                [FromQuery] int? categoryId = null,[FromQuery] int? tagId = null)
+        [Authorize(Roles = "STAFF,ADMIN")]
+        public async Task<ApiResponse<PageResponse<HeritageResponse>>> GetAll([FromQuery] HeritageOverviewSearchRequest request)
         {
-            var heritages = await _heritageService.GetAllAsync(page, pageSize, keyword, categoryId, tagId);
+            var heritages = await _heritageService.GetAllAsync(request);    
 
             return new ApiResponse<PageResponse<HeritageResponse>>(
                 code: 200,
@@ -50,7 +49,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("id")]
-        //[Authorize(Roles ="ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<HeritageResponse>> GetById([FromQuery] long id)
         {
             var heritage = await _heritageService.GetByIdAsync(id);
@@ -72,7 +71,7 @@ namespace Cultural_Heritage_System.Controllers
 
 
         [HttpPost("create")]
-        //[Authorize(Roles ="ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<HeritageResponse>> Create([FromBody] HeritageCreateRequest request)
         {        
             var newHeritage = await _heritageService.CreateAsync(request);
@@ -87,7 +86,7 @@ namespace Cultural_Heritage_System.Controllers
 
 
         [HttpPut("update")]
-        //[Authorize(Roles ="ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<HeritageResponse>> Update([FromBody] HeritageUpdateRequest request)
         {
             if (!ModelState.IsValid)
@@ -110,7 +109,7 @@ namespace Cultural_Heritage_System.Controllers
 
 
         [HttpDelete("delete")]
-        //[Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<long?>> Delete([FromQuery] long id)
         {
             var deletedId = await _heritageService.DeleteAsync(id);
@@ -164,6 +163,28 @@ namespace Cultural_Heritage_System.Controllers
                 code = 200,
                 result = await _heritageService.GetHeritageRelated(request)
             };
+        }
+
+        [HttpGet("export")]
+        [Authorize(Roles = "STAFF,ADMIN")]
+        public async Task<IActionResult> ExportHeritages([FromQuery] HeritageOverviewSearchRequest request)
+        {
+            try
+            {
+                var csvBytes = await _heritageService.ExportHeritagesToCsvAsync(request);
+
+                var fileName = $"Heritages_Export_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+                return File(csvBytes, "text/csv", fileName);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    code = 400,
+                    message = "Export failed: " + ex.Message
+                });
+            }
         }
     }
 }

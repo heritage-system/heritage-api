@@ -11,12 +11,11 @@ namespace Cultural_Heritage_System.Dtos.Request.Heritage
         public long Id { get; set; }
         public string Name { get; set; }
 
-        public HeritageContentRequest Description { get; set; }
+        public string Description { get; set; }
 
+        public HeritageContentRequest Content { get; set; }
 
         public int CategoryId { get; set; }
-
-        public bool IsFeatured { get; set; }
 
         public List<MediaRequest> Media { get; set; } = new();
 

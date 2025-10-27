@@ -21,7 +21,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<CreateCategoryResponse>> CreateCategory([FromBody] CreateCategoryRequest request)
         {
             var Categories = await CateService.CreateCategory(request);
@@ -33,7 +33,7 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
         [HttpPut]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<UpdateCategoryResponse>> UpdateCategory([FromBody] UpdateCategoryRequest request)
         {
             var Categories = await CateService.UpdateCategory(request);
@@ -45,7 +45,7 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
         [HttpDelete]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<DeleteCategoryResponse>> DeleteCategory([FromBody] DeleteCategoryRequest request)
         {
 
@@ -68,7 +68,7 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
         [HttpGet("search_categories")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<PageResponse<CategorySearchResponse>>> GetAllWithSearch(
          [FromQuery] CategorySearchRequest request)
 

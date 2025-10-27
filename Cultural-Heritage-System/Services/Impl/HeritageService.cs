@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using System.Globalization;
 using System.Linq;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using System.Text.Json;
 using static StackExchange.Redis.Role;
 
 namespace Cultural_Heritage_System.Services.Impl
@@ -54,30 +55,46 @@ namespace Cultural_Heritage_System.Services.Impl
             _favoriteRepository = favoriteRepository;
         }
 
-        public async Task<PageResponse<HeritageResponse>> GetAllAsync(int page,int pageSize, string? keyword = null,int? categoryId = null,int? tagId = null)
+        public async Task<PageResponse<HeritageResponse>> GetAllAsync(HeritageOverviewSearchRequest request)
         {
             var query = _heritageRepository.GetAllQuery();
 
-            if (!string.IsNullOrEmpty(keyword))
+            if (!string.IsNullOrEmpty(request.Keyword))
             {
-                var lowerKeyword = keyword.Trim().ToLower();
+                var lowerKeyword = request.Keyword.Trim().ToLower();
                 var unsignedTerm = StringHelper.RemoveDiacritics(lowerKeyword);
                 query = query.Where(h => h.NameUnsigned.ToLower().Contains(unsignedTerm)
                                        || h.Name.ToLower().Contains(lowerKeyword));
             }
 
-            if (categoryId.HasValue)
+            if (request.CategoryId.HasValue)
+                query = query.Where(h => h.CategoryId == request.CategoryId.Value);
+
+            if (request.TagIds != null && request.TagIds.Any())
             {
-                query = query.Where(h => h.CategoryId == categoryId.Value);
+                query = query.Where(h => request.TagIds.All(tagId =>
+                    h.HeritageTags.Any(ht => ht.TagId == tagId)));
             }
 
-            if (tagId.HasValue)
+            if (request.SortBy.HasValue)
             {
-                query = query.Where(h => h.HeritageTags.Any(ht => ht.TagId == tagId.Value));
+                query = request.SortBy.Value switch
+                {
+                    SortBy.NAMEASC => query.OrderBy(h => h.Name),
+                    SortBy.NAMEDESC => query.OrderByDescending(h => h.Name),
+                    SortBy.IDASC => query.OrderBy(h => h.Id),
+                    SortBy.IDDESC => query.OrderByDescending(h => h.Id),
+                    SortBy.DATEASC => query.OrderBy(h => h.CreatedAt),
+                    SortBy.DATEDESC => query.OrderByDescending(h => h.CreatedAt),
+                    _ => query.OrderByDescending(h => h.CreatedAt)
+                };
+            }
+            else
+            {
+                query = query.OrderByDescending(h => h.CreatedAt);
             }
 
-            var pagedResult = await query.ToPagedResponseAsync(page, pageSize);
-
+            var pagedResult = await query.ToPagedResponseAsync(request.Page, request.PageSize);
             return _mapper.Map<PageResponse<HeritageResponse>>(pagedResult);
         }
 
@@ -165,9 +182,12 @@ namespace Cultural_Heritage_System.Services.Impl
 
                 // --- Update basic fields ---
                 heritage.Name = request.Name;
-                //heritage.Description = request.Description;
+                heritage.Description = request.Description;
                 heritage.CategoryId = request.CategoryId;
-                heritage.IsFeatured = request.IsFeatured;
+                if (request.Content != null)
+                {
+                    heritage.Content = JsonSerializer.Serialize(request.Content);
+                }
 
                 // --- Update Media ---
                 heritage.Media.Clear();
@@ -941,6 +961,78 @@ namespace Cultural_Heritage_System.Services.Impl
                     }
                 }
             }
+        }
+
+        public async Task<byte[]> ExportHeritagesToCsvAsync(HeritageOverviewSearchRequest request)
+        {
+            try
+            {
+                // Get all data without pagination for export
+                var exportRequest = new HeritageOverviewSearchRequest
+                {
+                    Page = 1,
+                    PageSize = int.MaxValue, 
+                    Keyword = request.Keyword,
+                    CategoryId = request.CategoryId,
+                    TagIds = request.TagIds,
+                    SortBy = request.SortBy
+                };
+
+                var heritages = await GetAllAsync(exportRequest);
+
+                // Convert to CSV
+                var csv = GenerateHeritageCsv(heritages.Items);
+
+                // Add BOM for Excel UTF-8 support
+                var preamble = System.Text.Encoding.UTF8.GetPreamble();
+                var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
+
+                var result = new byte[preamble.Length + bytes.Length];
+                Buffer.BlockCopy(preamble, 0, result, 0, preamble.Length);
+                Buffer.BlockCopy(bytes, 0, result, preamble.Length, bytes.Length);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting heritages to CSV");
+                throw;
+            }
+        }
+
+        private string GenerateHeritageCsv(IEnumerable<HeritageResponse> heritages)
+        {
+            var sb = new System.Text.StringBuilder();
+
+            sb.AppendLine("ID,Tên di sản,Mô tả,Danh mục,Tags,Địa điểm,Ngày tạo,Ngày cập nhật");
+
+            foreach (var heritage in heritages)
+            {
+                var tags = string.Join("; ", heritage.Tags?.Select(t => t.Name) ?? new List<string>());
+                var locations = string.Join("; ", heritage.Locations?.Select(l =>
+                    $"{l.Province}, {l.District}") ?? new List<string>());
+
+                sb.AppendLine($"\"{heritage.Id}\"," +
+                             $"\"{EscapeCsvField(heritage.Name)}\"," +
+                             $"\"{EscapeCsvField(heritage.Description)}\"," +
+                             $"\"{EscapeCsvField(heritage.CategoryName)}\"," +
+                             $"\"{EscapeCsvField(tags)}\"," +
+                             $"\"{EscapeCsvField(locations)}\"," +
+                             $"\"{heritage.CreatedAt:yyyy-MM-dd HH:mm:ss}\"," +
+                             $"\"{heritage.UpdatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? ""}\"");
+            }
+
+            return sb.ToString();
+        }
+
+        private string EscapeCsvField(string field)
+        {
+            if (string.IsNullOrEmpty(field))
+                return "";
+
+            return field.Replace("\"", "\"\"")
+                        .Replace("\n", " ")
+                        .Replace("\r", "");
         }
     }
 }
