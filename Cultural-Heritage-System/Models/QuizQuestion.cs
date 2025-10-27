@@ -9,9 +9,8 @@ namespace Cultural_Heritage_System.Models
 
         [Column("quiz_id")]
         [ForeignKey("Quiz")]
-        public long QuizId { get; set; }
-        public Quiz Quiz { get; set; }
-
+        public long? QuizId { get; set; }
+        public Quiz? Quiz { get; set; }
 
         [Column("question")]
         public string Question { get; set; }
@@ -30,21 +29,24 @@ namespace Cultural_Heritage_System.Models
 
         [Column("correct_option")]
         public string CorrectOption { get; set; }
-      
-        [Required]
-        [Column("quiz_category_id")]
-        [ForeignKey("QuizCategory")]    
-        public int QuizCategoryId { get; set; }
-        public QuizCategory QuizCategory { get; set; }
+            
+        [Column("quiz_category", TypeName = "nvarchar(50)")]       
+        public QuizCategory? QuizCategory { get; set; }
 
+        [Column("quiz_level", TypeName = "nvarchar(50)")]
+        public QuizLevel? QuizLevel { get; set; }
 
-        [Required]
-        [ForeignKey("QuizRank")]
-        [Column("quiz_rank_id")]
-        public int QuizRankId { get; set; }
-        public QuizRank? QuizRank { get; set; }
+        public string[] ToOptionsArray()
+        {
+            var options = new List<string>();
 
+            if (!string.IsNullOrWhiteSpace(OptionA)) options.Add(OptionA);
+            if (!string.IsNullOrWhiteSpace(OptionB)) options.Add(OptionB);
+            if (!string.IsNullOrWhiteSpace(OptionC)) options.Add(OptionC);
+            if (!string.IsNullOrWhiteSpace(OptionD)) options.Add(OptionD);
 
+            return options.ToArray();
+        }
     }
 
 }

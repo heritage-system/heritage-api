@@ -17,5 +17,10 @@ namespace Cultural_Heritage_System.Repositories.Impl
         {
             await _entityDAO.AddRangeAsync(entities);
         }
+
+        public IQueryable<HeritageOccurrence> QueryOccurrences()
+        {
+           return _entityDAO.QueryOccurrences();
+        }
     }
 }

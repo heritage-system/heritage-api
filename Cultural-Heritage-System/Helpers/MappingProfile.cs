@@ -10,6 +10,7 @@ using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Request.Location;
 using Cultural_Heritage_System.Dtos.Request.Media;
 using Cultural_Heritage_System.Dtos.Request.Occurrence;
+using Cultural_Heritage_System.Dtos.Request.Quiz;
 using Cultural_Heritage_System.Dtos.Request.Report;
 using Cultural_Heritage_System.Dtos.Request.Review;
 using Cultural_Heritage_System.Dtos.Request.Tag;
@@ -21,6 +22,8 @@ using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Location;
 using Cultural_Heritage_System.Dtos.Response.Media;
 using Cultural_Heritage_System.Dtos.Response.Occurence;
+using Cultural_Heritage_System.Dtos.Response.Quiz;
+using Cultural_Heritage_System.Dtos.Response.QuizQuestion;
 using Cultural_Heritage_System.Dtos.Response.Report;
 using Cultural_Heritage_System.Dtos.Response.Review;
 using Cultural_Heritage_System.Dtos.Response.Tag;
@@ -349,8 +352,18 @@ namespace Cultural_Heritage_System.Helpers
             .ForMember(dest => dest.HeritageLocations,
                 opt => opt.MapFrom(src => src.HeritageLocations.Select(hl => hl.Location)));
 
-            
-            
+            CreateMap<QuizQuestion, QuizQuestionResponse>();
+            CreateMap<Quiz, QuizDetailResponse>();
+            CreateMap<Quiz, QuizListResponse>()
+            .ForMember(dest => dest.TotalQuestions,
+                opt => opt.MapFrom(src => src.Questions.Count))             
+            .ForMember(dest => dest.isPremium,
+                opt => opt.MapFrom(src => src.PremiumType != PremiumType.FREE));
+
+            CreateMap<QuizCreationRequest, Quiz>();
+            CreateMap<QuizUpdateRequest, Quiz>();
+            CreateMap<QuizQuestionCreationRequest, QuizQuestion>();
+            CreateMap<QuizQuestionUpdateRequest, QuizQuestion>();
         }
 
     }

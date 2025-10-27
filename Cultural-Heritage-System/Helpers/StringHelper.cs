@@ -34,6 +34,8 @@ namespace Cultural_Heritage_System.Helpers
            
             var result = stringBuilder.ToString().Normalize(NormalizationForm.FormC);
 
+            result = result.Replace('đ', 'd').Replace('Đ', 'D');
+
             return result.ToLower();
         }
 
