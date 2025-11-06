@@ -18,5 +18,10 @@ namespace Cultural_Heritage_System.Repositories.Impl
         {
             return _entityDAO.GetQuizResult(quizId, userId);
         }
+
+        public Task<List<QuizResult>> GetResultsByQuizId(long quizId)
+        {
+            return _entityDAO.GetResultsByQuizId(quizId);
+        }
     }
 }

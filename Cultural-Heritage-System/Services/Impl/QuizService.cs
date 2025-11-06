@@ -396,5 +396,28 @@ namespace Cultural_Heritage_System.Services.Impl
             await quizQuestionRepository.DeleteAsync(quizQuestion);
             return id;
         }
+
+        public async Task<QuizDetailAdminResponse> GetQuizDetailAdmin(long quizId)
+        {
+            var quiz = await quizRepository.GetQuizById(quizId);
+
+            if (quiz == null)
+                throw new AppException(ErrorCode.QUIZ_NOT_FOUND);
+
+            var response = mapper.Map<QuizDetailAdminResponse>(quiz);
+
+            var results = await quizResultRepository.GetResultsByQuizId(quizId);
+
+            response.TotalAttempts = results.Count;
+            response.TotalClearCount = results.Sum(r => r.NumberOfClear);
+            response.Results = results.Select(r => new QuizResultInfo
+            {
+                UserId = r.UserId,
+                NumberOfClear = r.NumberOfClear
+            }).ToList();
+
+            return response;
+        }
+
     }
 }

@@ -364,6 +364,15 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<QuizUpdateRequest, Quiz>();
             CreateMap<QuizQuestionCreationRequest, QuizQuestion>();
             CreateMap<QuizQuestionUpdateRequest, QuizQuestion>();
+
+            CreateMap<Quiz, QuizDetailAdminResponse>()
+            .ForMember(dest => dest.PremiumType, opt => opt.MapFrom(src => src.PremiumType))
+            .ForMember(dest => dest.TotalQuestions, opt => opt.MapFrom(src => src.Questions.Count))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
+
+            CreateMap<QuizResult, QuizResultInfo>();
+
         }
 
     }
