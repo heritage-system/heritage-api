@@ -1,11 +1,18 @@
 ﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using Azure.Core;
 using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Request;
+using Cultural_Heritage_System.Dtos.Request.User;
 using Cultural_Heritage_System.Dtos.Response;
+using Cultural_Heritage_System.Dtos.Response.Heritage;
+using Cultural_Heritage_System.Dtos.Response.User;
+using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 using Microsoft.AspNetCore.Identity;
+using System.Formats.Asn1;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
@@ -21,8 +28,9 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly ILogger<UserService> logger;
         private readonly ISubscriptionRepository subscriptionRepository;
         private readonly IContributorRepository contributorRepository;
+        private readonly IStaffRepository staffRepository;
         public UserService(IUserRepository userRepository, IRoleRepository roleRepository, ILogger<UserService> logger, IMailService mailService,
-            IProfileRepository profileRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor, ISubscriptionRepository subscriptionRepository, IContributorRepository contributorRepository)
+            IProfileRepository profileRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor, ISubscriptionRepository subscriptionRepository, IContributorRepository contributorRepository, IStaffRepository staffRepository)
         {
             this.userRepository = userRepository;
             this.roleRepository = roleRepository;
@@ -34,6 +42,7 @@ namespace Cultural_Heritage_System.Services.Impl
             this.httpContextAccessor = httpContextAccessor;
             this.subscriptionRepository = subscriptionRepository;
             this.contributorRepository = contributorRepository;
+            this.staffRepository = staffRepository;
         }
 
         public async Task<UserCreationResponse> CreateUser(UserCreationRequest request)
@@ -48,7 +57,7 @@ namespace Cultural_Heritage_System.Services.Impl
             User user = mapper.Map<User>(request);
             user.PasswordHash = passwordHasher.HashPassword(user, request.Password.Trim());
 
-            var role = await roleRepository.FindByRoleName(DefinitionRole.STAFF);
+            var role = await roleRepository.FindByRoleName(DefinitionRole.MEMBER);
             if (role == null)
             {
                 role = new Role();
@@ -169,6 +178,172 @@ namespace Cultural_Heritage_System.Services.Impl
             var currentContributor = await contributorRepository.GetContributorByUserId(accountId);
             response.isContributor = currentContributor?.Status == ContributorStatus.ACTIVE;
             return response;
+        }
+
+        public async Task<PageResponse<UserSearchResponse>> SearchMemberForAdmin(UserSearchRequest request)
+        {
+            var query = userRepository.GetQueryable();      
+
+            // ---- Filter ----
+            if (!string.IsNullOrWhiteSpace(request.Keyword))
+            {
+                var searchTerm = request.Keyword.Trim().ToLower();
+                var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
+
+                query = query.Where(x =>                 
+                    (x.Profile.FullName != null && x.Profile.FullName.ToLower().Contains(searchTerm)) ||
+                    (x.Profile.FullNameUnsigned != null && x.Profile.FullNameUnsigned.Contains(unsignedTerm)) ||
+                    (x.UserName != null && x.UserName.Contains(unsignedTerm)) ||
+                    (x.UserNameUnsigned != null && x.UserNameUnsigned.Contains(unsignedTerm)) ||
+                    (x.Email != null && x.Email.Contains(unsignedTerm))                
+                );
+            }
+
+            if (request.Status.HasValue)
+            {               
+                query = query.Where(x => x.UserStatus == request.Status);
+            }
+
+            // ---- Sort ----
+            query = request.SortBy switch
+            {
+                SortBy.IDASC => query.OrderBy(x => x.Id),
+                SortBy.IDDESC => query.OrderByDescending(x => x.Id),
+                SortBy.NAMEASC => query.OrderBy(x => x.Profile.FullName),
+                SortBy.NAMEDESC => query.OrderByDescending(x => x.Profile.FullName),
+                SortBy.DATEASC => query.OrderBy(x => x.UpdatedAt.ToString() ?? x.CreatedAt.ToString()),
+                SortBy.DATEDESC => query.OrderByDescending(x => x.UpdatedAt.ToString() ?? x.CreatedAt.ToString()),
+                _ => query.OrderBy(x => x.Id)
+            };
+
+            // ---- Paging ----
+
+            var dtoQuery = query.ProjectTo<UserSearchResponse>(mapper.ConfigurationProvider);
+            var paged = await dtoQuery.ToPagedResponseAsync(request.Page, request.PageSize);
+            
+
+            return paged;
+        }
+
+        public async Task<UserDetailResponse> GetUserDetailForAdmin(int id)
+        {
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            var userOptinal = await userRepository.FindUserByIdWithAllRelations(id);
+            if (userOptinal == null)
+            {
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
+            }
+
+            var response = mapper.Map<UserDetailResponse>(userOptinal);
+
+            return response;
+        }
+
+        public async Task<UserCreationResponse> CreateUserForAdmin(UserCreationByAdminRequest request)
+        {
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            
+            var userOptinal = await userRepository.FindUserByEmail(request.Email);
+            if (userOptinal != null)
+            {
+                logger.LogError("User Existed");
+                throw new AppException(ErrorCode.USER_EXISTED);
+            }
+
+            User user = mapper.Map<User>(request);
+            var generatedPassword = PasswordHelper.GenerateRandomPassword(8);
+            user.PasswordHash = passwordHasher.HashPassword(user, generatedPassword);
+
+            var role = await roleRepository.FindByRoleName(request.RoleName.ToUpper());
+            if (role == null)
+            {
+                role = new Role();
+                role.Name = request.RoleName;
+                await roleRepository.CreateRole(role);
+            }
+            user.RoleId = role.Id;          
+            user.CreatedBy = accountIdClaim;
+            await userRepository.AddAsync(user);
+
+            var profile = new Models.Profile
+            {
+                UserId = user.Id,
+                FullName = request.FullName,
+                AvatarUrl = "https://res.cloudinary.com/dea92gqx4/image/upload/v1761033759/Windows_10_Default_Profile_Picture.svg_x71ugm.png",
+                CreatedBy = accountIdClaim
+            };
+
+            await profileRepository.AddAsync(profile);
+
+            if(request.RoleName.ToUpper() == DefinitionRole.STAFF)
+            {
+                var staff = new Staff
+                {
+                    UserId = user.Id,                  
+                    StaffRole = request.StaffRole,
+                    CanManageEvents = request.CanManageEvents,
+                    CanAssignTasks = request.CanAssignTasks,
+                    CanReplyReports = request.CanReplyReports,
+                    CreatedBy = accountIdClaim
+
+                };
+
+                await staffRepository.AddAsync(staff);
+            }
+            if (request.RoleName.ToUpper() == DefinitionRole.CONTRIBUTOR)
+            {
+                var contributor = new Contributor
+                {
+                    UserId = user.Id,
+                    Bio = request.Bio,
+                    Expertise = request.Expertise,                                  
+                    IsPremiumEligible = request.IsPremiumEligible,
+                    CreatedBy = accountIdClaim              
+                };
+
+                await contributorRepository.AddAsync(contributor);
+            }
+      
+            await mailService.SendEmailWelcomeForAdmin(user.Email, profile.FullName, generatedPassword, ToVietnamese(user.Role.Name), user.UserName);
+
+            return mapper.Map<UserCreationResponse>(user);
+        }
+
+        public async Task<bool> ChangeUserStatusForAdmin(int id, UserStatus status)
+        {
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            var userOptinal = await userRepository.FindUserById(id);
+            if (userOptinal == null)
+            {             
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
+            }
+            userOptinal.UserStatus = status;
+            userOptinal.UpdatedAt = DateTime.UtcNow;
+            userOptinal.UpdatedBy = accountIdClaim;
+            
+            await userRepository.UpdateAsync(userOptinal);
+
+            return true;
+        }
+        private string ToVietnamese(string role)
+        {
+            return role switch
+            {
+                "GUEST" => "Khách",
+                "MEMBER" => "Thành viên",
+                "CONTRIBUTOR" => "Người đóng góp nội dung",
+                "STAFF" => "Nhân viên kiểm duyệt",
+                "ADMIN" => "Quản trị viên",
+                _ => "Người dùng"
+            };
         }
     }
 }

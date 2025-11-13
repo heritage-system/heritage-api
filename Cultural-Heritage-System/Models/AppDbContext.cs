@@ -450,6 +450,31 @@ namespace Cultural_Heritage_System.Models
                 .WithMany(c => c.ContributionAcceptances)
                 .HasForeignKey(ca => ca.ContributionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Heritage>()
+               .HasMany(q => q.PanoramaTours)
+               .WithOne(qq => qq.Heritage)
+               .HasForeignKey(qq => qq.HeritageId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PanoramaTour>()
+              .HasMany(q => q.Scenes)
+              .WithOne(qq => qq.PanoramaTour)
+              .HasForeignKey(qq => qq.PanoramaTourId)
+              .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PanoramaScene>()
+               .HasMany(q => q.InteractionPoints)
+               .WithOne(qq => qq.PanoramaScene)
+               .HasForeignKey(qq => qq.PanoramaSceneId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ReportReply>()
+                .HasOne(r => r.Staff)
+                .WithMany(s => s.ReportReplies)
+                .HasForeignKey(r => r.StaffId)
+                .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

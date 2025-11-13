@@ -111,6 +111,9 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<QuizDAO>();
             builder.Services.AddScoped<QuizResultDAO>();
             builder.Services.AddScoped<QuizQuestionDAO>();
+            builder.Services.AddScoped<PanoramaTourDAO>();
+            builder.Services.AddScoped<PanoramaSceneDAO>();
+            builder.Services.AddScoped<PanoramaInteractionPointDAO>();
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
@@ -143,6 +146,9 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IQuizRepository, QuizRepository>();
             builder.Services.AddScoped<IQuizResultRepository, QuizResultRepository>();
             builder.Services.AddScoped<IQuizQuestionRepository, QuizQuestionRepository>();
+            builder.Services.AddScoped<IPanoramaTourRepository, PanoramaTourRepository>();
+            builder.Services.AddScoped<IPanoramaSceneRepository, PanoramaSceneRepository>();
+            builder.Services.AddScoped<IPanoramaInteractionPointRepository, PanoramaInteractionPointRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();
@@ -164,6 +170,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IUserCacheService, UserCacheService>();
             builder.Services.AddScoped<IContributionAcceptanceService, ContributionAcceptanceService>();
             builder.Services.AddScoped<IQuizService, QuizService>();
+            builder.Services.AddScoped<IPanoramaTourService, PanoramaTourService>();
+            builder.Services.AddScoped<IStaffService, StaffService>();
 
             // Redis
             builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
