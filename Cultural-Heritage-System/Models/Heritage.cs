@@ -40,6 +40,8 @@ namespace Cultural_Heritage_System.Models
 
         public ICollection<ContributionHeritageTag> ContributionHeritageTags { get; set; } = new List<ContributionHeritageTag>();
 
+        public ICollection<PanoramaTour> PanoramaTours { get; set; } = new List<PanoramaTour>();
+
         [Column("name_unsigned")]
         public string NameUnsigned { get; set; }
 

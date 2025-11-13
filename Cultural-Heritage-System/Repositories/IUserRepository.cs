@@ -14,5 +14,6 @@ namespace Cultural_Heritage_System.Repositories
         Task<int> GetTotalUsersCount();
         Task<User?> FindUserById(long id);
         IQueryable<User> GetQueryable();
+        Task<User?> FindUserByIdWithAllRelations(int id);
     }
 }

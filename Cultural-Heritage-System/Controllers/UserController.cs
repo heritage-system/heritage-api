@@ -1,7 +1,10 @@
-﻿using Cultural_Heritage_System.Dtos.Request;
+﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
+using Cultural_Heritage_System.Dtos.Request.User;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
+using Cultural_Heritage_System.Dtos.Response.User;
 using Cultural_Heritage_System.Services;
 using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.Authorization;
@@ -72,8 +75,53 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
 
+        [HttpGet("search_member")]
+        //[Authorize]
+        public async Task<ApiResponse<PageResponse<UserSearchResponse>>> SearchMemberForAdmin(
+           [FromQuery] UserSearchRequest request)
 
-              
+        {
+            return new ApiResponse<PageResponse<UserSearchResponse>>
+            {
+                code = 200,
+                result = await userService.SearchMemberForAdmin(request)
+            };
+        }
+
+        [HttpPost("create_user")]
+        [Authorize]
+        public async Task<ApiResponse<UserCreationResponse>> CreateUserForAdmin([FromBody] UserCreationByAdminRequest request)
+        {
+            var users = await userService.CreateUserForAdmin(request);
+
+            return new ApiResponse<UserCreationResponse>(
+                code: 201,
+                message: "Created user",
+                result: users
+            );
+        }
+
+        [HttpGet("user_detail")]
+        public async Task<ApiResponse<UserDetailResponse>> GetUserDetailForAdmin(int id)
+        {
+            var result = await userService.GetUserDetailForAdmin(id);
+            return new ApiResponse<UserDetailResponse>(
+                code: 200,
+                message: "Get user details successfully",
+                result: result
+            );
+        }
+
+        [HttpPut("{id}/status")]
+        public async Task<ApiResponse<bool>> ChangeUserStatusForAdmin(int id, [FromBody] UserStatus status)
+        {
+            var result = await userService.ChangeUserStatusForAdmin(id, status);
+            return new ApiResponse<bool>(
+                code: 200,
+                message: "Change user status successfully",
+                result: result
+            );
+        }
 
     }
 }

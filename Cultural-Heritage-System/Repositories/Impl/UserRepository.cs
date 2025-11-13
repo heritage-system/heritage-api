@@ -46,5 +46,9 @@ namespace Cultural_Heritage_System.Repositories.Impl
             return _entityDAO.GetQueryable();
         }
 
+        public async Task<User?> FindUserByIdWithAllRelations(int id)
+        {
+            return await _entityDAO.FindUserByIdWithAllRelations(id);
+        }
     }
 }

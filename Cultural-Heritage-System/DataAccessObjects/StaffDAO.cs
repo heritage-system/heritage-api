@@ -19,7 +19,9 @@ namespace Cultural_Heritage_System.DataAccessObjects
         {
             return await _dbSet
                 .Include(c => c.User)
-                .ThenInclude(u => u.Profile)                  
+                .ThenInclude(u => u.Profile)
+                .Include(c => c.ReportReplies)
+                .Include(c => c.ContributionAcceptances)
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
@@ -28,6 +30,7 @@ namespace Cultural_Heritage_System.DataAccessObjects
             return _dbSet
                 .Include(c => c.User)
                     .ThenInclude(u => u.Profile)  
+                .Include(c => c.ReportReplies)
                 .Include(c => c.ContributionAcceptances);
         }
 
@@ -35,7 +38,8 @@ namespace Cultural_Heritage_System.DataAccessObjects
         {
             return await _dbSet
                 .Include(c => c.User)
-                .ThenInclude(u => u.Profile)   
+                .ThenInclude(u => u.Profile)
+                .Include(c => c.ReportReplies)
                 .Include(c => c.ContributionAcceptances)
                 .FirstOrDefaultAsync(c => c.UserId == id);
         }
