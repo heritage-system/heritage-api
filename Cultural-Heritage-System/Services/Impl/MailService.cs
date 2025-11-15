@@ -6,6 +6,7 @@ namespace Cultural_Heritage_System.Services.Impl
     {
         private readonly string _sendGridApiKey;
         private readonly string _welcomeTemplateId;
+        private readonly string _welcomeForAdminTemplateId;
         private readonly string _otpTemplateId;
         private readonly string _answerReportTemplateId;
         private readonly string _emailFrom;
@@ -23,6 +24,8 @@ namespace Cultural_Heritage_System.Services.Impl
                ?? ""; // optional
             _emailFrom = configuration["SendGrid:FromEmail"]
                 ?? throw new ArgumentNullException("SendGrid:FromEmail is required");
+            _welcomeForAdminTemplateId = configuration["SendGrid:WelcomeForAdminTemplateId"]
+                ?? throw new ArgumentNullException("SendGrid:WelcomeForAdminTemplateId is required");
 
             _logger = logger;
         }
@@ -120,6 +123,38 @@ namespace Cultural_Heritage_System.Services.Impl
             else
             {
                 _logger.LogError("Failed to send AnswerReport email to {Email}. Status: {StatusCode}", to, response.StatusCode);
+            }
+        }
+
+        public async Task SendEmailWelcomeForAdmin(string to, string user, string password, string role, string username)
+        {
+            var client = new SendGridClient(_sendGridApiKey);
+            var from = new EmailAddress(_emailFrom, "VTFP");
+            var toEmail = new EmailAddress(to);
+            var msg = new SendGridMessage
+            {
+                TemplateId = _welcomeForAdminTemplateId,
+                From = from,
+            };
+            msg.AddTo(toEmail);
+            msg.SetTemplateData(new
+            {
+                email = to,
+                user = user,
+                password = password,
+                role = role,
+                username = username,
+                activation_link = "https://heritage-web-ashy.vercel.app/login"
+            });
+
+            var response = await client.SendEmailAsync(msg);
+            if (response.StatusCode == System.Net.HttpStatusCode.Accepted)
+            {
+                _logger.LogInformation("Email sent successfully to {Email}", to);
+            }
+            else
+            {
+                _logger.LogError("Failed to send email to {Email}. Status: {StatusCode}", to, response.StatusCode);
             }
         }
     }

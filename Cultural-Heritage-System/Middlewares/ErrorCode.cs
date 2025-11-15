@@ -66,6 +66,8 @@ namespace Cultural_Heritage_System.Middlewares
 
         public static readonly ErrorCode QUIZ_NOT_FOUND = new ErrorCode(404, "Quiz not found", HttpStatusCode.NotFound);
         public static readonly ErrorCode QUIZ_QUESTION_NOT_FOUND = new ErrorCode(404, "Quiz question not found", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode PANORAMA_SCENE_NOT_FOUND = new ErrorCode(404, "Panorama scene not found", HttpStatusCode.NotFound);
     }
 }
 

@@ -13,6 +13,11 @@ namespace Cultural_Heritage_System.Models
         [Required]
         [Column("message")]
         public string Message { get; set; }
+
+        [ForeignKey("Staff")]
+        [Column("staff_id")]
+        public int StaffId { get; set; }
+        public Staff Staff { get; set; }
     }
 
 }

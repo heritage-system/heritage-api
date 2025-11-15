@@ -1,4 +1,4 @@
-﻿namespace Cultural_Heritage_System.Dtos.Request
+﻿namespace Cultural_Heritage_System.Dtos.Request.User
 {
     public class UserCreationRequest
     {     

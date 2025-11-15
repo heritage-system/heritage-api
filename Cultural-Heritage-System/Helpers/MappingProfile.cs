@@ -1,4 +1,5 @@
-﻿using Cultural_Heritage_System.Common;
+﻿using CloudinaryDotNet.Core;
+using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.DataAccessObjects;
 using Cultural_Heritage_System.Dtos.Models;
 using Cultural_Heritage_System.Dtos.Request;
@@ -14,6 +15,7 @@ using Cultural_Heritage_System.Dtos.Request.Quiz;
 using Cultural_Heritage_System.Dtos.Request.Report;
 using Cultural_Heritage_System.Dtos.Request.Review;
 using Cultural_Heritage_System.Dtos.Request.Tag;
+using Cultural_Heritage_System.Dtos.Request.User;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Category;
 using Cultural_Heritage_System.Dtos.Response.Contribution;
@@ -22,11 +24,14 @@ using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Location;
 using Cultural_Heritage_System.Dtos.Response.Media;
 using Cultural_Heritage_System.Dtos.Response.Occurence;
+using Cultural_Heritage_System.Dtos.Response.Panorama;
 using Cultural_Heritage_System.Dtos.Response.Quiz;
 using Cultural_Heritage_System.Dtos.Response.QuizQuestion;
 using Cultural_Heritage_System.Dtos.Response.Report;
 using Cultural_Heritage_System.Dtos.Response.Review;
+using Cultural_Heritage_System.Dtos.Response.Staff;
 using Cultural_Heritage_System.Dtos.Response.Tag;
+using Cultural_Heritage_System.Dtos.Response.User;
 using Cultural_Heritage_System.Models;
 using System.Text.Json;
 
@@ -373,6 +378,63 @@ namespace Cultural_Heritage_System.Helpers
 
             CreateMap<QuizResult, QuizResultInfo>();
 
+
+            CreateMap<PanoramaScene, PanoramaSceneResponse>();
+
+            CreateMap<UserCreationByAdminRequest, User>();
+            CreateMap<User, UserSearchResponse>();
+            CreateMap<User, UserDetailResponse>()
+             .ForMember(dest => dest.Phone,
+                opt => opt.MapFrom(src => src.Profile != null ? src.Profile.Phone : string.Empty))
+             .ForMember(dest => dest.FullName,
+                opt => opt.MapFrom(src => src.Profile != null ? src.Profile.FullName : string.Empty))
+             .ForMember(dest => dest.Address,
+                opt => opt.MapFrom(src => src.Profile != null ? src.Profile.Address : string.Empty))
+             .ForMember(dest => dest.DateOfBirth,
+                opt => opt.MapFrom(src => src.Profile != null ? src.Profile.DateOfBirth : null))
+             .ForMember(dest => dest.AvatarUrl,
+                opt => opt.MapFrom(src => src.Profile != null ? src.Profile.AvatarUrl : string.Empty))
+             .ForMember(dest => dest.RoleName,
+                opt => opt.MapFrom(src => src.Role != null ? src.Role.Name : string.Empty))
+             .ForMember(dest => dest.NumberOfFavorites,
+                    opt => opt.MapFrom(src => src.Favorites != null ? src.Favorites.Count : 0))
+             .ForMember(dest => dest.NumberOfHeritageReviews,
+                    opt => opt.MapFrom(src => src.Reviews != null ? src.Reviews.Count : 0))
+             .ForMember(dest => dest.NumberOfReports,
+                    opt => opt.MapFrom(src => src.Reports != null ? src.Reports.Count : 0))
+             .ForMember(dest => dest.NumberOfSubscriptions,
+                    opt => opt.MapFrom(src => src.Subscriptions != null ? src.Subscriptions.Count : 0))
+             .ForMember(dest => dest.NumberOfContributionSaves,
+                    opt => opt.MapFrom(src => src.ContributionSaves != null ? src.ContributionSaves.Count : 0))
+             .ForMember(dest => dest.NumberOfContributionReviews,
+                    opt => opt.MapFrom(src => src.ContributionReviews != null ? src.ContributionReviews.Count : 0))
+             .ForMember(dest => dest.NumberOfContributionReports,
+                    opt => opt.MapFrom(src => src.ContributionReports != null ? src.ContributionReports.Count : 0));
+
+            CreateMap<Staff, StaffSearchResponse>()
+                .ForMember(dest => dest.UserName,
+                opt => opt.MapFrom(src => src.User != null ? src.User.UserName : string.Empty))
+                .ForMember(dest => dest.Email,
+                opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty));
+            CreateMap<Staff, StaffDetailResponse>()
+                .ForMember(dest => dest.Phone,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.Phone : string.Empty))
+                .ForMember(dest => dest.FullName,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.FullName : string.Empty))
+                .ForMember(dest => dest.Address,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.Address : string.Empty))
+                .ForMember(dest => dest.DateOfBirth,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.DateOfBirth : null))
+                .ForMember(dest => dest.AvatarUrl,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.AvatarUrl : string.Empty))
+                .ForMember(dest => dest.UserName,
+                opt => opt.MapFrom(src => src.User != null ? src.User.UserName : string.Empty))
+                .ForMember(dest => dest.Phone,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.Phone : string.Empty))
+                .ForMember(dest => dest.NumberOfContributionAcceptances,
+                    opt => opt.MapFrom(src => src.ContributionAcceptances != null ? src.ContributionAcceptances.Count : 0))
+                .ForMember(dest => dest.NumberOfReportReplies,
+                    opt => opt.MapFrom(src => src.ReportReplies != null ? src.ReportReplies.Count : 0));
         }
 
     }

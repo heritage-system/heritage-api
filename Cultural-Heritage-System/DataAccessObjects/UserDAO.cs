@@ -61,5 +61,28 @@ namespace Cultural_Heritage_System.DataAccessObjects
                 .Where(u => u.Role.Name == DefinitionRole.MEMBER);
         }
 
+        public async Task<User?> FindUserByIdWithAllRelations(int id)
+        {
+            return await _dbSet
+                // --- 1:1 (Reference navigations)
+                .Include(u => u.Role)
+                .Include(u => u.Profile)            
+
+                // --- 1:n (Collection navigations)
+                .Include(u => u.Favorites)
+                .Include(u => u.Reviews)
+                .Include(u => u.Reports)             
+                .Include(u => u.Notifications)
+                .Include(u => u.ReviewLikes)
+                .Include(u => u.ReviewReports)               
+                .Include(u => u.Subscriptions)
+                .Include(u => u.ContributionAccessLogs)          
+                .Include(u => u.ContributionSaves)
+                .Include(u => u.ContributionReviews)              
+                .Include(u => u.ContributionReports)
+                
+                .FirstOrDefaultAsync(u => u.Id == id);
+        }
+
     }
 }
