@@ -13,7 +13,7 @@ namespace Cultural_Heritage_System.Models
         [Column("label")]
         public string Label { get; set; }
 
-        [Column("type")]
+        [Column("type", TypeName = "nvarchar(20)")]
         public InteractionType Type { get; set; }
 
 

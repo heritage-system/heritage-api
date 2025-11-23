@@ -13,13 +13,21 @@ namespace Cultural_Heritage_System.Models
         [Required]
         [Column("price", TypeName = "decimal(18,2)")]
         public decimal Price { get; set; }
-        //[Required]
-        //[Column("max_opens_per_month")]
-        //public int MaxOpensPerMonth { get; set; }
+        
         [Column("currency", TypeName = "char(3)")]
         public string Currency { get; set; } = "VND";
+
+        [Column("duration_days")]
+        public int? DurationDays { get; set; }
+
+        [Column("marketing_message")]
+        public string? MarketingMessage { get; set; }
+
+        [Column("is_active")]
         public bool IsActive { get; set; } = true;
-              
+
+        public ICollection<PremiumPackageBenefit> PackageBenefits { get; set; } = new List<PremiumPackageBenefit>();
+
     }
 
 

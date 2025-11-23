@@ -371,6 +371,7 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<QuizQuestionUpdateRequest, QuizQuestion>();
 
             CreateMap<PanoramaScene, PanoramaSceneResponse>();
+            CreateMap<PanoramaInteractionPoint, PanoramaInteractionPointResponse>();
 
             CreateMap<UserCreationByAdminRequest, User>();
             CreateMap<User, UserSearchResponse>();
