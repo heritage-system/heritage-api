@@ -1,10 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using Cultural_Heritage_System.Common;
 using System.ComponentModel.DataAnnotations;
-using Cultural_Heritage_System.Common;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class WalletTransaction : BaseEntity<int>
+    public class PaymentTransaction : BaseEntity<long>
     {
         [Required]
         [ForeignKey("User")]

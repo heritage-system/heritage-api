@@ -2,6 +2,7 @@
 using AutoMapper.QueryableExtensions;
 using Azure.Core;
 using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Dtos.Models;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Contribution;
@@ -15,8 +16,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Globalization;
 using System.Linq;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using System.Text.Json;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static StackExchange.Redis.Role;
 
 namespace Cultural_Heritage_System.Services.Impl
@@ -967,18 +968,14 @@ namespace Cultural_Heritage_System.Services.Impl
         {
             try
             {
-                // Get all data without pagination for export
-                var exportRequest = new HeritageOverviewSearchRequest
+                if(request.Page == 0)
                 {
-                    Page = 1,
-                    PageSize = int.MaxValue, 
-                    Keyword = request.Keyword,
-                    CategoryId = request.CategoryId,
-                    TagIds = request.TagIds,
-                    SortBy = request.SortBy
-                };
-
-                var heritages = await GetAllAsync(exportRequest);
+                    // Get all data without pagination for export
+                    request.Page = 1;
+                    request.PageSize = int.MaxValue;                 
+                }
+ 
+                var heritages = await GetAllAsync(request);
 
                 // Convert to CSV
                 var csv = GenerateHeritageCsv(heritages.Items);
@@ -1004,26 +1001,164 @@ namespace Cultural_Heritage_System.Services.Impl
         {
             var sb = new System.Text.StringBuilder();
 
-            sb.AppendLine("ID,Tên di sản,Mô tả,Danh mục,Tags,Địa điểm,Ngày tạo,Ngày cập nhật");
+            // ================================
+            // HEADER CẤP 1 (TIẾNG VIỆT)
+            // ================================
+            sb.AppendLine(string.Join(",",
+                "Mã ID",
+                "Tên di sản",
+                "Mô tả",
+                "Nội dung – Lịch sử",
+                "Nội dung – Nghi lễ",
+                "Nội dung – Giá trị",
+                "Nội dung – Bảo tồn",             
+                "Danh mục",                      
+                "Danh sách thẻ",
+                "Ngày tạo",
+                "Ngày cập nhật",
 
-            foreach (var heritage in heritages)
+                // Location (không gộp)
+                "Địa điểm – Tỉnh/Thành",
+                "Địa điểm – Quận/Huyện",
+                "Địa điểm – Phường/Xã",
+                "Địa điểm – Chi tiết",
+
+                
+
+                // Occurrence
+                "Loại sự kiện",
+                "Lịch (Âm/Dương)",
+                "Ngày bắt đầu",
+                "Tháng bắt đầu",
+                "Ngày kết thúc",
+                "Tháng kết thúc",
+                "Tần suất"
+            ));
+
+            // ================================
+            // HEADER CẤP 2 (THUỘC TÍNH CON)
+            // ================================
+            sb.AppendLine(string.Join(",",
+                "Id",
+                "Name",
+                "Description",
+                "History",
+                "Rituals",
+                "Values",
+                "Preservation",
+              
+                "CategoryName",
+                "TagNames",
+                "CreatedAt",
+                "UpdatedAt",
+
+                "Province",
+                "District",
+                "Ward",
+                "AddressDetail",                      
+
+                "OccurrenceType",
+                "CalendarType",
+                "StartDay",
+                "StartMonth",
+                "EndDay",
+                "EndMonth",
+                "Frequency"
+            ));
+
+            // ================================
+            // XỬ LÝ TỪNG HERITAGE
+            // ================================
+            foreach (var h in heritages)
             {
-                var tags = string.Join("; ", heritage.Tags?.Select(t => t.Name) ?? new List<string>());
-                var locations = string.Join("; ", heritage.Locations?.Select(l =>
-                    $"{l.Province}, {l.District}") ?? new List<string>());
+                var loc = h.Locations?.FirstOrDefault();
+                var occ = h.Occurrences?.FirstOrDefault();
 
-                sb.AppendLine($"\"{heritage.Id}\"," +
-                             $"\"{EscapeCsvField(heritage.Name)}\"," +
-                             $"\"{EscapeCsvField(heritage.Description)}\"," +
-                             $"\"{EscapeCsvField(heritage.CategoryName)}\"," +
-                             $"\"{EscapeCsvField(tags)}\"," +
-                             $"\"{EscapeCsvField(locations)}\"," +
-                             $"\"{heritage.CreatedAt:yyyy-MM-dd HH:mm:ss}\"," +
-                             $"\"{heritage.UpdatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? ""}\"");
+                var tagIds = string.Join(";", h.Tags.Select(t => t.Id));
+                var tagNames = string.Join(";", h.Tags.Select(t => t.Name));
+
+                // Content JSON → tách thành 4 phần
+                var (history, rituals, values, preservation) = ExtractContentSections(h.Content);
+
+                sb.AppendLine(string.Join(",",
+                    Quote(h.Id),
+                    Quote(h.Name),
+                    Quote(h.Description),
+
+                    Quote(history),
+                    Quote(rituals),
+                    Quote(values),
+                    Quote(preservation),
+
+                  
+                    Quote(h.CategoryName),
+                    Quote(tagNames),
+
+                    Quote(h.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")),
+                    Quote(h.UpdatedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? ""),
+
+                    Quote(loc?.Province),
+                    Quote(loc?.District),
+                    Quote(loc?.Ward),
+                    Quote(loc?.AddressDetail),
+                 
+
+                    Quote(occ?.OccurrenceType),
+                    Quote(occ?.CalendarType),
+                    Quote(occ?.StartDay),
+                    Quote(occ?.StartMonth),
+                    Quote(occ?.EndDay),
+                    Quote(occ?.EndMonth),
+                    Quote(occ?.Frequency)
+                ));
             }
 
             return sb.ToString();
         }
+
+        private string Quote(object value)
+        {
+            if (value == null) return "\"\"";
+            return $"\"{value.ToString().Replace("\"", "'")}\"";
+        }
+
+        // ================================
+        // TÁCH CONTENT JSON → 4 TRƯỜNG
+        // ================================
+        private (string History, string Rituals, string Values, string Preservation)
+            ExtractContentSections(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                return ("", "", "", "");
+
+            try
+            {
+                var content = System.Text.Json.JsonSerializer.Deserialize<HeritageContent>(json);
+
+                return (
+                    BlocksToString(content?.History),
+                    BlocksToString(content?.Rituals),
+                    BlocksToString(content?.Values),
+                    BlocksToString(content?.Preservation)
+                );
+            }
+            catch
+            {
+                return ("", "", "", "");
+            }
+        }
+
+        private string BlocksToString(List<HeritageDescriptionBlock>? blocks)
+        {
+            if (blocks == null) return "";
+
+            return string.Join("\n\n", blocks.Select(b =>
+                b.Type == "paragraph"
+                    ? b.Content
+                    : string.Join("\n", b.Items.Select(i => $"• {i}"))
+            ));
+        }
+
 
         private string EscapeCsvField(string field)
         {
