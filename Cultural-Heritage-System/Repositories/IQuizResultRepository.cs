@@ -7,5 +7,6 @@ namespace Cultural_Heritage_System.Repositories
     public interface IQuizResultRepository : IBaseRepository<QuizResult>
     {
         Task<QuizResult?> GetQuizResult(long quizId, int userId);
+        Task<List<QuizResult>> GetResultsByQuizId(long quizId);
     }
 }

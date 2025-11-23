@@ -10,7 +10,7 @@ namespace Cultural_Heritage_System.Dtos.Response.Quiz
         public long Id { get; set; }
         public string Title { get; set; }   
         public int NumberOfClear { get; set; }
-        public List<QuizQuestionResponse> Questions { get; set; } = new List<QuizQuestionResponse>(); 
+        public List<QuizQuestionResponse> Questions { get; set; } = new List<QuizQuestionResponse>();
         
     }
 }
