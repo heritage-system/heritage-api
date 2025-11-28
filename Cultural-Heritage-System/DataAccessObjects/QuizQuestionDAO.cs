@@ -16,7 +16,7 @@ namespace Cultural_Heritage_System.DataAccessObjects
 
         public IQueryable<QuizQuestion> GetQuizQuestionQueryable()
         {
-            return _context.QuizQuestions.AsQueryable();
+            return _context.QuizQuestions.Include(q => q.Quiz).AsQueryable();
         }
 
         public async Task<QuizQuestion?> GetQuizQuestionById(long id)

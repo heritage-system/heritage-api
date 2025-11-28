@@ -17,7 +17,7 @@ namespace Cultural_Heritage_System.Services
         Task<ContributionResponse> GetContributionDetail(int id);
         Task<ContributionOverviewResponse> GetContributionOverview(int id);
         Task<PageResponse<ContributionSearchResponse>> SearchContributionsAsync(ContributionSearchRequest request);
-        //Task<ContributionResponse> UnlockContribution(int contributionId);
+        Task<ContributionResponse> UnlockContribution(int contributionId);
         Task<bool> AddContributionSave(int contributionId);
         Task<PageResponse<ContributionSaveResponse>> GetContributionSave(ContributionSearchRequest request);      
         Task<bool> RemoveContributionSave(int contributionId);

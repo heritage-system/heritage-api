@@ -49,7 +49,7 @@ namespace Cultural_Heritage_System.Models
         public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
 
         public ICollection<ContributionAccessLog> ContributionAccessLogs { get; set; } = new List<ContributionAccessLog>();
-        //public ICollection<ContributionUnlock> ContributionUnlocks { get; set; } = new List<ContributionUnlock>();
+        public ICollection<ContributionUnlock> ContributionUnlocks { get; set; } = new List<ContributionUnlock>();
         public ICollection<ContributionSave> ContributionSaves { get; set; } = new List<ContributionSave>();
 
         public ICollection<ContributionReview> ContributionReviews { get; set; } = new List<ContributionReview>();

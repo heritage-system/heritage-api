@@ -8,10 +8,10 @@ namespace Cultural_Heritage_System.Dtos.Request.Panorama
     {
         public long? PanoramaTourId { get; set; }    
         public string SceneName { get; set; }
-        public string PanoramaUrl { get; set; }
-        public string? AmbientSoundUrl { get; set; }
+        public string SceneThumbnail { get; set; }
+        public string PanoramaUrl { get; set; }       
         public string? Description { get; set; }
         public PanoramaStatus Status { get; set; } = PanoramaStatus.ACTIVE;
-        public List<PanoramaInteractionPointCreationRequest> InteractionPoints { get; set; } = new List<PanoramaInteractionPointCreationRequest>();
+        public PremiumType PremiumType { get; set; } = PremiumType.FREE;
     }
 }

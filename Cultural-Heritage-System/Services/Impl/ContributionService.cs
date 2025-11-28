@@ -36,13 +36,18 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly ILogger<ContributionService> logger;
         private readonly IContributionAccessLogRepository contributionAccessLogRepository;     
         private readonly IContributionSaveRepository contributionSaveRepository;
+        private readonly IContributionUnlockRepository contributionUnlockRepository;
         private readonly IContributionHeritageTagRepository contributionHeritageTagRepository;
         private readonly IContributionReportRepository contributionReportRepository;
         private readonly IStaffRepository staffRepository;
+        private readonly ISubscriptionUsageRepository subscriptionUsageRepository;
         public ContributionService(IContributorRepository contributorRepository, IContributionRepository contributionRepository, ILogger<ContributionService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor, ISubscriptionRepository subscriptionRepository,
             IContributionAccessLogRepository contributionAccessLogRepository,
-            IContributionSaveRepository contributionSaveRepository, IContributionHeritageTagRepository contributionHeritageTagRepository, IContributionReportRepository contributionReportRepository, IStaffRepository staffRepository)
+            IContributionSaveRepository contributionSaveRepository, 
+            IContributionHeritageTagRepository contributionHeritageTagRepository, 
+            IContributionReportRepository contributionReportRepository, 
+            IStaffRepository staffRepository, IContributionUnlockRepository contributionUnlockRepository, ISubscriptionUsageRepository subscriptionUsageRepository)
         {
             this.contributorRepository = contributorRepository;
             this.logger = logger;
@@ -56,6 +61,8 @@ namespace Cultural_Heritage_System.Services.Impl
             this.contributionHeritageTagRepository = contributionHeritageTagRepository;
             this.contributionReportRepository = contributionReportRepository;
             this.staffRepository = staffRepository;
+            this.contributionUnlockRepository = contributionUnlockRepository;
+            this.subscriptionUsageRepository = subscriptionUsageRepository;
         }
 
         public async Task<PageResponse<ContributionSearchResponse>> SearchContributionsAsync(ContributionSearchRequest request)
@@ -248,88 +255,105 @@ namespace Cultural_Heritage_System.Services.Impl
                 return response;
             }
 
+            var contributionUnlock = activeSub.UsageRecords.FirstOrDefault(c => c.BenefitName == BenefitName.CONTRIBUTION);
+            if (contributionUnlock == null)
+            {
+                throw new AppException(ErrorCode.SUBSCRIPTION_USAGE_NOT_FOUND);
+            }
 
             response.Subscription = mapper.Map<SubscriptionDto>(activeSub);
+            if(contributionUnlock.Total != null)
+            {
+                response.Subscription.Total = (int)contributionUnlock.Total;
+               
+            }
+            response.Subscription.Used = contributionUnlock.Used;
 
-            //var unlockContribution = await contributionUnlockRepository.GetContributionUnlocks(userId, id);
+            var unlockContribution = await contributionUnlockRepository.GetContributionUnlockByUserAndContribution(userId, id);
 
-            //if (unlockContribution == null)
-            //{
-            //    // không có sub → chỉ preview
-            //    response.Content = null;
-            //    return response;
-            //}
+            if (unlockContribution == null)
+            {
+                // không có sub → chỉ preview
+                response.Content = null;
+                return response;
+            }
 
 
 
             return response;
         }
 
-        //public async Task<ContributionResponse> UnlockContribution(int contributionId)
-        //{
-        //    var existingContribution = await contributionRepository.GetContributionById(contributionId);
+        public async Task<ContributionResponse> UnlockContribution(int contributionId)
+        {
+            var existingContribution = await contributionRepository.GetContributionById(contributionId);
 
-        //    if (existingContribution == null)
-        //        throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
+            if (existingContribution == null)
+                throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
 
-        //    var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
-        //    if (string.IsNullOrEmpty(accountIdClaim))
-        //    {
-        //        throw new AppException(ErrorCode.UNAUTHORIZED);
-        //    }
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
 
-        //    var userId = int.Parse(accountIdClaim);
+            var userId = int.Parse(accountIdClaim);
 
-        //    // Lấy subscription active
-        //    var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+            // Lấy subscription active
+            var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
 
-        //    if (activeSub == null)
-        //    {
-        //        throw new AppException(ErrorCode.USER_NOT_PREMIUM);
-        //    }
+            
+            if (activeSub == null)
+            {
+                throw new AppException(ErrorCode.USER_NOT_PREMIUM);
+            }
 
-        //    if (activeSub.OpensUsed >= activeSub.Package.MaxOpensPerMonth)
-        //    {
-        //        throw new AppException(ErrorCode.OVER_OPEN_LIMIT);
-        //    }
+            var contributionUnlock = activeSub.UsageRecords.FirstOrDefault(c => c.BenefitName == BenefitName.CONTRIBUTION);
+            if (contributionUnlock == null)
+            {
+                throw new AppException(ErrorCode.SUBSCRIPTION_USAGE_NOT_FOUND);
+            }
+            if (contributionUnlock.Used >= contributionUnlock.Total)
+            {
+                throw new AppException(ErrorCode.OVER_OPEN_LIMIT);
+            }
 
-        //    activeSub.OpensUsed++;
-        //    await subscriptionRepository.UpdateAsync(activeSub);
+            contributionUnlock.Used++;
+            await subscriptionUsageRepository.UpdateAsync(contributionUnlock);
 
-        //    var unlock = new ContributionUnlock
-        //    {
-        //        UserId = userId,
-        //        ContributionId = contributionId
-        //    };
-        //    await contributionUnlockRepository.AddAsync(unlock);
+            var unlock = new ContributionUnlock
+            {
+                UserId = userId,
+                ContributionId = contributionId
+            };
+            await contributionUnlockRepository.AddAsync(unlock);
 
-        //    var existingLog = await contributionAccessLogRepository.GetContributionAccessLogs(userId, existingContribution.Id);
+            var existingLog = await contributionAccessLogRepository.GetContributionAccessLogs(userId, existingContribution.Id);
 
-        //    if (existingLog == null)
-        //    {
-        //        // Chưa mở bài này
+            if (existingLog == null)
+            {
+                // Chưa mở bài này
 
-        //        var log = new ContributionAccessLog
-        //        {
-        //            UserId = userId,
-        //            ContributionId = existingContribution.Id,
-        //            SubscriptionId = activeSub.Id,
-        //            CountedForQuota = true
-        //        };
+                var log = new ContributionAccessLog
+                {
+                    UserId = userId,
+                    ContributionId = existingContribution.Id,
+                    SubscriptionId = activeSub.Id,
+                    CountedForQuota = true
+                };
 
-        //        await contributionAccessLogRepository.AddAsync(log);
+                await contributionAccessLogRepository.AddAsync(log);
 
-        //    }
-        //    else
-        //    {
-        //        // Đã mở → update LastOpenedAt
-        //        existingLog.UpdatedAt = DateTime.UtcNow;
-        //        await contributionAccessLogRepository.UpdateAsync(existingLog);
-        //    }
+            }
+            else
+            {
+                // Đã mở → update LastOpenedAt
+                existingLog.UpdatedAt = DateTime.UtcNow;
+                await contributionAccessLogRepository.UpdateAsync(existingLog);
+            }
 
-        //    var result = mapper.Map<ContributionResponse>(existingContribution);
-        //    return result;
-        //}
+            var result = mapper.Map<ContributionResponse>(existingContribution);
+            return result;
+        }
 
         public async Task<PageResponse<ContributionSaveResponse>> GetContributionSave(ContributionSearchRequest request)
         {
