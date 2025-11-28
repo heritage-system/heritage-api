@@ -114,6 +114,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<PanoramaTourDAO>();
             builder.Services.AddScoped<PanoramaSceneDAO>();
             builder.Services.AddScoped<PanoramaInteractionPointDAO>();
+            builder.Services.AddScoped<PremiumPackageDAO>();
+            builder.Services.AddScoped<PremiumBenefitDAO>();
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
@@ -149,6 +151,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IPanoramaTourRepository, PanoramaTourRepository>();
             builder.Services.AddScoped<IPanoramaSceneRepository, PanoramaSceneRepository>();
             builder.Services.AddScoped<IPanoramaInteractionPointRepository, PanoramaInteractionPointRepository>();
+            builder.Services.AddScoped<IPremiumPackageRepository, PremiumPackageRepository>();
+            builder.Services.AddScoped<IPremiumBenefitRepository, PremiumBenefitRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();
@@ -172,6 +176,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IQuizService, QuizService>();
             builder.Services.AddScoped<IPanoramaTourService, PanoramaTourService>();
             builder.Services.AddScoped<IStaffService, StaffService>();
+            builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
+            builder.Services.AddScoped<IPremiumBenefitService, PremiumBenefitService>();
 
             // Redis
             builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
