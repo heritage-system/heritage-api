@@ -31,7 +31,9 @@ namespace Cultural_Heritage_System.Models
         [Required]
         [Column("status", TypeName = "nvarchar(20)")]
         public SubscriptionStatus Status { get; set; } = SubscriptionStatus.ACTIVE;
-         
+
+        public ICollection<SubscriptionUsage> UsageRecords { get; set; } = new List<SubscriptionUsage>();
+
     }
 
 
