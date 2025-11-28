@@ -12,6 +12,7 @@ namespace Cultural_Heritage_System.Services
         Task<DeleteTagResponse> DeleteTag(DeleteTagRequest request);
         IQueryable<Tag> GetTagsQueryable();
         Task<PageResponse<TagSearchResponse>> SearchTagsAsync(TagSearchRequest request);
+        Task<byte[]> ExportTagsAsync(TagSearchRequest request);
 
     }
 }

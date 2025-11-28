@@ -1,10 +1,11 @@
 ﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Helpers;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class PanoramaTour : BaseEntity<long>
+    public class PanoramaTour : BaseEntity<long>, IUnsignedEntity
     {
      
         [Column("heritage_id")]
@@ -16,10 +17,7 @@ namespace Cultural_Heritage_System.Models
         public string Name { get; set; }
 
         [Column("thumbnail_url")]
-        public string? ThumbnailUrl { get; set; }
-
-        [Column("default_scene_id")]
-        public long? DefaultSceneId { get; set; }
+        public string? ThumbnailUrl { get; set; }       
 
         [Column("description")]
         public string? Description { get; set; }
@@ -31,6 +29,13 @@ namespace Cultural_Heritage_System.Models
         public PremiumType PremiumType { get; set; } = PremiumType.FREE;
 
         public ICollection<PanoramaScene> Scenes { get; set; } = new List<PanoramaScene>();
+
+        [Column("name_unsigned")]
+        public string NameUnsigned { get; set; }
+        public void GenerateUnsignedFields()
+        {
+            NameUnsigned = StringHelper.RemoveDiacritics(Name).ToLower();
+        }
     }
 }
  

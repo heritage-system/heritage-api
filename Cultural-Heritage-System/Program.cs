@@ -19,6 +19,7 @@ namespace Cultural_Heritage_System
     {
         public static void Main(string[] args)
         {
+
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);

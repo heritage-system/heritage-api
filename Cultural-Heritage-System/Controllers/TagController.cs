@@ -1,4 +1,5 @@
-﻿using Cultural_Heritage_System.Dtos.Request.Tag;
+﻿using Cultural_Heritage_System.Dtos.Request.Heritage;
+using Cultural_Heritage_System.Dtos.Request.Tag;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Tag;
 using Cultural_Heritage_System.Models;
@@ -78,6 +79,32 @@ namespace Cultural_Heritage_System.Controllers
                 code = 200,
                 result = await TagService.SearchTagsAsync(request)
             };
+        }
+
+        [HttpGet("export")]     
+        public async Task<IActionResult> ExportTags([FromQuery] TagSearchRequest request)
+        {
+            try
+            {
+                var excelBytes = await TagService.ExportTagsAsync(request);
+
+                var fileName = $"Tags_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+                return File(
+                    excelBytes,
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    fileName
+                );
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new ApiResponse<string>
+                {
+                    code = 400,
+                    message = "Export failed: " + ex.Message
+                });
+            }
         }
 
     }
