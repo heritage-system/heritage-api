@@ -1,10 +1,11 @@
 ﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Helpers;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class PanoramaScene : BaseEntity<long>
+    public class PanoramaScene : BaseEntity<long>, IUnsignedEntity
     {
      
         [Column("panorama_tour_id")]
@@ -15,11 +16,11 @@ namespace Cultural_Heritage_System.Models
         [Column("scene_name")]
         public string SceneName { get; set; }
 
-        [Column("panorama_url")]
-        public string PanoramaUrl { get; set; }
+        [Column("scene_thumbnail")]
+        public string SceneThumbnail { get; set; }
 
-        [Column("ambient_sound_url")]
-        public string? AmbientSoundUrl { get; set; }
+        [Column("panorama_url")]
+        public string PanoramaUrl { get; set; }  
        
         [Column("description")]
         public string? Description { get; set; }
@@ -27,6 +28,14 @@ namespace Cultural_Heritage_System.Models
         [Column("status", TypeName = "nvarchar(20)")]
         public PanoramaStatus Status { get; set; } = PanoramaStatus.ACTIVE;
 
-        public ICollection<PanoramaInteractionPoint> InteractionPoints { get; set; } = new List<PanoramaInteractionPoint>();
+        [Column("premium_type", TypeName = "nvarchar(30)")]
+        public PremiumType PremiumType { get; set; } = PremiumType.FREE;
+
+        [Column("scene_name_unsigned")]
+        public string SceneNameUnsigned { get; set; }
+        public void GenerateUnsignedFields()
+        {
+            SceneNameUnsigned = StringHelper.RemoveDiacritics(SceneName).ToLower();
+        }
     }
 }

@@ -5,8 +5,8 @@ namespace Cultural_Heritage_System.Models
 {
     public class PremiumBenefit : BaseEntity<int>
     {
-        [Column("name")]
-        public string Name { get; set; }
+        [Column("benefit_name", TypeName = "nvarchar(20)")]
+        public BenefitName BenefitName { get; set; }
 
         [Column("benefit_type", TypeName = "nvarchar(50)")]
         public BenefitType BenefitType { get; set; }

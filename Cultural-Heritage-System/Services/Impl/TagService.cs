@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Request.Tag;
 using Cultural_Heritage_System.Dtos.Response;
+using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Tag;
 using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
@@ -175,6 +177,29 @@ namespace Cultural_Heritage_System.Services.Impl
             return paged;
         }
 
+        public async Task<byte[]> ExportTagsAsync(TagSearchRequest request)
+        {
+            try
+            {
+                if (request.Page == 0)
+                {
+                    // Get all data without pagination for export
+                    request.Page = 1;
+                    request.PageSize = int.MaxValue;
+                }
 
+                var list = await SearchTagsAsync(request);
+
+
+                var fileBytes = ExcelExporter.ExportToExcel(list.Items);
+
+                return fileBytes;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error exporting tags to CSV");
+                throw;
+            }
+        }
     }
 }
