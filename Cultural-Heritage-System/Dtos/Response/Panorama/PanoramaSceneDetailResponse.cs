@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cultural_Heritage_System.Dtos.Response.Panorama
 {
-    public class PanoramaSceneResponse
+    public class PanoramaSceneDetailResponse
     {
         public long Id { get; set; }
         public long? PanoramaTourId { get; set; }

@@ -9,7 +9,7 @@ namespace Cultural_Heritage_System.Dtos.Request.Panorama
         public long? HeritageId { get; set; }       
         public string Name { get; set; }
         public string? ThumbnailUrl { get; set; }
-        public long? DefaultSceneId { get; set; }
+        public PremiumType PremiumType { get; set; } = PremiumType.FREE;
         public string? Description { get; set; }
         public PanoramaStatus Status { get; set; } = PanoramaStatus.ACTIVE;
         public List<PanoramaSceneCreationRequest> Scenes { get; set; } = new List<PanoramaSceneCreationRequest>();

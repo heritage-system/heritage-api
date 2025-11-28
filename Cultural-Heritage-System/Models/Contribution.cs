@@ -74,7 +74,7 @@ namespace Cultural_Heritage_System.Models
 
         public ICollection<ContributionHeritageTag> ContributionHeritageTags { get; set; } = new List<ContributionHeritageTag>();
         public ICollection<ContributionAccessLog> ContributionAccessLogs { get; set; } = new List<ContributionAccessLog>();
-        //public ICollection<ContributionUnlock> ContributionUnlocks { get; set; } = new List<ContributionUnlock>();
+        public ICollection<ContributionUnlock> ContributionUnlocks { get; set; } = new List<ContributionUnlock>();
         public ICollection<ContributionSave> ContributionSaves { get; set; } = new List<ContributionSave>();
         public ICollection<ContributionReport> ContributionReports { get; set; } = new List<ContributionReport>();
         public ICollection<ContributionReview> Reviews { get; set; } = new List<ContributionReview>();
