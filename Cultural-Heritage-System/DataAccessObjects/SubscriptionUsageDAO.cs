@@ -10,26 +10,23 @@ using System.Threading.Tasks;
 
 namespace Cultural_Heritage_System.DataAccessObjects
 {
-    public class SubscriptionDAO : BaseDAO<Subscription>
+    public class SubscriptionUsageDAO : BaseDAO<SubscriptionUsage>
     {
-        private readonly ILogger<SubscriptionDAO> _logger;
+        private readonly ILogger<SubscriptionUsageDAO> _logger;
 
-        public SubscriptionDAO(AppDbContext context, ILogger<SubscriptionDAO> logger)
+        public SubscriptionUsageDAO(AppDbContext context, ILogger<SubscriptionUsageDAO> logger)
             : base(context)
         {
             _logger = logger;
         }
-        public async Task<Subscription?> GetActiveSubscription(int userId)
+        public async Task<SubscriptionUsage?> GetActiveSubscriptionUsage(long id)
         {
             var now = DateTime.UtcNow;
 
-            return await _dbSet
-                .Include(s => s.Package)
-                .Include(s => s.UsageRecords)
-                .FirstOrDefaultAsync(s => s.UserId == userId
+            return await _dbSet           
+                .FirstOrDefaultAsync(s => s.Id == id
                                        && s.Status == SubscriptionStatus.ACTIVE
-                                       && s.StartAt <= now
-                                       && s.EndAt >= now);
+                                       );
         }
 
 

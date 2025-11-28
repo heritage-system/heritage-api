@@ -63,15 +63,15 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
 
-        //[HttpPost("unlock_contribution")]
-        //public async Task<ApiResponse<ContributionResponse>> UnlockContribution(int id)
-        //{          
-        //    return new ApiResponse<ContributionResponse>(
-        //        code: 200,
-        //        message: "Unlock contribution successfully",
-        //        result: await contributionService.UnlockContribution(id)
-        //    );
-        //}
+        [HttpPost("unlock_contribution")]
+        public async Task<ApiResponse<ContributionResponse>> UnlockContribution(int id)
+        {
+            return new ApiResponse<ContributionResponse>(
+                code: 200,
+                message: "Unlock contribution successfully",
+                result: await contributionService.UnlockContribution(id)
+            );
+        }
 
         [HttpGet("get_contribution_save")]
         public async Task<ApiResponse<PageResponse<ContributionSaveResponse>>> GetContributionSaves(

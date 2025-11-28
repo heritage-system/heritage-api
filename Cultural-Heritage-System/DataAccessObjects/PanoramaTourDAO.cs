@@ -19,16 +19,18 @@ namespace Cultural_Heritage_System.DataAccessObjects
         public IQueryable<PanoramaTour> GetPanoramaToursQueryable()
         {
             return _dbSet
-                .Include(p => p.Scenes)
-                .ThenInclude(h => h.InteractionPoints)               
+                .Include(p => p.Heritage)
+                .ThenInclude(h => h.HeritageLocations)
+                .ThenInclude(l => l.Location)
+                .Include(p => p.Scenes)                
                 .AsQueryable();
         }
 
         public async Task<PanoramaTour?> GetPanoramaTourById(long id)
         {
             return await _dbSet
-               .Include(p => p.Scenes)
-                .ThenInclude(h => h.InteractionPoints)
+                .Include(p => p.Heritage)
+               .Include(p => p.Scenes)              
                .FirstOrDefaultAsync(u => u.Id == id);
         }        
 

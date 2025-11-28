@@ -11,6 +11,7 @@ using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Request.Location;
 using Cultural_Heritage_System.Dtos.Request.Media;
 using Cultural_Heritage_System.Dtos.Request.Occurrence;
+using Cultural_Heritage_System.Dtos.Request.Panorama;
 using Cultural_Heritage_System.Dtos.Request.PremiumBenefit;
 using Cultural_Heritage_System.Dtos.Request.PremiumPackage;
 using Cultural_Heritage_System.Dtos.Request.Quiz;
@@ -383,8 +384,7 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<QuizResult, QuizResultInfo>();
 
 
-            CreateMap<PanoramaScene, PanoramaSceneResponse>();
-            CreateMap<PanoramaInteractionPoint, PanoramaInteractionPointResponse>();
+            CreateMap<PanoramaScene, PanoramaSceneResponse>();         
 
             CreateMap<UserCreationByAdminRequest, User>();
             CreateMap<User, UserSearchResponse>();
@@ -440,6 +440,27 @@ namespace Cultural_Heritage_System.Helpers
                     opt => opt.MapFrom(src => src.ContributionAcceptances != null ? src.ContributionAcceptances.Count : 0))
                 .ForMember(dest => dest.NumberOfReportReplies,
                     opt => opt.MapFrom(src => src.ReportReplies != null ? src.ReportReplies.Count : 0));
+
+            CreateMap<PanoramaTour, PanoramaTourDetailResponse>();
+            CreateMap<PanoramaTourCreationRequest, PanoramaTour>();
+            CreateMap<PanoramaSceneCreationRequest, PanoramaScene>();
+            CreateMap<PanoramaTour, PanoramaTourSearchResponse>()
+                .ForMember(dest => dest.HeritageName,
+                    opt => opt.MapFrom(src => src.Heritage != null ? src.Heritage.Name : null))
+                .ForMember(dest => dest.NumberOfScenes,
+                    opt => opt.MapFrom(src => src.Scenes.Count))
+                .ForMember(dest => dest.HeritageLocations,
+                    opt => opt.MapFrom(src =>
+                        src.Heritage.HeritageLocations.Select(hl => hl.Location)
+                    ));
+
+            CreateMap<PanoramaTour, PanoramaTourSearchForAdminResponse>()
+                .ForMember(dest => dest.HeritageName,
+                    opt => opt.MapFrom(src => src.Heritage != null ? src.Heritage.Name : null))
+                .ForMember(dest => dest.NumberOfScenes,
+                    opt => opt.MapFrom(src => src.Scenes.Count));
+            CreateMap<PanoramaTour, PanoramaTourDetailForAdminResponse>();
+
 
             // PremiumPackage
             CreateMap<PremiumPackageCreateRequest, PremiumPackage>();

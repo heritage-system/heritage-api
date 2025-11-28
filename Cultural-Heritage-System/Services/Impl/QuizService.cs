@@ -48,7 +48,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
         public async Task<List<QuizQuestionResponse>> GenerateQuestionSet(int numberOfQuestions)
         {
-            var query =  quizQuestionRepository.GetQuizQuestionQueryable();
+            var query =  quizQuestionRepository.GetQuizQuestionQueryable().Where(q => q.Quiz.PremiumType == PremiumType.FREE);
 
             if (query == null || !query.Any())
                 return new List<QuizQuestionResponse>();

@@ -18,15 +18,13 @@ namespace Cultural_Heritage_System.DataAccessObjects
 
         public IQueryable<PanoramaScene> GetPanoramaScenesQueryable()
         {
-            return _dbSet          
-                .Include(h => h.InteractionPoints)               
+            return _dbSet                             
                 .AsQueryable();
         }
 
         public async Task<PanoramaScene?> GetPanoramaSceneById(long id)
         {
-            return await _dbSet          
-               .Include(h => h.InteractionPoints)
+            return await _dbSet                     
                .FirstOrDefaultAsync(u => u.Id == id);
         }        
 

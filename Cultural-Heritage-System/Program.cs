@@ -114,6 +114,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<QuizQuestionDAO>();
             builder.Services.AddScoped<PanoramaTourDAO>();
             builder.Services.AddScoped<PanoramaSceneDAO>();
+            builder.Services.AddScoped<ContributionUnlockDAO>();
+            builder.Services.AddScoped<SubscriptionUsageDAO>();
             builder.Services.AddScoped<PanoramaInteractionPointDAO>();
             builder.Services.AddScoped<PremiumPackageDAO>();
             builder.Services.AddScoped<PremiumBenefitDAO>();
@@ -151,6 +153,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IQuizQuestionRepository, QuizQuestionRepository>();
             builder.Services.AddScoped<IPanoramaTourRepository, PanoramaTourRepository>();
             builder.Services.AddScoped<IPanoramaSceneRepository, PanoramaSceneRepository>();
+            builder.Services.AddScoped<IContributionUnlockRepository, ContributionUnlockRepository>();
+            builder.Services.AddScoped<ISubscriptionUsageRepository, SubscriptionUsageRepository>();
             builder.Services.AddScoped<IPanoramaInteractionPointRepository, PanoramaInteractionPointRepository>();
             builder.Services.AddScoped<IPremiumPackageRepository, PremiumPackageRepository>();
             builder.Services.AddScoped<IPremiumBenefitRepository, PremiumBenefitRepository>();
