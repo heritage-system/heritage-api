@@ -10,7 +10,7 @@ namespace Cultural_Heritage_System.Dtos.Response.Panorama
         public long? PanoramaTourId { get; set; }
         public string SceneName { get; set; }
         public string SceneThumbnail { get; set; }
-        public string PanoramaUrl { get; set; }
+        public string? PanoramaUrl { get; set; }
         public string? Description { get; set; }
         public PanoramaStatus Status { get; set; }
         public PremiumType PremiumType { get; set; }

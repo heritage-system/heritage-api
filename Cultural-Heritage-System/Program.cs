@@ -116,6 +116,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<PanoramaSceneDAO>();
             builder.Services.AddScoped<ContributionUnlockDAO>();
             builder.Services.AddScoped<SubscriptionUsageDAO>();
+            builder.Services.AddScoped<PanoramaSceneUnlockDAO>();
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
@@ -152,6 +153,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IPanoramaSceneRepository, PanoramaSceneRepository>();
             builder.Services.AddScoped<IContributionUnlockRepository, ContributionUnlockRepository>();
             builder.Services.AddScoped<ISubscriptionUsageRepository, SubscriptionUsageRepository>();
+            builder.Services.AddScoped<IPanoramaSceneUnlockRepository, PanoramaSceneUnlockRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();
