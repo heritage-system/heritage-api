@@ -26,6 +26,7 @@ namespace Cultural_Heritage_System.Services
         Task<bool> UpdatePanoramaScene(long id, PanoramaSceneCreationRequest request);
         Task<long?> DeletePanoramaScene(long id);
         Task<long> CreatePanoramaScene(PanoramaSceneCreationRequest request);
+        Task<PanoramaSceneResponse> UnlockPanoramaScene(long sceneId);
     }
 }
 

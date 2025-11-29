@@ -418,6 +418,8 @@ namespace Cultural_Heritage_System.Helpers
                 .ForMember(dest => dest.Email,
                 opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty));
             CreateMap<Staff, StaffDetailResponse>()
+                .ForMember(dest => dest.Email,
+                opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
                 .ForMember(dest => dest.Phone,
                 opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.Phone : string.Empty))
                 .ForMember(dest => dest.FullName,
