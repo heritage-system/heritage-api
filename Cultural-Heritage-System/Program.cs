@@ -26,8 +26,13 @@ namespace Cultural_Heritage_System
             builder.Services.AddControllers()
                  .AddJsonOptions(options =>
                  {
+                     options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                      options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
                  });
+            builder.Services.Configure<StreamAdmissionOptions>(
+    builder.Configuration.GetSection("Streaming"));
+            builder.Services.Configure<StreamCleanupOptions>(builder.Configuration.GetSection("StreamCleanup"));
 
             builder.Services.AddHttpClient<GoogleAuthClient>(client =>
             {
@@ -57,7 +62,7 @@ namespace Cultural_Heritage_System
                     policy.WithOrigins("http://localhost:3000", "https://localhost:3000", "https://heritage-web-ashy.vercel.app")
                           .AllowAnyHeader()
                           .AllowAnyMethod()
-                          .AllowCredentials(); 
+                          .AllowCredentials();
                 });
             });
 
@@ -101,7 +106,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<ContributorDAO>();
             builder.Services.AddScoped<ContributionDAO>();
             builder.Services.AddScoped<SubscriptionDAO>();
-            builder.Services.AddScoped<ContributionAccessLogDAO>();     
+            builder.Services.AddScoped<ContributionAccessLogDAO>();
             builder.Services.AddScoped<ContributionSaveDAO>();
             builder.Services.AddScoped<ContributionReviewDAO>();
             builder.Services.AddScoped<ContributionHeritageTagDAO>();
@@ -111,7 +116,10 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<QuizDAO>();
             builder.Services.AddScoped<QuizResultDAO>();
             builder.Services.AddScoped<QuizQuestionDAO>();
-
+            builder.Services.AddScoped<StreamingRoomDAO>();
+            builder.Services.AddScoped<StreamingParticipantDAO>();
+            builder.Services.AddScoped<RaiseHandDAO>();
+            builder.Services.AddScoped<RoomChatDAO>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -128,12 +136,12 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IHeritageMediaRepository, HeritageMediaRepository>();
             builder.Services.AddScoped<ILocationRepository, LocationRepository>();
             builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
-            builder.Services.AddScoped<IHeritageRepository, HeritageRepository>();          
+            builder.Services.AddScoped<IHeritageRepository, HeritageRepository>();
             builder.Services.AddScoped<IReportReplyRepository, ReportReplyRepository>();
             builder.Services.AddScoped<IContributorRepository, ContributorRepository>();
             builder.Services.AddScoped<IContributionRepository, ContributionRepository>();
             builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
-            builder.Services.AddScoped<IContributionAccessLogRepository, ContributionAccessLogRepository>();        
+            builder.Services.AddScoped<IContributionAccessLogRepository, ContributionAccessLogRepository>();
             builder.Services.AddScoped<IContributionSaveRepository, ContributionSaveRepository>();
             builder.Services.AddScoped<IContributionReviewRepository, ContributionReviewRepository>();
             builder.Services.AddScoped<IContributionHeritageTagRepository, ContributionHeritageTagRepository>();
@@ -151,7 +159,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<IMailService, MailService>();
             builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
-            builder.Services.AddScoped<IFavoriteService, FavoriteService>();           
+            builder.Services.AddScoped<IFavoriteService, FavoriteService>();
             //builder.Services.AddScoped<IProfileService, ProfileService>();
             builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
             builder.Services.AddScoped<IHeritageService, HeritageService>();
@@ -165,6 +173,20 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IContributionAcceptanceService, ContributionAcceptanceService>();
             builder.Services.AddScoped<IQuizService, QuizService>();
 
+
+            builder.Services.Configure<AgoraOptions>(
+            builder.Configuration.GetSection("Agora"));
+
+            builder.Services.AddScoped<IStreamingRoomRepository, StreamingRoomRepository>();
+            builder.Services.AddScoped<IStreamingParticipantRepository, StreamingParticipantRepository>();
+            builder.Services.AddScoped<IRaiseHandRepository, RaiseHandRepository>();
+            builder.Services.AddScoped<IRoomChatRepository, RoomChatRepository>();
+            builder.Services.AddSingleton<IAgoraTokenService, AgoraTokenService>();
+            builder.Services.AddHostedService<RoomIdleWatcher>();
+            builder.Services.AddScoped<IStreamingRoomService, StreamingRoomService>();
+
+            // Controllers / MVC
+            builder.Services.AddControllers();
             // Redis
             builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
@@ -173,7 +195,7 @@ namespace Cultural_Heritage_System
                     EndPoints = { builder.Configuration["Redis:Host"] + ":" + builder.Configuration["Redis:Port"] },
                     DefaultDatabase = int.Parse(builder.Configuration["Redis:DefaultDatabase"] ?? "0"),
                     Password = builder.Configuration["Redis:Password"],
-                    AbortOnConnectFail = false 
+                    AbortOnConnectFail = false
                 };
                 return ConnectionMultiplexer.Connect(configuration);
             });
@@ -194,8 +216,8 @@ namespace Cultural_Heritage_System
 
             //if (app.Environment.IsDevelopment())
             //{
-                app.UseSwagger();
-                app.UseSwaggerUI();
+            app.UseSwagger();
+            app.UseSwaggerUI();
             //    app.UseDeveloperExceptionPage();
             //}
             //else

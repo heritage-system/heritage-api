@@ -1,10 +1,8 @@
 ﻿using Cultural_Heritage_System.Common;
-using Cultural_Heritage_System.DataAccessObjects;
 using Cultural_Heritage_System.Dtos.Models;
 using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.Category;
 using Cultural_Heritage_System.Dtos.Request.ContribtutionReport;
-using Cultural_Heritage_System.Dtos.Request.Contribution;
 using Cultural_Heritage_System.Dtos.Request.Contributor;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Request.Location;
@@ -16,7 +14,6 @@ using Cultural_Heritage_System.Dtos.Request.Review;
 using Cultural_Heritage_System.Dtos.Request.Tag;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Category;
-using Cultural_Heritage_System.Dtos.Response.Contribution;
 using Cultural_Heritage_System.Dtos.Response.Contributor;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Location;
@@ -26,6 +23,7 @@ using Cultural_Heritage_System.Dtos.Response.Quiz;
 using Cultural_Heritage_System.Dtos.Response.QuizQuestion;
 using Cultural_Heritage_System.Dtos.Response.Report;
 using Cultural_Heritage_System.Dtos.Response.Review;
+using Cultural_Heritage_System.Dtos.Response.Streaming;
 using Cultural_Heritage_System.Dtos.Response.Tag;
 using Cultural_Heritage_System.Models;
 using System.Text.Json;
@@ -47,7 +45,7 @@ namespace Cultural_Heritage_System.Helpers
             .ForMember(dest => dest.CategoryName,
                 opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : string.Empty))
             .ForMember(dest => dest.HeritageTags,
-                opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag.Name)))            
+                opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag.Name)))
             .ForMember(dest => dest.HeritageOccurrences,
                 opt => opt.MapFrom(src => src.HeritageOccurrences))
             .ForMember(dest => dest.Media,
@@ -168,8 +166,8 @@ namespace Cultural_Heritage_System.Helpers
         .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.User.UserName))
         .ForMember(dest => dest.UserImageUrl, opt => opt.MapFrom(src => src.User.Profile.AvatarUrl))
         .ForMember(dest => dest.Likes, opt => opt.MapFrom(src => src.Likes != null ? src.Likes.Count : 0))
-        .ForMember(dest => dest.LikedByMe, opt => opt.Ignore()) 
-        .ForMember(dest => dest.CreatedByMe, opt => opt.Ignore()) 
+        .ForMember(dest => dest.LikedByMe, opt => opt.Ignore())
+        .ForMember(dest => dest.CreatedByMe, opt => opt.Ignore())
         .ForMember(dest => dest.ReviewMedias, opt => opt.MapFrom(src => src.ReviewMedias))
         .ForMember(dest => dest.Replies, opt => opt.Ignore())
         .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
@@ -187,11 +185,11 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<ReviewCreateRequest, Review>()
                 .ForMember(dest => dest.HeritageId, opt => opt.MapFrom(src => src.HeritageId))
                 .ForMember(dest => dest.Comment, opt => opt.MapFrom(src => src.Comment))
-                .ForMember(dest => dest.ParentReviewId, opt => opt.MapFrom(src => src.ParentReviewId));             
+                .ForMember(dest => dest.ParentReviewId, opt => opt.MapFrom(src => src.ParentReviewId));
 
             // ReviewMediaRequest → ReviewMedia
             CreateMap<ReviewMediaRequest, ReviewMedia>();
-               
+
 
 
             // Map from Review entity to LikeReviewResponse DTO
@@ -244,7 +242,7 @@ namespace Cultural_Heritage_System.Helpers
 
             CreateMap<Heritage, HeritageNameSearchResponse>();
 
-            CreateMap<Subscription, SubscriptionDto>();   
+            CreateMap<Subscription, SubscriptionDto>();
 
             CreateMap<ContributionSave, ContributionSaveResponse>()
                 .ForMember(dest => dest.ContributionId, opt => opt.MapFrom(src => src.Contribution.Id))
@@ -288,7 +286,7 @@ namespace Cultural_Heritage_System.Helpers
                  opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
              .ForMember(dest => dest.Count,
                  opt => opt.MapFrom(src => src.Contributions != null ? src.Contributions.Count : 0))
-              .ForMember(dest => dest.DocumentsUrl,  
+              .ForMember(dest => dest.DocumentsUrl,
                     opt => opt.MapFrom(src => src.DocumentsUrl))
              .ForMember(dest => dest.CreatedByName, opt => opt.Ignore())
              .ForMember(dest => dest.CreatedByEmail, opt => opt.Ignore())
@@ -319,7 +317,7 @@ namespace Cultural_Heritage_System.Helpers
                             .First().Id
                         : 0));
 
-            CreateMap<Contribution, ContributionOverviewListItemResponse>()          
+            CreateMap<Contribution, ContributionOverviewListItemResponse>()
              .ForMember(dest => dest.View,
                     opt => opt.MapFrom(src => src.ContributionAccessLogs != null ? src.ContributionAccessLogs.Count : 0))
              .ForMember(dest => dest.Comments,
@@ -337,7 +335,7 @@ namespace Cultural_Heritage_System.Helpers
                             .First().Id
                         : 0));
 
-            CreateMap<Contribution, ContributionDetailUpdatedResponse>()              
+            CreateMap<Contribution, ContributionDetailUpdatedResponse>()
                 .ForMember(dest => dest.IsPremium, opt => opt.MapFrom(src =>
                 src.PremiumType != PremiumType.FREE));
 
@@ -345,7 +343,7 @@ namespace Cultural_Heritage_System.Helpers
             .ForMember(dest => dest.CategoryName,
                 opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : string.Empty))
             .ForMember(dest => dest.HeritageTags,
-                opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag.Name)))           
+                opt => opt.MapFrom(src => src.HeritageTags.Select(ht => ht.Tag.Name)))
             .ForMember(dest => dest.Media,
                        opt => opt.MapFrom(src =>
                            src.Media.FirstOrDefault(m => m.MediaType == MediaType.IMAGE)))
@@ -356,7 +354,7 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<Quiz, QuizDetailResponse>();
             CreateMap<Quiz, QuizListResponse>()
             .ForMember(dest => dest.TotalQuestions,
-                opt => opt.MapFrom(src => src.Questions.Count))             
+                opt => opt.MapFrom(src => src.Questions.Count))
             .ForMember(dest => dest.isPremium,
                 opt => opt.MapFrom(src => src.PremiumType != PremiumType.FREE));
 
@@ -364,6 +362,9 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<QuizUpdateRequest, Quiz>();
             CreateMap<QuizQuestionCreationRequest, QuizQuestion>();
             CreateMap<QuizQuestionUpdateRequest, QuizQuestion>();
+
+            CreateMap<StreamingRoom, StreamingRoomResponse>();
+            CreateMap<StreamingParticipant, StreamingParticipantResponse>();
         }
 
     }

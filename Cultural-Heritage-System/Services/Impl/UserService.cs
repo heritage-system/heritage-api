@@ -48,11 +48,11 @@ namespace Cultural_Heritage_System.Services.Impl
             User user = mapper.Map<User>(request);
             user.PasswordHash = passwordHasher.HashPassword(user, request.Password.Trim());
 
-            var role = await roleRepository.FindByRoleName(DefinitionRole.STAFF);
+            var role = await roleRepository.FindByRoleName(DefinitionRole.ADMIN);
             if (role == null)
             {
                 role = new Role();
-                role.Name = DefinitionRole.STAFF;
+                role.Name = DefinitionRole.ADMIN;
                 await roleRepository.CreateRole(role);
             }
             user.RoleId = role.Id;
@@ -148,7 +148,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
 
-            var accountId = int.Parse(accountIdClaim);  
+            var accountId = int.Parse(accountIdClaim);
 
             var existingUser = await userRepository.FindUserById(accountId);
             if (existingUser == null)

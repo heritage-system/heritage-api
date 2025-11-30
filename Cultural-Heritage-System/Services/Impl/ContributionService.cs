@@ -1,27 +1,16 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using Azure.Core;
 using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Models;
-using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.ContribtutionReport;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
-using Cultural_Heritage_System.Dtos.Request.Report;
-using Cultural_Heritage_System.Dtos.Request.Review;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Contribution;
-using Cultural_Heritage_System.Dtos.Response.Heritage;
-using Cultural_Heritage_System.Dtos.Response.Report;
-using Cultural_Heritage_System.Dtos.Response.Review;
 using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using OfficeOpenXml.Packaging.Ionic.Zlib;
-using System.Threading.Tasks;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
@@ -34,7 +23,7 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly IMapper mapper;
         private readonly IMailService mailService;
         private readonly ILogger<ContributionService> logger;
-        private readonly IContributionAccessLogRepository contributionAccessLogRepository;     
+        private readonly IContributionAccessLogRepository contributionAccessLogRepository;
         private readonly IContributionSaveRepository contributionSaveRepository;
         private readonly IContributionHeritageTagRepository contributionHeritageTagRepository;
         private readonly IContributionReportRepository contributionReportRepository;
@@ -51,7 +40,7 @@ namespace Cultural_Heritage_System.Services.Impl
             this.mapper = mapper;
             this.httpContextAccessor = httpContextAccessor;
             this.subscriptionRepository = subscriptionRepository;
-            this.contributionAccessLogRepository = contributionAccessLogRepository;           
+            this.contributionAccessLogRepository = contributionAccessLogRepository;
             this.contributionSaveRepository = contributionSaveRepository;
             this.contributionHeritageTagRepository = contributionHeritageTagRepository;
             this.contributionReportRepository = contributionReportRepository;
@@ -172,7 +161,7 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 contribution.ContributionAcceptances.Add(new ContributionAcceptance
                 {
-                    StaffId = nextStaffId.Value,                 
+                    StaffId = nextStaffId.Value,
                     Note = "Bài viết mới, chờ duyệt"
                 });
             }
@@ -424,7 +413,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 }
 
 
-                var existingContribution = await contributionRepository.GetContributionByIdAndStatus(contributionId,ContributionStatus.APPROVED);
+                var existingContribution = await contributionRepository.GetContributionByIdAndStatus(contributionId, ContributionStatus.APPROVED);
                 if (existingContribution == null)
                 {
 
@@ -484,7 +473,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
 
-            var existingContribution = await contributionRepository.GetContributionByIdAndStatus(request.ContributionId,ContributionStatus.APPROVED);
+            var existingContribution = await contributionRepository.GetContributionByIdAndStatus(request.ContributionId, ContributionStatus.APPROVED);
             if (existingContribution == null)
             {
 
@@ -531,10 +520,10 @@ namespace Cultural_Heritage_System.Services.Impl
                         c.TitleUnsigned.Contains(unsignedKeyword));
                 }
 
-               
+
                 var dtoQuery = query.ProjectTo<ContributionSearchResponse>(mapper.ConfigurationProvider);
 
-               
+
                 dtoQuery = dtoQuery.OrderBy(x => Guid.NewGuid());
 
                 // Lấy các bài liên quan trước
@@ -576,7 +565,7 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
-      
+
             var currentContributor = await contributorRepository.GetContributorByUserId(int.Parse(accountIdClaim));
             if (currentContributor == null)
             {
@@ -588,7 +577,7 @@ namespace Cultural_Heritage_System.Services.Impl
             if (existingContribution == null)
                 throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
 
-            if(existingContribution.ContributorId != currentContributor.Id)
+            if (existingContribution.ContributorId != currentContributor.Id)
             {
                 throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
             }
@@ -610,7 +599,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 .OrderByDescending(x => x.Year)
                 .ThenByDescending(x => x.Month)
                 .Take(6)
-                .OrderBy(x => x.Year).ThenBy(x => x.Month) 
+                .OrderBy(x => x.Year).ThenBy(x => x.Month)
                 .ToList();
 
             response.MonthlyViews = monthlyViews;
@@ -621,7 +610,7 @@ namespace Cultural_Heritage_System.Services.Impl
         public async Task<PageResponse<ContributionOverviewListItemResponse>> GetListContributionsOverview(ContributionOverviewSearchRequest request)
         {
             try
-            {        
+            {
                 var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
 
                 if (accountIdClaim == null)
@@ -649,14 +638,14 @@ namespace Cultural_Heritage_System.Services.Impl
                     var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
 
                     query = query.Where(h =>
-                      
+
                         h.Title.ToLower().Contains(searchTerm) ||
                         h.TitleUnsigned.Contains(unsignedTerm) ||
 
-                     
+
                         h.Contributor.User.UserName.ToLower().Contains(searchTerm) ||
                         h.Contributor.User.UserNameUnsigned.Contains(unsignedTerm) ||
-                     
+
                         h.ContributionHeritageTags.Any(tag =>
                             tag.Heritage.Name.ToLower().Contains(searchTerm) ||
                             tag.Heritage.NameUnsigned.Contains(unsignedTerm)
@@ -723,7 +712,7 @@ namespace Cultural_Heritage_System.Services.Impl
             }
 
             var response = mapper.Map<ContributionDetailUpdatedResponse>(existingContribution);
-               
+
             return response;
         }
 
@@ -742,7 +731,7 @@ namespace Cultural_Heritage_System.Services.Impl
             if (contribution == null)
                 throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
 
-         
+
             if (contribution.ContributorId != currentContributor.Id)
                 throw new AppException(ErrorCode.FORBIDDEN);
 

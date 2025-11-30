@@ -1,10 +1,8 @@
 ﻿using Cultural_Heritage_System.Dtos.Request.Contributor;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Contributor;
-using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cultural_Heritage_System.Controllers
@@ -80,7 +78,7 @@ namespace Cultural_Heritage_System.Controllers
         public async Task<ApiResponse<List<DropdownUserResponse>>> SearchDropdownUser([FromQuery] string? keyword)
         {
             var result = await contributorService.SearchDropdownUserAsync(keyword);
-            return new ApiResponse<List<DropdownUserResponse>>(200,"List of members",result );
+            return new ApiResponse<List<DropdownUserResponse>>(200, "List of members", result);
         }
 
         [HttpPut("{id}/approve")]
