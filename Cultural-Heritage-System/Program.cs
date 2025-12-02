@@ -11,6 +11,7 @@ using Cultural_Heritage_System.Services;
 using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
+using Net.payOS;
 using StackExchange.Redis;
 
 namespace Cultural_Heritage_System
@@ -116,9 +117,10 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<PanoramaSceneDAO>();
             builder.Services.AddScoped<ContributionUnlockDAO>();
             builder.Services.AddScoped<SubscriptionUsageDAO>();
-            builder.Services.AddScoped<PanoramaInteractionPointDAO>();
             builder.Services.AddScoped<PremiumPackageDAO>();
             builder.Services.AddScoped<PremiumBenefitDAO>();
+            builder.Services.AddScoped<SubscriptionDAO>();
+            builder.Services.AddScoped<SubscriptionPaymentDAO>();
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
@@ -155,9 +157,11 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IPanoramaSceneRepository, PanoramaSceneRepository>();
             builder.Services.AddScoped<IContributionUnlockRepository, ContributionUnlockRepository>();
             builder.Services.AddScoped<ISubscriptionUsageRepository, SubscriptionUsageRepository>();
-            builder.Services.AddScoped<IPanoramaInteractionPointRepository, PanoramaInteractionPointRepository>();
             builder.Services.AddScoped<IPremiumPackageRepository, PremiumPackageRepository>();
             builder.Services.AddScoped<IPremiumBenefitRepository, PremiumBenefitRepository>();
+            builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+            builder.Services.AddScoped<ISubscriptionUsageRepository, SubscriptionUsageRepository>();
+            builder.Services.AddScoped<ISubscriptionPaymentRepository, SubscriptionPaymentRepository>();        
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();
@@ -183,6 +187,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IStaffService, StaffService>();
             builder.Services.AddScoped<IPremiumPackageService, PremiumPackageService>();
             builder.Services.AddScoped<IPremiumBenefitService, PremiumBenefitService>();
+            builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 
             // Redis
             builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
@@ -202,6 +207,19 @@ namespace Cultural_Heritage_System
 
             builder.Services.AddAutoMapper(typeof(MappingProfile));
             builder.Services.AddScoped<TwoFactorService>();
+
+            builder.Services.AddSingleton(sp =>
+            {
+                var config = sp.GetRequiredService<IConfiguration>();
+
+                return new PayOS(
+                    config["PayOS:ClientId"],
+                    config["PayOS:ApiKey"],
+                    config["PayOS:ChecksumKey"]
+                );
+            });
+
+
 
             var app = builder.Build();
 

@@ -7,6 +7,7 @@ using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace Cultural_Heritage_System.Services.Impl
@@ -18,16 +19,20 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly IUserRepository _userRepository;
         private readonly IMailService _mailService;
         private readonly IReportReplyRepository _reportReplyRepository;
+        private readonly IStaffRepository _staffRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<ReportService> _logger;
 
-        public ReportService(IReportRepository reportRepository, IMapper mapper, IUserRepository userRepository, IMailService mailService, IReportReplyRepository reportReplyRepository, IHttpContextAccessor httpContextAccessor)
+        public ReportService(IReportRepository reportRepository, IMapper mapper, IUserRepository userRepository, IMailService mailService, IReportReplyRepository reportReplyRepository, IStaffRepository staffRepository, IHttpContextAccessor httpContextAccessor, ILogger<ReportService> logger)
         {
             _reportRepository = reportRepository;
             _mapper = mapper;
             _userRepository = userRepository;
             _mailService = mailService;
             _reportReplyRepository = reportReplyRepository;
+            _staffRepository = staffRepository;
             _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
         }
 
         public async Task<PageResponse<ReportResponse>> GetAllAsync(int page,int pageSize,string? keyword = null,DateTime? startDate = null,DateTime? endDate = null,string? status = null) 
@@ -78,30 +83,59 @@ namespace Cultural_Heritage_System.Services.Impl
 
         public async Task<ReportResponse> CreateAsync(CreateReportRequest request)
         {
+            var userId = GetCurrentUserId();
+            if (userId == null)
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            request.UserId = userId.Value; 
             var entity = _mapper.Map<Report>(request);
             await _reportRepository.AddAsync(entity);
             return _mapper.Map<ReportResponse>(entity);
         }
 
+
         public async Task<bool> AnswerReportAsync(long reportId, string answer)
         {
+            if (string.IsNullOrWhiteSpace(answer))
+            {
+                throw new AppException(ErrorCode.FILE_INVALID);
+            }
+
+            var currentUserId = GetCurrentUserId();
+            if (currentUserId == null || !currentUserId.HasValue)
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+
+            var staff = await _staffRepository.GetStaffByUserId(currentUserId.Value);
+            if (staff == null)
+            {
+                throw new AppException(ErrorCode.FORBIDDEN);
+            }
+
+            if (!staff.CanReplyReports)
+            {
+                throw new AppException(ErrorCode.FORBIDDEN);
+            }
+
             var report = await _reportRepository.GetByIdAsync(reportId);
-            if (report == null) return false;
+            if (report == null)
+            {
+                return false;
+            }
 
             var user = await _userRepository.GetByIdAsync(report.UserId);
-            if (user == null || string.IsNullOrWhiteSpace(user.Email)) return false;
-
-            await _mailService.SendEmailAnswerReport(user.Email, reportId, answer);
-
-            var accountIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
-            if (string.IsNullOrEmpty(accountIdClaim))
-                throw new AppException(ErrorCode.UNAUTHORIZED);
+            if (user == null || string.IsNullOrWhiteSpace(user.Email))
+            {
+                return false;
+            }
 
             var reply = new ReportReply
             {
                 ReportId = reportId,
-                CreatedBy = accountIdClaim, 
-                Message = answer,
+                StaffId = staff.Id,
+                Message = answer.Trim(),
             };
             await _reportReplyRepository.AddAsync(reply);
 
@@ -110,7 +144,35 @@ namespace Cultural_Heritage_System.Services.Impl
                 report.Status = ReportStatus.ANSWERED;
                 await _reportRepository.UpdateAsync(report);
             }
+
+            try
+            {
+                await _mailService.SendEmailAnswerReport(user.Email, reportId, answer);
+                _logger.LogInformation("Answer email sent successfully to {Email} for report {ReportId}", user.Email, reportId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send answer email for report {ReportId} to {Email}. Reply was saved successfully but email notification failed.", reportId, user.Email);
+            }
+
             return true;
+        }
+
+
+        private int? GetCurrentUserId()
+        {
+            var accountIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                return null;
+            }
+
+            if (int.TryParse(accountIdClaim, out int userId))
+            {
+                return userId;
+            }
+
+            return null;
         }
     }
 }

@@ -467,7 +467,7 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<PremiumPackageUpdateRequest, PremiumPackage>();
             CreateMap<PremiumPackageBenefit, PremiumPackageBenefitResponse>()
             .ForMember(dest => dest.BenefitId, opt => opt.MapFrom(src => src.Benefit.Id))
-            .ForMember(dest => dest.BenefitName, opt => opt.MapFrom(src => src.Benefit.Name))
+            .ForMember(dest => dest.BenefitName, opt => opt.MapFrom(src => src.Benefit.BenefitName))
             .ForMember(dest => dest.BenefitType, opt => opt.MapFrom(src => src.Benefit.BenefitType))
             .ForMember(dest => dest.Value, opt => opt.MapFrom(src => src.Benefit.Value));
 
@@ -480,8 +480,6 @@ namespace Cultural_Heritage_System.Helpers
                 .ForMember(dest => dest.MarketingMessage, opt => opt.MapFrom(src => src.MarketingMessage))
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
                 .ForMember(dest => dest.Benefits, opt => opt.MapFrom(src => src.PackageBenefits));
-
-            
 
             CreateMap<PremiumBenefit, PremiumBenefitResponse>();
             CreateMap<PremiumBenefitCreateRequest, PremiumBenefit>();

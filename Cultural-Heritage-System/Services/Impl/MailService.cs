@@ -90,39 +90,67 @@ namespace Cultural_Heritage_System.Services.Impl
 
         public async Task SendEmailAnswerReport(string to, long reportId, string answer)
         {
-            var client = new SendGridClient(_sendGridApiKey);
-            var from = new EmailAddress(_emailFrom, "VTFP");
-            var toEmail = new EmailAddress(to);
-            var msg = new SendGridMessage
+            try
             {
-                TemplateId = string.IsNullOrEmpty(_answerReportTemplateId) ? null : _answerReportTemplateId,
-                From = from,
-            };
-            msg.AddTo(toEmail);
-            if (!string.IsNullOrEmpty(_answerReportTemplateId))
-            {
-                msg.SetTemplateData(new
+                var client = new SendGridClient(_sendGridApiKey);
+                var from = new EmailAddress(_emailFrom, "VTFP");
+                var toEmail = new EmailAddress(to);
+                var msg = new SendGridMessage
                 {
-                    reportId = reportId,
-                    answer = answer,
-                    email = to
-                });
-            }
-            else
-            {
-                msg.Subject = $"Response to your report #{reportId}";
-                msg.PlainTextContent = answer;
-                msg.HtmlContent = $"<p>We have an update for your report <strong>#{reportId}</strong>:</p><p>{System.Net.WebUtility.HtmlEncode(answer)}</p>";
-            }
+                    From = from,
+                };
+                msg.AddTo(toEmail);
 
-            var response = await client.SendEmailAsync(msg);
-            if (response.StatusCode == System.Net.HttpStatusCode.Accepted)
-            {
-                _logger.LogInformation("AnswerReport email sent successfully to {Email}", to);
+                if (!string.IsNullOrEmpty(_answerReportTemplateId))
+                {
+                    msg.TemplateId = _answerReportTemplateId;
+                    msg.SetTemplateData(new
+                    {
+                        reportId = reportId,
+                        answer = answer,
+                        email = to
+                    });
+                    _logger.LogInformation("Sending AnswerReport email using template {TemplateId} to {Email} for report {ReportId}", _answerReportTemplateId, to, reportId);
+                }
+                else
+                {
+                    msg.Subject = $"Response to your report #{reportId}";
+                    msg.PlainTextContent = answer;
+                    msg.HtmlContent = $"<p>We have an update for your report <strong>#{reportId}</strong>:</p><p>{System.Net.WebUtility.HtmlEncode(answer)}</p>";
+                    _logger.LogInformation("Sending AnswerReport email without template to {Email} for report {ReportId}", to, reportId);
+                }
+
+                var response = await client.SendEmailAsync(msg);
+                string? responseBody = null;
+                try
+                {
+                    responseBody = await response.Body.ReadAsStringAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Could not read response body from SendGrid");
+                }
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Accepted)
+                {
+                    _logger.LogInformation("AnswerReport email sent successfully to {Email} for report {ReportId}. Response: {ResponseBody}", to, reportId, responseBody ?? "N/A");
+                }
+                else
+                {
+                    var errorMessage = $"Failed to send email. Status: {response.StatusCode}";
+                    if (!string.IsNullOrEmpty(responseBody))
+                    {
+                        errorMessage += $", Response: {responseBody}";
+                    }
+                    _logger.LogError("Failed to send AnswerReport email to {Email} for report {ReportId}. {ErrorMessage}", 
+                        to, reportId, errorMessage);
+                    throw new Exception(errorMessage);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                _logger.LogError("Failed to send AnswerReport email to {Email}. Status: {StatusCode}", to, response.StatusCode);
+                _logger.LogError(ex, "Exception occurred while sending AnswerReport email to {Email} for report {ReportId}", to, reportId);
+                throw;
             }
         }
 
