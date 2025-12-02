@@ -5,16 +5,19 @@ namespace Cultural_Heritage_System.Dtos.Response.Contributor
     public class ContributorResponse
     {
         public int Id { get; set; }
+        public string UserName { get; set; }
+        public string Email { get; set; }
+        public string? Phone { get; set; }
+        public string? Address { get; set; }
+        public string FullName { get; set; }
+        public DateTime? DateOfBirth { get; set; }
         public string? Bio { get; set; }
         public string? Expertise { get; set; }
         public string? DocumentsUrl { get; set; }
         public string Status { get; set; }
 
         public bool IsPremiumEligible { get; set; }
-        public int UserId { get; set; }
-        public string? UserFullName { get; set; }
-        public string? UserEmail { get; set; }
-
+        public int UserId { get; set; }      
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public string? CreatedBy { get; set; }

@@ -53,8 +53,8 @@ public class ContributorService : IContributorService
              DocumentsUrl = c.DocumentsUrl,
              Status = c.Status.ToString(),
              UserId = c.UserId,
-             UserEmail = c.User.Email,
-             UserFullName = c.User.Profile.FullName,           
+             Email = c.User.Email,
+             FullName = c.User.Profile.FullName,           
              FullNameUnsigned = c.User.Profile.FullNameUnsigned,
              ExpertiseUnsigned = c.ExpertiseUnsigned,
              Count = c.Contributions.Count,
@@ -72,10 +72,10 @@ public class ContributorService : IContributorService
 
             query = query.Where(x =>
                 (x.Expertise != null && x.Expertise.ToLower().Contains(searchTerm)) ||
-                (x.UserFullName != null && x.UserFullName.ToLower().Contains(searchTerm)) ||
+                (x.FullName != null && x.FullName.ToLower().Contains(searchTerm)) ||
                 (x.FullNameUnsigned != null && x.FullNameUnsigned.Contains(unsignedTerm)) ||
                 (x.ExpertiseUnsigned != null && x.ExpertiseUnsigned.Contains(unsignedTerm)) ||
-                (x.UserEmail != null && x.UserEmail.ToLower().Contains(searchTerm))
+                (x.Email != null && x.Email.ToLower().Contains(searchTerm))
             );
         }
 
@@ -91,8 +91,8 @@ public class ContributorService : IContributorService
         {
             SortBy.IDASC => query.OrderBy(x => x.Id),
             SortBy.IDDESC => query.OrderByDescending(x => x.Id),
-            SortBy.NAMEASC => query.OrderBy(x => x.UserFullName),
-            SortBy.NAMEDESC => query.OrderByDescending(x => x.UserFullName),
+            SortBy.NAMEASC => query.OrderBy(x => x.FullName),
+            SortBy.NAMEDESC => query.OrderByDescending(x => x.FullName),
             SortBy.DATEASC => query.OrderBy(x => x.UpdatedAt ?? x.CreatedAt),
             SortBy.DATEDESC => query.OrderByDescending(x => x.UpdatedAt ?? x.CreatedAt),
             _ => query.OrderBy(x => x.Id)
@@ -143,10 +143,11 @@ public class ContributorService : IContributorService
     public async Task<ContributorResponse?> GetContributorDetail(int id)
     {
         var contributor = await contributorRepository.GetContributorById(id);
-        if (contributor == null) return null;
-
-        var response = mapper.Map<ContributorResponse>(contributor);
-        response.UserFullName = contributor.User?.Profile?.FullName;
+        if (contributor == null)
+        {
+            throw new AppException(ErrorCode.CONTRIBUTOR_NOT_EXISTED);
+        }
+        var response = mapper.Map<ContributorResponse>(contributor);    
         response.DocumentsUrl = contributor.DocumentsUrl;
         return response;
     }
@@ -263,6 +264,43 @@ public class ContributorService : IContributorService
             await userRepository.UpdateAsync(targetUser);
         }
 
+        var profile = contributor.User?.Profile;
+        if (profile != null)
+        {
+            bool profileChanged = false;
+
+            if (!string.IsNullOrWhiteSpace(request.FullName))
+            {
+                profile.FullName = request.FullName.Trim();
+                profile.GenerateUnsignedFields();
+                profileChanged = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Phone))
+            {
+                profile.Phone = request.Phone.Trim();
+                profileChanged = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.Address))
+            {
+                profile.Address = request.Address.Trim();
+                profileChanged = true;
+            }
+
+            if (request.DateOfBirth.HasValue)
+            {
+                profile.DateOfBirth = request.DateOfBirth.Value;
+                profileChanged = true;
+            }
+
+            if (profileChanged)
+            {
+                profile.UpdatedAt = DateTime.UtcNow;
+                profile.UpdatedBy = accountIdClaim;
+                await profileRepository.UpdateAsync(profile);
+            }
+        }
         await contributorRepository.UpdateAsync(contributor);
         return mapper.Map<ContributorResponse>(contributor);
     }
