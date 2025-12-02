@@ -292,10 +292,20 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<ContributionReportCreationRequest, ContributionReport>();
 
             CreateMap<Contributor, ContributorResponse>()
-             .ForMember(dest => dest.UserFullName,
-                 opt => opt.MapFrom(src => src.User != null && src.User.Profile != null ? src.User.Profile.FullName : null))
-             .ForMember(dest => dest.UserEmail,
-                 opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
+             .ForMember(dest => dest.Email,
+                opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
+                .ForMember(dest => dest.Phone,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.Phone : string.Empty))
+                .ForMember(dest => dest.FullName,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.FullName : string.Empty))
+                .ForMember(dest => dest.Address,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.Address : string.Empty))
+                .ForMember(dest => dest.DateOfBirth,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.DateOfBirth : null))                
+                .ForMember(dest => dest.UserName,
+                opt => opt.MapFrom(src => src.User != null ? src.User.UserName : string.Empty))
+                .ForMember(dest => dest.Phone,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.Phone : string.Empty))
              .ForMember(dest => dest.Count,
                  opt => opt.MapFrom(src => src.Contributions != null ? src.Contributions.Count : 0))
               .ForMember(dest => dest.DocumentsUrl,  

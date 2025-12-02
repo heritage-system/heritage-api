@@ -81,17 +81,17 @@ namespace Cultural_Heritage_System.Services.Impl
             return _mapper.Map<ReportResponse?>(entity);
         }
 
-        public async Task<ReportResponse> CreateAsync(CreateReportRequest request)
+        public async Task<bool> CreateAsync(CreateReportRequest request)
         {
-            var userId = GetCurrentUserId();
-            if (userId == null)
-            {
+            var accountIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
                 throw new AppException(ErrorCode.UNAUTHORIZED);
-            }
-            request.UserId = userId.Value; 
+
+            int userId = int.Parse(accountIdClaim);
             var entity = _mapper.Map<Report>(request);
+            entity.UserId = userId;
             await _reportRepository.AddAsync(entity);
-            return _mapper.Map<ReportResponse>(entity);
+            return true;
         }
 
 

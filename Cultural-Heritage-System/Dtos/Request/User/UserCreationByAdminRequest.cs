@@ -8,6 +8,9 @@ namespace Cultural_Heritage_System.Dtos.Request
         public string Username { get; set; }     
         public string Email { get; set; }   
         public string FullName { get; set; }
+        public string? Address { get; set; }
+        public string? Phone { get; set; }
+        public DateTime? DateOfBirth { get; set; }
         public string RoleName { get; set; } = DefinitionRole.MEMBER;
 
         //Staff
