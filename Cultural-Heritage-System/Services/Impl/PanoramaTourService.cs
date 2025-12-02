@@ -35,15 +35,16 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly IContributorRepository contributorRepository;
         private readonly IPanoramaTourRepository panoramaTourRepository;
         private readonly IPanoramaSceneRepository panoramaSceneRepository;
-       
+        private readonly IPanoramaSceneUnlockRepository panoramaSceneUnlockRepository;
         private readonly ISubscriptionRepository subscriptionRepository;
         private readonly IMapper mapper;
         private readonly IMailService mailService;
         private readonly ILogger<PanoramaTourService> logger;     
         private readonly IStaffRepository staffRepository;
+        private readonly ISubscriptionUsageRepository subscriptionUsageRepository;
         public PanoramaTourService(IContributorRepository contributorRepository, IPanoramaTourRepository panoramaTourRepository, ILogger<PanoramaTourService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor, ISubscriptionRepository subscriptionRepository,
-            IStaffRepository staffRepository, IPanoramaSceneRepository panoramaSceneRepository)
+            IStaffRepository staffRepository, IPanoramaSceneRepository panoramaSceneRepository, IPanoramaSceneUnlockRepository panoramaSceneUnlockRepository, ISubscriptionUsageRepository subscriptionUsageRepository)
         {
             this.contributorRepository = contributorRepository;
             this.logger = logger;
@@ -53,7 +54,9 @@ namespace Cultural_Heritage_System.Services.Impl
             this.httpContextAccessor = httpContextAccessor;
             this.subscriptionRepository = subscriptionRepository;         
             this.staffRepository = staffRepository;
-            this.panoramaSceneRepository = panoramaSceneRepository;           
+            this.panoramaSceneRepository = panoramaSceneRepository;
+            this.panoramaSceneUnlockRepository = panoramaSceneUnlockRepository;
+            this.subscriptionUsageRepository = subscriptionUsageRepository;
         }
 
         public async Task<bool> CreatePanoramaTour(PanoramaTourCreationRequest request)
@@ -115,13 +118,90 @@ namespace Cultural_Heritage_System.Services.Impl
 
         public async Task<PanoramaTourDetailResponse> GetPanoramaTourDetail(long id)
         {
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
             var existingPanoramaTour = await panoramaTourRepository.GetPanoramaTourById(id);
 
             if (existingPanoramaTour == null)
                 throw new AppException(ErrorCode.PANORAMA_TOUR_NOT_FOUND);
 
             var response = mapper.Map<PanoramaTourDetailResponse>(existingPanoramaTour);
+
+            // Nếu toàn tour FREE -> không cần check sub
+            if (existingPanoramaTour.PremiumType == PremiumType.FREE)
+            {
+                await HidePremiumScenesIfNeeded(response, accountIdClaim);
+                return response;
+            }
+
+            // Nếu tour PREMIUM -> cũng cần check sub
+            await HidePremiumScenesIfNeeded(response, accountIdClaim);
+
             return response;
+        }
+
+        private async Task HidePremiumScenesIfNeeded(PanoramaTourDetailResponse response, string? accountIdClaim)
+        {           
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                foreach (var scene in response.Scenes)
+                {
+                    if (scene.PremiumType != PremiumType.FREE)
+                        scene.PanoramaUrl = null;
+                }
+                return;
+            }
+
+            int userId = int.Parse(accountIdClaim);
+
+
+            // Lấy subscription active của người dùng
+            var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+
+            if (activeSub == null)
+            {
+                foreach (var scene in response.Scenes)
+                {
+                    if (scene.PremiumType != PremiumType.FREE)
+                        scene.PanoramaUrl = null;
+                }
+                return;
+            }
+            
+            var panoramaUnlock = activeSub.UsageRecords.FirstOrDefault(c => c.BenefitName == BenefitName.TOUR);
+
+            if (panoramaUnlock == null)
+            {
+                foreach (var scene in response.Scenes)
+                {
+                    if (scene.PremiumType != PremiumType.FREE)
+                        scene.PanoramaUrl = null;
+                }
+                return;
+            }
+
+            // Đã có Subscription => map
+            response.Subscription = mapper.Map<SubscriptionDto>(activeSub);
+            response.Subscription.Total = panoramaUnlock.Total ?? int.MaxValue;
+            response.Subscription.Used = panoramaUnlock.Used;
+
+
+            var unlockedScenes = panoramaSceneUnlockRepository.GetPanoramaSceneUnlocksQueryByUserId(userId);
+
+            var unlockedSceneIds = unlockedScenes.Select(x => x.PanoramaSceneId).ToHashSet();
+
+            foreach (var scene in response.Scenes)
+            {
+                // FREE thì luôn cho xem
+                if (scene.PremiumType == PremiumType.FREE)
+                    continue;
+
+                // Nếu đã unlock → giữ nguyên URL
+                if (unlockedSceneIds.Contains(scene.Id))
+                    continue;
+
+                // Chưa unlock → ẨN URL
+                scene.PanoramaUrl = null;
+            }
         }
 
         public async Task<PanoramaSceneResponse> GetPanoramaSceneDetail(long id)
@@ -130,6 +210,8 @@ namespace Cultural_Heritage_System.Services.Impl
 
             if (existingPanoramaScene == null)
                 throw new AppException(ErrorCode.PANORAMA_SCENE_NOT_FOUND);
+
+
 
             var response = mapper.Map<PanoramaSceneResponse>(existingPanoramaScene);         
             return response;
@@ -361,6 +443,54 @@ namespace Cultural_Heritage_System.Services.Impl
 
             await panoramaSceneRepository.DeleteAsync(panoramaScene);
             return id;
+        }
+
+        public async Task<PanoramaSceneResponse> UnlockPanoramaScene(long sceneId)
+        {
+            var existingScene = await panoramaSceneRepository.GetPanoramaSceneById(sceneId);
+
+            if (existingScene == null)
+                throw new AppException(ErrorCode.PANORAMA_SCENE_NOT_FOUND);
+
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+
+            var userId = int.Parse(accountIdClaim);
+
+            // Lấy subscription active
+            var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+
+
+            if (activeSub == null)
+            {
+                throw new AppException(ErrorCode.USER_NOT_PREMIUM);
+            }
+
+            var sceneUnlock = activeSub.UsageRecords.FirstOrDefault(c => c.BenefitName == BenefitName.TOUR);
+            if (sceneUnlock == null)
+            {
+                throw new AppException(ErrorCode.SUBSCRIPTION_USAGE_NOT_FOUND);
+            }
+            if (sceneUnlock.Used >= sceneUnlock.Total)
+            {
+                throw new AppException(ErrorCode.OVER_OPEN_LIMIT);
+            }
+
+            sceneUnlock.Used++;
+            await subscriptionUsageRepository.UpdateAsync(sceneUnlock);
+
+            var unlock = new PanoramaSceneUnlock
+            {
+                UserId = userId,
+                PanoramaSceneId = sceneId
+            };
+            await panoramaSceneUnlockRepository.AddAsync(unlock);            
+
+            var result = mapper.Map<PanoramaSceneResponse>(existingScene);
+            return result;
         }
     }
 }

@@ -37,5 +37,7 @@ namespace Cultural_Heritage_System.Models
         {
             SceneNameUnsigned = StringHelper.RemoveDiacritics(SceneName).ToLower();
         }
+
+        public ICollection<PanoramaSceneUnlock> PanoramaSceneUnlocks { get; set; } = new List<PanoramaSceneUnlock>();
     }
 }

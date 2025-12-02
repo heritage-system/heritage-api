@@ -1,4 +1,5 @@
 ﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Dtos.Models;
 using Cultural_Heritage_System.Models;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -15,5 +16,6 @@ namespace Cultural_Heritage_System.Dtos.Response.Panorama
         public PanoramaStatus Status { get; set; }
         public PremiumType PremiumType { get; set; }
         public List<PanoramaSceneResponse> Scenes { get; set; } = new List<PanoramaSceneResponse>();
+        public SubscriptionDto? Subscription { get; set; }
     }
 }

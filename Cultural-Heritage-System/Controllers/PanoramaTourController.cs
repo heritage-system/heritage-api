@@ -131,7 +131,7 @@ namespace Cultural_Heritage_System.Controllers
 
             return new ApiResponse<long>(
                 code: 201,
-                message: "Panorama tour created successfully",
+                message: "Panorama scene created successfully",
                 result: result
             );
         }
@@ -142,7 +142,7 @@ namespace Cultural_Heritage_System.Controllers
             var result = await panoramaTourService.UpdatePanoramaScene(id, request);
             return new ApiResponse<bool>(
                 code: 200,
-                message: "Updated panorama tour successfully",
+                message: "Updated panorama scene successfully",
                 result: result
             );
         }
@@ -154,8 +154,19 @@ namespace Cultural_Heritage_System.Controllers
 
             return new ApiResponse<long?>(
                 code: 200,
-                message: "Delete panorama tour successfully",
+                message: "Delete panorama scene successfully",
                 result: await panoramaTourService.DeletePanoramaScene(id)
+            );
+        }
+
+        [HttpPost("{id}/unlock_scene")]
+        public async Task<ApiResponse<PanoramaSceneResponse>> UnlockPanoramaScene(long id)
+        {
+            var result = await panoramaTourService.UnlockPanoramaScene(id);
+            return new ApiResponse<PanoramaSceneResponse>(
+                code: 201,
+                message: "Unlock panorama scene successfully",
+                result: result
             );
         }
     }

@@ -55,6 +55,7 @@ namespace Cultural_Heritage_System.Models
         public ICollection<ContributionReview> ContributionReviews { get; set; } = new List<ContributionReview>();
         public ICollection<ContributionReviewLike> ContributionReviewLike { get; set; } = new List<ContributionReviewLike>();
 
+        public ICollection<PanoramaSceneUnlock> PanoramaSceneUnlocks { get; set; } = new List<PanoramaSceneUnlock>();
         public ICollection<ContributionReport> ContributionReports { get; set; } = new List<ContributionReport>();
         public Contributor? Contributor { get; set; }        
         public Profile? Profile { get; set; }
