@@ -33,9 +33,7 @@ namespace Cultural_Heritage_System.Models
         public DbSet<Tag> Tags { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Contributor> Contributors { get; set; }
-        //public DbSet<RevenueShare> RevenueShares { get; set; }
-        public DbSet<Wallet> Wallets { get; set; }
-        public DbSet<WalletTransaction> WalletTransactions { get; set; }
+        //public DbSet<RevenueShare> RevenueShares { get; set; }        
         public DbSet<HeritageMedia> HeritageMedias { get; set; }
         public DbSet<HeritageOccurrence> HeritageOccurrences { get; set; }
         public DbSet<ReviewLike> ReviewLikes { get; set; }
@@ -157,13 +155,8 @@ namespace Cultural_Heritage_System.Models
                     _ => SystemLogAction.ADMIN_ACTION
                 },
 
-                Wallet => entry.State switch
-                {
-                    EntityState.Added => SystemLogAction.WALLET_CREATED,
-                    _ => SystemLogAction.ADMIN_ACTION
-                },
-
-                WalletTransaction => entry.State switch
+             
+                PaymentTransaction => entry.State switch
                 {
                     EntityState.Added => SystemLogAction.WALLET_TRANSACTION_ADDED,
                     EntityState.Deleted => SystemLogAction.WALLET_TRANSACTION_FAILED,
@@ -522,6 +515,48 @@ namespace Cultural_Heritage_System.Models
                       .OnDelete(DeleteBehavior.SetNull);
             });
 
+
+            modelBuilder.Entity<Heritage>()
+               .HasMany(q => q.PanoramaTours)
+               .WithOne(qq => qq.Heritage)
+               .HasForeignKey(qq => qq.HeritageId)
+               .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PanoramaTour>()
+              .HasMany(q => q.Scenes)
+              .WithOne(qq => qq.PanoramaTour)
+              .HasForeignKey(qq => qq.PanoramaTourId)
+              .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ReportReply>()
+                .HasOne(r => r.Staff)
+                .WithMany(s => s.ReportReplies)
+                .HasForeignKey(r => r.StaffId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<User>()
+               .HasMany(q => q.PaymentTransactions)
+               .WithOne(qq => qq.User)
+               .HasForeignKey(qq => qq.UserId)
+               .OnDelete(DeleteBehavior.Cascade);
+        
+            modelBuilder.Entity<PremiumPackageBenefit>()
+                .HasOne(p => p.Package)
+                .WithMany(p => p.PackageBenefits)
+                .HasForeignKey(p => p.PackageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PremiumPackageBenefit>()
+                .HasOne(p => p.Benefit)
+                .WithMany()
+                .HasForeignKey(p => p.BenefitId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Subscription>()
+               .HasMany(q => q.UsageRecords)
+               .WithOne(qq => qq.Subscription)
+               .HasForeignKey(qq => qq.SubscriptionId)
+               .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

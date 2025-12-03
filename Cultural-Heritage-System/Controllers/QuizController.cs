@@ -137,5 +137,20 @@ namespace Cultural_Heritage_System.Controllers
                 result: await quizService.DeleteQuizQuestion(id)
             );
         }
+
+        [HttpGet("admin/detail/{quizId}")]
+        //[Authorize(Roles = "ADMIN")]
+        public async Task<ApiResponse<QuizDetailAdminResponse>> GetQuizDetailAdmin([FromRoute] long quizId)
+        {
+            var result = await quizService.GetQuizDetailAdmin(quizId);
+
+            return new ApiResponse<QuizDetailAdminResponse>
+            {
+                code = 200,
+                message = "Get quiz detail for admin successfully",
+                result = result
+            };
+        }
+
     }
 }

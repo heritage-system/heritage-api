@@ -31,9 +31,9 @@ namespace Cultural_Heritage_System.Models
         [Required]
         [Column("status", TypeName = "nvarchar(20)")]
         public SubscriptionStatus Status { get; set; } = SubscriptionStatus.ACTIVE;
-     
-        [Column("auto_renew")]
-        public bool AutoRenew { get; set; } = false;
+
+        public ICollection<SubscriptionUsage> UsageRecords { get; set; } = new List<SubscriptionUsage>();
+
     }
 
 

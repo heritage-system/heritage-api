@@ -36,11 +36,11 @@ namespace Cultural_Heritage_System.Models
         public bool CanReplyReports { get; set; } = false;
 
         [Column("can_assign_tasks")]
-        public bool CanAssignTasks { get; set; } = false;
+        public bool CanAssignTasks { get; set; } = false;     
 
         public ICollection<Heritage> ManagedHeritages { get; set; } = new List<Heritage>();
-
         public ICollection<ContributionAcceptance> ContributionAcceptances { get; set; } = new List<ContributionAcceptance>();
+        public ICollection<ReportReply> ReportReplies { get; set; } = new List<ReportReply>();
 
     }
 }

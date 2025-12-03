@@ -20,6 +20,11 @@ namespace Cultural_Heritage_System.DataAccessObjects
                 .FirstOrDefaultAsync(u => u.QuizId == quizId && u.UserId == userId);
 
             return result;
-        }    
+        }
+
+        public Task<List<QuizResult>> GetResultsByQuizId(long quizId)
+        {
+            return _dbSet.Where(r => r.QuizId == quizId).ToListAsync();
+        }
     }
 }

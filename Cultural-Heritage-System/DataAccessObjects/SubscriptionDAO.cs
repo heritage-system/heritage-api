@@ -25,6 +25,7 @@ namespace Cultural_Heritage_System.DataAccessObjects
 
             return await _dbSet
                 .Include(s => s.Package)
+                .Include(s => s.UsageRecords)
                 .FirstOrDefaultAsync(s => s.UserId == userId
                                        && s.Status == SubscriptionStatus.ACTIVE
                                        && s.StartAt <= now

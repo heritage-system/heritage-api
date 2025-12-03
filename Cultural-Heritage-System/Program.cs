@@ -19,6 +19,7 @@ namespace Cultural_Heritage_System
     {
         public static void Main(string[] args)
         {
+
             var builder = WebApplication.CreateBuilder(args);
 
             builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
@@ -116,6 +117,12 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<QuizDAO>();
             builder.Services.AddScoped<QuizResultDAO>();
             builder.Services.AddScoped<QuizQuestionDAO>();
+            builder.Services.AddScoped<PanoramaTourDAO>();
+            builder.Services.AddScoped<PanoramaSceneDAO>();
+            builder.Services.AddScoped<ContributionUnlockDAO>();
+            builder.Services.AddScoped<SubscriptionUsageDAO>();
+            builder.Services.AddScoped<PanoramaSceneUnlockDAO>();
+
             builder.Services.AddScoped<StreamingRoomDAO>();
             builder.Services.AddScoped<StreamingParticipantDAO>();
             builder.Services.AddScoped<RaiseHandDAO>();
@@ -151,6 +158,11 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IQuizRepository, QuizRepository>();
             builder.Services.AddScoped<IQuizResultRepository, QuizResultRepository>();
             builder.Services.AddScoped<IQuizQuestionRepository, QuizQuestionRepository>();
+            builder.Services.AddScoped<IPanoramaTourRepository, PanoramaTourRepository>();
+            builder.Services.AddScoped<IPanoramaSceneRepository, PanoramaSceneRepository>();
+            builder.Services.AddScoped<IContributionUnlockRepository, ContributionUnlockRepository>();
+            builder.Services.AddScoped<ISubscriptionUsageRepository, SubscriptionUsageRepository>();
+            builder.Services.AddScoped<IPanoramaSceneUnlockRepository, PanoramaSceneUnlockRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();
@@ -172,6 +184,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IUserCacheService, UserCacheService>();
             builder.Services.AddScoped<IContributionAcceptanceService, ContributionAcceptanceService>();
             builder.Services.AddScoped<IQuizService, QuizService>();
+            builder.Services.AddScoped<IPanoramaTourService, PanoramaTourService>();
+            builder.Services.AddScoped<IStaffService, StaffService>();
 
 
             builder.Services.Configure<AgoraOptions>(

@@ -35,7 +35,7 @@ namespace Cultural_Heritage_System.Models
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ICollection<Report> Reports { get; set; } = new List<Report>();       
 
-        public ICollection<Wallet> Wallets { get; set; } = new List<Wallet>();
+        public ICollection<PaymentTransaction> PaymentTransactions { get; set; } = new List<PaymentTransaction>();
         public ICollection<QuizResult> QuizResults { get; set; } = new List<QuizResult>();
         public ICollection<SystemLog> SystemLogs { get; set; } = new List<SystemLog>();
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
@@ -49,12 +49,13 @@ namespace Cultural_Heritage_System.Models
         public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
 
         public ICollection<ContributionAccessLog> ContributionAccessLogs { get; set; } = new List<ContributionAccessLog>();
-        //public ICollection<ContributionUnlock> ContributionUnlocks { get; set; } = new List<ContributionUnlock>();
+        public ICollection<ContributionUnlock> ContributionUnlocks { get; set; } = new List<ContributionUnlock>();
         public ICollection<ContributionSave> ContributionSaves { get; set; } = new List<ContributionSave>();
 
         public ICollection<ContributionReview> ContributionReviews { get; set; } = new List<ContributionReview>();
         public ICollection<ContributionReviewLike> ContributionReviewLike { get; set; } = new List<ContributionReviewLike>();
 
+        public ICollection<PanoramaSceneUnlock> PanoramaSceneUnlocks { get; set; } = new List<PanoramaSceneUnlock>();
         public ICollection<ContributionReport> ContributionReports { get; set; } = new List<ContributionReport>();
         public Contributor? Contributor { get; set; }        
         public Profile? Profile { get; set; }
