@@ -15,6 +15,8 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly IEventRepository eventRepo;
         private readonly IStreamingParticipantRepository participantRepo;
         private readonly IUserRepository userRepo;
+        private readonly IEventRegistrationRepository regRepo;   // 👈 THÊM
+        private readonly IMailService mailService;               // 👈 THÊM
         private readonly IAgoraTokenService tokenSvc;
         private readonly AgoraOptions opt;
         private readonly IMapper mapper;
@@ -25,6 +27,8 @@ namespace Cultural_Heritage_System.Services.Impl
             IEventRepository eventRepo,
             IStreamingParticipantRepository participantRepo,
             IUserRepository userRepo,
+            IEventRegistrationRepository regRepo,  // 👈 THÊM
+            IMailService mailService,              // 👈 THÊM
             IAgoraTokenService tokenSvc,
             IOptions<AgoraOptions> opt,
             IMapper mapper,
@@ -35,6 +39,8 @@ namespace Cultural_Heritage_System.Services.Impl
             this.eventRepo = eventRepo;
             this.participantRepo = participantRepo;
             this.userRepo = userRepo;
+            this.regRepo = regRepo;               // 👈
+            this.mailService = mailService;       // 👈
             this.tokenSvc = tokenSvc;
             this.opt = opt.Value;
             this.mapper = mapper;
@@ -57,6 +63,44 @@ namespace Cultural_Heritage_System.Services.Impl
 
         private static string EnsureRtcUid(string? rtcUid, int userId)
             => string.IsNullOrWhiteSpace(rtcUid) ? userId.ToString() : rtcUid.Trim();
+        private async Task ScheduleRemindEmailsForRoomAsync(Event ev, StreamingRoom room)
+        {
+            var regs = await regRepo.GetByEventWithUserAsync(ev.Id);
+            if (regs == null || regs.Count == 0) return;
+
+            var roomStartUtc = room.StartAt.Kind == DateTimeKind.Utc
+                ? room.StartAt
+                : room.StartAt.ToUniversalTime();
+
+            var scheduleUtc = roomStartUtc.AddMinutes(-5);
+            if (scheduleUtc <= DateTime.UtcNow)
+                scheduleUtc = DateTime.UtcNow.AddMinutes(1);
+
+            var local = roomStartUtc.ToLocalTime();
+            var startTimeStr = local.ToString("HH:mm");
+            var eventDateStr = local.ToString("dd/MM/yyyy");
+
+            foreach (var reg in regs.Where(r => !r.IsCancelled))
+            {
+                var user = reg.User;
+                if (user == null || string.IsNullOrWhiteSpace(user.Email))
+                    continue;
+
+                var userName = user.Profile?.FullName ?? user.UserName ?? user.Email;
+
+                var joinUrl = $"https://heritage-web-ashy.vercel.app/live/{room.RoomName}";
+
+
+                await mailService.SendRemindEmail(
+                    user.Email,
+                    userName,
+                    ev.Title,
+                    startTimeStr,
+                    eventDateStr,
+                    joinUrl,
+                    scheduleUtc);
+            }
+        }
 
         public async Task<StreamingRoomResponse> CreateRoomAsync(StreamingRoomCreateRequest request)
         {
@@ -67,7 +111,6 @@ namespace Cultural_Heritage_System.Services.Impl
             Event? evt = null;
             if (request.EventId.HasValue)
             {
-                // inject IEventRepository vào constructor
                 evt = await eventRepo.GetByIdAsync(request.EventId.Value)
                       ?? throw new AppException(ErrorCode.EVENT_NOT_FOUND);
             }
@@ -76,14 +119,13 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 RoomName = $"room-{Guid.NewGuid():N}",
                 Title = request.Title,
-                CreatedBy = creator.Id.ToString(),    // ✅
+                CreatedBy = creator.Id.ToString(),
                 EventId = request.EventId,
                 IsActive = false,
                 StartAt = request.StartAt,
                 Type = StreamingRoomType.UPCOMING,
                 ClosedAt = null
             };
-
 
             await roomRepo.AddAsync(room);
 
@@ -96,6 +138,12 @@ namespace Cultural_Heritage_System.Services.Impl
                 Status = ParticipantStatus.WAITING,
                 RtcUid = creator.Id.ToString()
             });
+
+            // 👇 NẾU ROOM GẮN VỚI EVENT VÀ EVENT ĐÃ CÓ ĐĂNG KÝ → SCHEDULE EMAIL
+            if (evt != null)
+            {
+                await ScheduleRemindEmailsForRoomAsync(evt, room);
+            }
 
             return mapper.Map<StreamingRoomResponse>(room);
         }

@@ -16,5 +16,6 @@ namespace Cultural_Heritage_System.Services
         Task<List<EventRegistrationUserResponse>> GetEventRegistrationsWithUserAsync(long eventId);
         Task<EventResponse> CreateEventWithRoomsAsync(EventWithRoomsCreateRequest request);
         Task<EventResponse> UpdateEventWithRoomsAsync(EventWithRoomsUpdateRequest request);
+
     }
 }
