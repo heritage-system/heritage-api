@@ -89,7 +89,7 @@ namespace Cultural_Heritage_System.Services.Impl
             }
         }
 
-        public async Task SendEmailAnswerReport(string to, string userName, string heritageName, DateTime reportTime, string reportContent, string replyMessage)
+        public async Task SendEmailAnswerReport(string to, string userName, string heritageName, string reportTime, string reportContent, string replyMessage)
         {
             var client = new SendGridClient(_sendGridApiKey);
             var from = new EmailAddress(_emailFrom, "VTFP");
@@ -151,6 +151,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 _logger.LogError("Failed to send email to {Email}. Status: {StatusCode}", to, response.StatusCode);
             }
         }
+
     }
 
 }
