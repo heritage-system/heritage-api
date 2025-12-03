@@ -48,7 +48,7 @@ namespace Cultural_Heritage_System.Middlewares
         public static readonly ErrorCode INVALID_CONTRIBUTOR_DATA = new ErrorCode(400, "Invalid contributor data", HttpStatusCode.BadRequest);
         public static readonly ErrorCode HERITAGE_NOT_FOUND = new ErrorCode(404, "Heritage not found", HttpStatusCode.NotFound);
         public static readonly ErrorCode FAVORITE_ALREADY_EXISTS = new ErrorCode(400, "Heritage is already in favorite", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode FAVORITE_NOT_FOUND = new ErrorCode(404, "Heritage is not in favorites",HttpStatusCode.NotFound);
+        public static readonly ErrorCode FAVORITE_NOT_FOUND = new ErrorCode(404, "Heritage is not in favorites", HttpStatusCode.NotFound);
 
         public static readonly ErrorCode CONTRIBUTION_NOT_EXISTED = new ErrorCode(404, "Contribution not existed", HttpStatusCode.NotFound);
         public static readonly ErrorCode INVALID_ROLE = new ErrorCode(400, "Contributor rights can only be granted to Members.", HttpStatusCode.NotFound);
@@ -75,6 +75,9 @@ namespace Cultural_Heritage_System.Middlewares
         public static readonly ErrorCode INVALID_TOKEN = new ErrorCode(400, "Mã không hợp lệ", HttpStatusCode.BadRequest);
         public static readonly ErrorCode NO_CONFIRM_EMAIL = new ErrorCode(400, "Bạn chưa xác nhận email", HttpStatusCode.BadRequest);
 
+        public static readonly ErrorCode ROOM_NOT_FOUND = new ErrorCode(404, "Room not found", HttpStatusCode.NotFound);
+        public static readonly ErrorCode STREAM_NOT_STARTED = new ErrorCode(400, "stream not started", HttpStatusCode.NotFound);
+        public static readonly ErrorCode EVENT_NOT_FOUND = new ErrorCode(400, "Event not found", HttpStatusCode.NotFound);
     }
 }
 

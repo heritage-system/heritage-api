@@ -1,5 +1,4 @@
 ﻿using Cultural_Heritage_System.Common;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -24,15 +23,15 @@ namespace Cultural_Heritage_System.Models
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<PasswordReset> PasswordResets { get; set; }
         public DbSet<Profile> Profiles { get; set; }
-        public DbSet<Quiz> Quiz { get; set; } 
-        public DbSet<QuizQuestion> QuizQuestions { get; set; }    
+        public DbSet<Quiz> Quiz { get; set; }
+        public DbSet<QuizQuestion> QuizQuestions { get; set; }
         public DbSet<QuizResult> QuizResults { get; set; }
         public DbSet<Report> Reports { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<SystemLog> SystemLogs { get; set; }
         public DbSet<Tag> Tags { get; set; }
-        public DbSet<User> Users { get; set; }       
+        public DbSet<User> Users { get; set; }
         public DbSet<Contributor> Contributors { get; set; }
         //public DbSet<RevenueShare> RevenueShares { get; set; }        
         public DbSet<HeritageMedia> HeritageMedias { get; set; }
@@ -44,6 +43,10 @@ namespace Cultural_Heritage_System.Models
         public DbSet<Subscription> Subscriptions { get; set; }
 
         public DbSet<ContributionReviewLike> ContributionReviewLike { get; set; }
+        public DbSet<StreamingRoom> StreamingRooms { get; set; }
+        public DbSet<StreamingParticipant> StreamingParticipants { get; set; }
+        public DbSet<Event> Events { get; set; }
+        public DbSet<EventRegistration> EventRegistrations { get; set; }
         public override int SaveChanges()
         {
             ApplyUnsignedFields();
@@ -152,7 +155,7 @@ namespace Cultural_Heritage_System.Models
                     _ => SystemLogAction.ADMIN_ACTION
                 },
 
-             
+
                 PaymentTransaction => entry.State switch
                 {
                     EntityState.Added => SystemLogAction.WALLET_TRANSACTION_ADDED,
@@ -383,14 +386,14 @@ namespace Cultural_Heritage_System.Models
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-           
+
             modelBuilder.Entity<ContributionReview>()
                 .HasOne(r => r.Contribution)
                 .WithMany(h => h.Reviews)
                 .HasForeignKey(r => r.ContributionId)
                 .OnDelete(DeleteBehavior.Cascade);
-           
-          
+
+
             modelBuilder.Entity<ContributionReview>()
                 .HasOne(r => r.ParentReview)
                 .WithMany(r => r.Replies)
@@ -427,7 +430,7 @@ namespace Cultural_Heritage_System.Models
 
             modelBuilder.Entity<Staff>()
                .HasOne(s => s.User)
-               .WithOne(u => u.Staff) 
+               .WithOne(u => u.Staff)
                .HasForeignKey<Staff>(s => s.UserId)
                .OnDelete(DeleteBehavior.Cascade);
 
@@ -443,6 +446,70 @@ namespace Cultural_Heritage_System.Models
                 .WithMany(c => c.ContributionAcceptances)
                 .HasForeignKey(ca => ca.ContributionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // ================== Streaming (Google Meet-like) ==================
+            modelBuilder.Entity<StreamingRoom>(entity =>
+            {
+                entity.HasKey(r => r.Id);
+
+                entity.HasIndex(r => r.RoomName).IsUnique();
+
+                entity.HasOne(r => r.Event)
+                      .WithMany(e => e.StreamingRooms)
+                      .HasForeignKey(r => r.EventId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+
+            modelBuilder.Entity<StreamingParticipant>(entity =>
+            {
+                entity.HasKey(p => p.Id);
+
+                entity.HasOne(p => p.Room)
+                      .WithMany(r => r.Participants)
+                      .HasForeignKey(p => p.RoomId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(p => p.User)
+                      .WithMany()
+                      .HasForeignKey(p => p.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(p => new { p.RoomId, p.UserId }).IsUnique();
+                entity.HasIndex(p => new { p.RoomId, p.RtcUid });
+            });
+
+
+            // ===== EventRegistration =====
+            modelBuilder.Entity<EventRegistration>(entity =>
+            {
+                entity.HasKey(r => r.Id);
+
+                entity.HasOne(r => r.Event)
+                      .WithMany(e => e.Registrations)
+                      .HasForeignKey(r => r.EventId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(r => r.User)
+                      .WithMany(u => u.EventRegistrations)
+                      .HasForeignKey(r => r.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(r => new { r.EventId, r.UserId }).IsUnique();
+            });
+
+            // ===== StreamingRoom → Event =====
+            modelBuilder.Entity<StreamingRoom>(entity =>
+            {
+
+                entity.HasOne(r => r.Event)
+                      .WithMany(e => e.StreamingRooms)
+                      .HasForeignKey(r => r.EventId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+
+
 
             modelBuilder.Entity<Heritage>()
                .HasMany(q => q.PanoramaTours)
@@ -467,7 +534,7 @@ namespace Cultural_Heritage_System.Models
                .WithOne(qq => qq.User)
                .HasForeignKey(qq => qq.UserId)
                .OnDelete(DeleteBehavior.Cascade);
-        
+
             modelBuilder.Entity<PremiumPackageBenefit>()
                 .HasOne(p => p.Package)
                 .WithMany(p => p.PackageBenefits)

@@ -1,11 +1,9 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using Azure.Core;
 using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.User;
 using Cultural_Heritage_System.Dtos.Response;
-using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.User;
 using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
@@ -13,7 +11,6 @@ using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 using Cultural_Heritage_System.Repositories.Impl;
 using Microsoft.AspNetCore.Identity;
-using System.Formats.Asn1;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
@@ -173,7 +170,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
 
-            var accountId = int.Parse(accountIdClaim);  
+            var accountId = int.Parse(accountIdClaim);
 
             var existingUser = await userRepository.FindUserById(accountId);
             if (existingUser == null)
@@ -198,7 +195,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
         public async Task<PageResponse<UserSearchResponse>> SearchMemberForAdmin(UserSearchRequest request)
         {
-            var query = userRepository.GetQueryable();      
+            var query = userRepository.GetQueryable();
 
             // ---- Filter ----
             if (!string.IsNullOrWhiteSpace(request.Keyword))
@@ -206,17 +203,17 @@ namespace Cultural_Heritage_System.Services.Impl
                 var searchTerm = request.Keyword.Trim().ToLower();
                 var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
 
-                query = query.Where(x =>                 
+                query = query.Where(x =>
                     (x.Profile.FullName != null && x.Profile.FullName.ToLower().Contains(searchTerm)) ||
                     (x.Profile.FullNameUnsigned != null && x.Profile.FullNameUnsigned.Contains(unsignedTerm)) ||
                     (x.UserName != null && x.UserName.Contains(unsignedTerm)) ||
                     (x.UserNameUnsigned != null && x.UserNameUnsigned.Contains(unsignedTerm)) ||
-                    (x.Email != null && x.Email.Contains(unsignedTerm))                
+                    (x.Email != null && x.Email.Contains(unsignedTerm))
                 );
             }
 
             if (request.Status.HasValue)
-            {               
+            {
                 query = query.Where(x => x.UserStatus == request.Status);
             }
 
@@ -236,7 +233,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
             var dtoQuery = query.ProjectTo<UserSearchResponse>(mapper.ConfigurationProvider);
             var paged = await dtoQuery.ToPagedResponseAsync(request.Page, request.PageSize);
-            
+
 
             return paged;
         }
@@ -263,7 +260,7 @@ namespace Cultural_Heritage_System.Services.Impl
             var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
             if (string.IsNullOrEmpty(accountIdClaim))
                 throw new AppException(ErrorCode.UNAUTHORIZED);
-            
+
             var userOptinal = await userRepository.FindUserByEmail(request.Email);
             if (userOptinal != null)
             {
@@ -283,7 +280,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 role.Name = request.RoleName;
                 await roleRepository.CreateRole(role);
             }
-            user.RoleId = role.Id;          
+            user.RoleId = role.Id;
             user.CreatedBy = accountIdClaim;
             await userRepository.AddAsync(user);
 
@@ -300,11 +297,11 @@ namespace Cultural_Heritage_System.Services.Impl
 
             await profileRepository.AddAsync(profile);
 
-            if(request.RoleName.ToUpper() == DefinitionRole.STAFF)
+            if (request.RoleName.ToUpper() == DefinitionRole.STAFF)
             {
                 var staff = new Staff
                 {
-                    UserId = user.Id,                  
+                    UserId = user.Id,
                     StaffRole = request.StaffRole,
                     CanManageEvents = request.CanManageEvents,
                     CanAssignTasks = request.CanAssignTasks,
@@ -322,7 +319,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 {
                     UserId = user.Id,
                     Bio = request.Bio,
-                    Expertise = request.Expertise,                                  
+                    Expertise = request.Expertise,
                     IsPremiumEligible = request.IsPremiumEligible,
                     CreatedBy = accountIdClaim,     
                     Status = ContributorStatus.APPLIED
@@ -330,7 +327,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
                 await contributorRepository.AddAsync(contributor);
             }
-      
+
             await mailService.SendEmailWelcomeForAdmin(user.Email, profile.FullName, generatedPassword, ToVietnamese(user.Role.Name), user.UserName);
 
             return mapper.Map<UserCreationResponse>(user);
@@ -344,13 +341,13 @@ namespace Cultural_Heritage_System.Services.Impl
 
             var userOptinal = await userRepository.FindUserById(id);
             if (userOptinal == null)
-            {             
+            {
                 throw new AppException(ErrorCode.USER_NOT_EXISTED);
             }
             userOptinal.UserStatus = status;
             userOptinal.UpdatedAt = DateTime.UtcNow;
             userOptinal.UpdatedBy = accountIdClaim;
-            
+
             await userRepository.UpdateAsync(userOptinal);
 
             return true;
