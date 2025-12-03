@@ -271,6 +271,9 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 UserId = user.Id,
                 FullName = request.FullName,
+                Address = request.Address,
+                DateOfBirth = request.DateOfBirth,
+                Phone = request.Phone,               
                 AvatarUrl = "https://res.cloudinary.com/dea92gqx4/image/upload/v1761033759/Windows_10_Default_Profile_Picture.svg_x71ugm.png",
                 CreatedBy = accountIdClaim
             };

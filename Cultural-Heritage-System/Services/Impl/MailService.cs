@@ -1,4 +1,5 @@
-﻿using SendGrid;
+﻿using Cultural_Heritage_System.Models;
+using SendGrid;
 using SendGrid.Helpers.Mail;
 namespace Cultural_Heritage_System.Services.Impl
 {
@@ -10,6 +11,7 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly string _otpTemplateId;
         private readonly string _answerReportTemplateId;
         private readonly string _emailFrom;
+        private readonly string _remindEmailTemplateId;
         private readonly ILogger<MailService> _logger;
 
         public MailService(IConfiguration configuration, ILogger<MailService> logger)
@@ -20,12 +22,14 @@ namespace Cultural_Heritage_System.Services.Impl
                 ?? throw new ArgumentNullException("SendGrid:WelcomeTemplateId is required");
             _otpTemplateId = configuration["SendGrid:OtpTemplateId"]
                ?? throw new ArgumentNullException("SendGrid:OtpTemplateId is required");
-            _answerReportTemplateId = configuration["SendGrid:AnswerReportTemplateId"]
+            _answerReportTemplateId = configuration["SendGrid:ReplyReportTemplateId"]
                ?? ""; // optional
             _emailFrom = configuration["SendGrid:FromEmail"]
                 ?? throw new ArgumentNullException("SendGrid:FromEmail is required");
             _welcomeForAdminTemplateId = configuration["SendGrid:WelcomeForAdminTemplateId"]
                 ?? throw new ArgumentNullException("SendGrid:WelcomeForAdminTemplateId is required");
+            _remindEmailTemplateId = configuration["SendGrid:RemindEmailTemplateId"]
+                ?? throw new ArgumentNullException("SendGrid:RemindEmailTemplateId is required");
 
             _logger = logger;
         }
@@ -88,7 +92,7 @@ namespace Cultural_Heritage_System.Services.Impl
             }
         }
 
-        public async Task SendEmailAnswerReport(string to, long reportId, string answer)
+        public async Task SendEmailAnswerReport(string to, string userName, string heritageName, string reportTime, string reportContent, string replyMessage)
         {
             var client = new SendGridClient(_sendGridApiKey);
             var from = new EmailAddress(_emailFrom, "VTFP");
@@ -99,30 +103,23 @@ namespace Cultural_Heritage_System.Services.Impl
                 From = from,
             };
             msg.AddTo(toEmail);
-            if (!string.IsNullOrEmpty(_answerReportTemplateId))
+            msg.SetTemplateData(new
             {
-                msg.SetTemplateData(new
-                {
-                    reportId = reportId,
-                    answer = answer,
-                    email = to
-                });
-            }
-            else
-            {
-                msg.Subject = $"Response to your report #{reportId}";
-                msg.PlainTextContent = answer;
-                msg.HtmlContent = $"<p>We have an update for your report <strong>#{reportId}</strong>:</p><p>{System.Net.WebUtility.HtmlEncode(answer)}</p>";
-            }
+                userName = userName,
+                heritageName = heritageName,
+                reportTime = reportTime,
+                reportContent = reportContent,
+                replyMessage =replyMessage
+            });
 
             var response = await client.SendEmailAsync(msg);
             if (response.StatusCode == System.Net.HttpStatusCode.Accepted)
             {
-                _logger.LogInformation("AnswerReport email sent successfully to {Email}", to);
+                _logger.LogInformation("Email sent successfully to {Email}", to);
             }
             else
             {
-                _logger.LogError("Failed to send AnswerReport email to {Email}. Status: {StatusCode}", to, response.StatusCode);
+                _logger.LogError("Failed to send email to {Email}. Status: {StatusCode}", to, response.StatusCode);
             }
         }
 
@@ -157,6 +154,43 @@ namespace Cultural_Heritage_System.Services.Impl
                 _logger.LogError("Failed to send email to {Email}. Status: {StatusCode}", to, response.StatusCode);
             }
         }
+
+        public async Task SendRemindEmail(
+            string to, string userName, string eventName,
+            string startTime, string eventDate, string joinUrl,
+            DateTime scheduleTimeUtc) // thêm tham số thời gian gửi
+        {
+            var client = new SendGridClient(_sendGridApiKey);
+            var from = new EmailAddress(_emailFrom, "VTFP");
+            var toEmail = new EmailAddress(to);
+
+            var msg = new SendGridMessage
+            {
+                TemplateId = string.IsNullOrEmpty(_remindEmailTemplateId) ? null : _remindEmailTemplateId,
+                From = from
+            };
+
+            msg.AddTo(toEmail);
+            msg.SetTemplateData(new
+            {
+                userName,
+                eventName,
+                startTime,
+                eventDate,
+                joinUrl
+            });
+         
+            msg.SendAt = new DateTimeOffset(scheduleTimeUtc).ToUnixTimeSeconds();
+
+            var response = await client.SendEmailAsync(msg);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Accepted)
+                _logger.LogInformation("Scheduled email for {Email} at {Time}", to, scheduleTimeUtc);
+            else
+                _logger.LogError("Failed scheduled email for {Email}. Status: {StatusCode}", to, response.StatusCode);
+        }
+
+
     }
 
 }

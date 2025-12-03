@@ -29,6 +29,18 @@ namespace Cultural_Heritage_System.DataAccessObjects
                                        );
         }
 
+        public async Task<List<SubscriptionUsage>> GetBySubscriptionAsync(int subscriptionId)
+        {
+            return await _dbSet
+                .Where(x => x.SubscriptionId == subscriptionId)
+                .ToListAsync();
+        }
+
+        public async Task<bool> ExistsAsync(int subscriptionId, string benefitName)
+        {
+            return await _dbSet
+                .AnyAsync(u => u.SubscriptionId == subscriptionId && u.BenefitName.Equals(benefitName));
+        }
 
     }
 }

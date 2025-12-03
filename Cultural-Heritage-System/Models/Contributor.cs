@@ -14,7 +14,7 @@ namespace Cultural_Heritage_System.Models
         public int UserId { get; set; }
         public User? User { get; set; }
 
-        [Column("bio", TypeName = "text")]
+        [Column("bio")]
         public string? Bio { get; set; }
 
         [Column("expertise")]
