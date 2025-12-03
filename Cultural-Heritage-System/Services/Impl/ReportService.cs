@@ -97,7 +97,7 @@ namespace Cultural_Heritage_System.Services.Impl
             var user = await _userRepository.GetByIdAsync(report.UserId);
             if (user == null || string.IsNullOrWhiteSpace(user.Email)) return false;
 
-            await _mailService.SendEmailAnswerReport(user.Email, reportId, answer);
+            //await _mailService.SendEmailAnswerReport(user.Email, reportId, answer);
 
             var accountIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
             if (string.IsNullOrEmpty(accountIdClaim))
