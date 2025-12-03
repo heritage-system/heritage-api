@@ -132,7 +132,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("{id}/reactivate")]
-        [Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<ContributorResponse>> ReActivate(int id)
         {
             var result = await contributorService.ReActivateContributor(id);

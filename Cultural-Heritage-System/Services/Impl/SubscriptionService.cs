@@ -71,9 +71,9 @@ namespace Cultural_Heritage_System.Services.Impl
                 }
 
                 //2.Kiểm tra user có subscription đang active không
-                //var activeSubscription = await GetActiveSubscriptionAsync();
-                //if (activeSubscription != null)
-                //    throw new Exception("Bạn đang có gói đăng ký đang hoạt động");
+                var activeSubscription = await GetActiveSubscriptionAsync();
+                if (activeSubscription != null)
+                    throw new Exception("Bạn đang có gói đăng ký đang hoạt động");
 
                 // 3. Tạo Subscription mới với status PENDING
                 var subscription = new Subscription

@@ -11,6 +11,7 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly string _otpTemplateId;
         private readonly string _answerReportTemplateId;
         private readonly string _emailFrom;
+        private readonly string _remindEmailTemplateId;
         private readonly ILogger<MailService> _logger;
 
         public MailService(IConfiguration configuration, ILogger<MailService> logger)
@@ -27,6 +28,8 @@ namespace Cultural_Heritage_System.Services.Impl
                 ?? throw new ArgumentNullException("SendGrid:FromEmail is required");
             _welcomeForAdminTemplateId = configuration["SendGrid:WelcomeForAdminTemplateId"]
                 ?? throw new ArgumentNullException("SendGrid:WelcomeForAdminTemplateId is required");
+            _remindEmailTemplateId = configuration["SendGrid:RemindEmailTemplateId"]
+                ?? throw new ArgumentNullException("SendGrid:RemindEmailTemplateId is required");
 
             _logger = logger;
         }
@@ -151,6 +154,42 @@ namespace Cultural_Heritage_System.Services.Impl
                 _logger.LogError("Failed to send email to {Email}. Status: {StatusCode}", to, response.StatusCode);
             }
         }
+
+        public async Task SendRemindEmail(
+            string to, string userName, string eventName,
+            string startTime, string eventDate, string joinUrl,
+            DateTime scheduleTimeUtc) // thêm tham số thời gian gửi
+        {
+            var client = new SendGridClient(_sendGridApiKey);
+            var from = new EmailAddress(_emailFrom, "VTFP");
+            var toEmail = new EmailAddress(to);
+
+            var msg = new SendGridMessage
+            {
+                TemplateId = string.IsNullOrEmpty(_remindEmailTemplateId) ? null : _remindEmailTemplateId,
+                From = from
+            };
+
+            msg.AddTo(toEmail);
+            msg.SetTemplateData(new
+            {
+                userName,
+                eventName,
+                startTime,
+                eventDate,
+                joinUrl
+            });
+         
+            msg.SendAt = new DateTimeOffset(scheduleTimeUtc).ToUnixTimeSeconds();
+
+            var response = await client.SendEmailAsync(msg);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Accepted)
+                _logger.LogInformation("Scheduled email for {Email} at {Time}", to, scheduleTimeUtc);
+            else
+                _logger.LogError("Failed scheduled email for {Email}. Status: {StatusCode}", to, response.StatusCode);
+        }
+
 
     }
 
