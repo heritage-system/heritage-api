@@ -33,7 +33,7 @@ namespace Cultural_Heritage_System.Models
         public SubscriptionStatus Status { get; set; } = SubscriptionStatus.ACTIVE;
 
         public ICollection<SubscriptionUsage> UsageRecords { get; set; } = new List<SubscriptionUsage>();
-
+        public ICollection<SubscriptionPayment> Payments { get; set; } = new List<SubscriptionPayment>();
     }
 
 

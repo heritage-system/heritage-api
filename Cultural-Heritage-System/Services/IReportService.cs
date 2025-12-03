@@ -9,7 +9,7 @@ namespace Cultural_Heritage_System.Services.Impl
     {
         Task<PageResponse<ReportResponse>> GetAllAsync(int page, int pageSize, string? keyword = null, DateTime? startDate = null, DateTime? endDate = null, string? status = null);
         Task<ReportResponse?> GetByIdAsync(long id);
-        Task<ReportResponse> CreateAsync(CreateReportRequest request);
+        Task<bool> CreateAsync(CreateReportRequest request);
         Task<bool> AnswerReportAsync(long reportId, string answer);
     }
 }

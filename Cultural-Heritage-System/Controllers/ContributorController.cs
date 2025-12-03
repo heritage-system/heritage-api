@@ -29,7 +29,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "ADMIN,STAFF")]
+        //[Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<ContributorResponse>> GetDetail(int id)
         {
             var result = await contributorService.GetContributorDetail(id);

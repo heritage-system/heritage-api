@@ -60,18 +60,10 @@ namespace Cultural_Heritage_System.Controllers
 
         [HttpPost("create")]
         //[Authorize(Roles = "MEMBER")]
-        public async Task<ApiResponse<ReportResponse>> Create([FromBody] CreateReportRequest request)
-        {
-            if (!ModelState.IsValid)
-            {
-                return new ApiResponse<ReportResponse>(
-                    code: 400,
-                    message: "Invalid model state"
-                );
-            }
-
+        public async Task<ApiResponse<bool>> Create([FromBody] CreateReportRequest request)
+        {           
             var created = await _reportService.CreateAsync(request);
-            return new ApiResponse<ReportResponse>(
+            return new ApiResponse<bool>(
                 code: 201,
                 message: "Report created successfully",
                 result: created

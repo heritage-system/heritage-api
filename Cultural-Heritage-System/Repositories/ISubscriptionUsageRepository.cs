@@ -12,6 +12,7 @@ namespace Cultural_Heritage_System.Repositories
 {
     public interface ISubscriptionUsageRepository : IBaseRepository<SubscriptionUsage>
     {
-        Task<SubscriptionUsage?> GetActiveSubscriptionUsage(long id);       
+        Task<SubscriptionUsage?> GetActiveSubscriptionUsage(long id);
+        Task<bool> ExistsAsync(int subscriptionId, string benefitName);
     }
 }

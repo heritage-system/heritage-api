@@ -12,6 +12,8 @@ using Cultural_Heritage_System.Dtos.Request.Location;
 using Cultural_Heritage_System.Dtos.Request.Media;
 using Cultural_Heritage_System.Dtos.Request.Occurrence;
 using Cultural_Heritage_System.Dtos.Request.Panorama;
+using Cultural_Heritage_System.Dtos.Request.PremiumBenefit;
+using Cultural_Heritage_System.Dtos.Request.PremiumPackage;
 using Cultural_Heritage_System.Dtos.Request.Quiz;
 using Cultural_Heritage_System.Dtos.Request.Report;
 using Cultural_Heritage_System.Dtos.Request.Review;
@@ -26,6 +28,8 @@ using Cultural_Heritage_System.Dtos.Response.Location;
 using Cultural_Heritage_System.Dtos.Response.Media;
 using Cultural_Heritage_System.Dtos.Response.Occurence;
 using Cultural_Heritage_System.Dtos.Response.Panorama;
+using Cultural_Heritage_System.Dtos.Response.PremiumBenefit;
+using Cultural_Heritage_System.Dtos.Response.PremiumPackage;
 using Cultural_Heritage_System.Dtos.Response.Quiz;
 using Cultural_Heritage_System.Dtos.Response.QuizQuestion;
 using Cultural_Heritage_System.Dtos.Response.Report;
@@ -288,10 +292,20 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<ContributionReportCreationRequest, ContributionReport>();
 
             CreateMap<Contributor, ContributorResponse>()
-             .ForMember(dest => dest.UserFullName,
-                 opt => opt.MapFrom(src => src.User != null && src.User.Profile != null ? src.User.Profile.FullName : null))
-             .ForMember(dest => dest.UserEmail,
-                 opt => opt.MapFrom(src => src.User != null ? src.User.Email : null))
+             .ForMember(dest => dest.Email,
+                opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
+                .ForMember(dest => dest.Phone,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.Phone : string.Empty))
+                .ForMember(dest => dest.FullName,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.FullName : string.Empty))
+                .ForMember(dest => dest.Address,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.Address : string.Empty))
+                .ForMember(dest => dest.DateOfBirth,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.DateOfBirth : null))                
+                .ForMember(dest => dest.UserName,
+                opt => opt.MapFrom(src => src.User != null ? src.User.UserName : string.Empty))
+                .ForMember(dest => dest.Phone,
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.Phone : string.Empty))
              .ForMember(dest => dest.Count,
                  opt => opt.MapFrom(src => src.Contributions != null ? src.Contributions.Count : 0))
               .ForMember(dest => dest.DocumentsUrl,  
@@ -459,6 +473,30 @@ namespace Cultural_Heritage_System.Helpers
                     opt => opt.MapFrom(src => src.Scenes.Count));
             CreateMap<PanoramaTour, PanoramaTourDetailForAdminResponse>();
 
+
+            // PremiumPackage
+            CreateMap<PremiumPackageCreateRequest, PremiumPackage>();
+            CreateMap<PremiumPackageUpdateRequest, PremiumPackage>();
+            CreateMap<PremiumPackageBenefit, PremiumPackageBenefitResponse>()
+            .ForMember(dest => dest.BenefitId, opt => opt.MapFrom(src => src.Benefit.Id))
+            .ForMember(dest => dest.BenefitName, opt => opt.MapFrom(src => src.Benefit.BenefitName))
+            .ForMember(dest => dest.BenefitType, opt => opt.MapFrom(src => src.Benefit.BenefitType))
+            .ForMember(dest => dest.Value, opt => opt.MapFrom(src => src.Benefit.Value));
+
+            CreateMap<PremiumPackage, PremiumPackageResponse>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.Price, opt => opt.MapFrom(src => src.Price))
+                .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.Currency))
+                .ForMember(dest => dest.DurationDays, opt => opt.MapFrom(src => src.DurationDays))
+                .ForMember(dest => dest.MarketingMessage, opt => opt.MapFrom(src => src.MarketingMessage))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
+                .ForMember(dest => dest.Benefits, opt => opt.MapFrom(src => src.PackageBenefits));
+
+            CreateMap<PremiumBenefit, PremiumBenefitResponse>();
+            CreateMap<PremiumBenefitCreateRequest, PremiumBenefit>();
+            CreateMap<PremiumBenefitUpdateRequest, PremiumBenefit>()
+                .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         }
 
     }
