@@ -45,6 +45,7 @@ namespace Cultural_Heritage_System.Models
         public ICollection<ReviewReport> ReviewReports { get; set; } = new List<ReviewReport>();
 
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+        public ICollection<ConfirmToken> ConfirmTokens { get; set; } = new List<ConfirmToken>();
 
         public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
 

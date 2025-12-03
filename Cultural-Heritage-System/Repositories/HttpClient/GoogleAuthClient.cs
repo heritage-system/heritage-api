@@ -23,7 +23,7 @@ namespace Cultural_Heritage_System.Repositories
                 new KeyValuePair<string, string>("code", code),
                 new KeyValuePair<string, string>("client_id", _configuration["Authentication:Google:ClientId"]),
                 new KeyValuePair<string, string>("client_secret", _configuration["Authentication:Google:ClientSecret"]),
-                new KeyValuePair<string, string>("redirect_uri", _configuration["Authentication:Google:RedirectUri"]),
+                new KeyValuePair<string, string>("redirect_uri",$"{_configuration["BaseUrl:FEUrl"]}{ _configuration["Authentication:Google:RedirectUri"]}"),
                 new KeyValuePair<string, string>("grant_type", "authorization_code")
             ]);
 

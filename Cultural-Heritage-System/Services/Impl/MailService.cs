@@ -34,7 +34,7 @@ namespace Cultural_Heritage_System.Services.Impl
             _logger = logger;
         }
 
-        public async Task SendEmailWelcome(string to, string user, DateTime registrationDate)
+        public async Task SendEmailWelcome(string to, string user, DateTime registrationDate, string activationLink)
         {
             var client = new SendGridClient(_sendGridApiKey);
             var from = new EmailAddress(_emailFrom, "VTFP");
@@ -48,7 +48,8 @@ namespace Cultural_Heritage_System.Services.Impl
             msg.SetTemplateData(new
             {
                 email = to,            
-                user = user
+                user = user,
+                activationLink = activationLink
                 //registration_date = registrationDate.ToString("dd/MM/yyyy")
             });
 

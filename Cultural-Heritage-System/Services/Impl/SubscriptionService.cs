@@ -19,7 +19,7 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly IConfiguration _configuration;
         private readonly ILogger<SubscriptionService> _logger;
         private readonly IHttpContextAccessor httpContextAccessor;
-
+        private readonly string _baseUrl;
         public SubscriptionService(
             ISubscriptionRepository subscriptionRepository,
             ISubscriptionPaymentRepository paymentRepository,
@@ -43,6 +43,9 @@ namespace Cultural_Heritage_System.Services.Impl
                 _configuration["PayOS:ChecksumKey"]
             );
             this.httpContextAccessor = httpContextAccessor;
+
+            _baseUrl = configuration["BaseUrl:FEUrl"]
+                ?? throw new ArgumentNullException("BaseUrl:FEUrl is required");
         }
 
         public async Task<CreatePaymentResponse> CreateSubscriptionAsync(CreateSubscriptionRequest request)
@@ -102,8 +105,8 @@ namespace Cultural_Heritage_System.Services.Impl
                     {
                     new ItemData(package.Name, 1, (int)package.Price)
                     },
-                    cancelUrl: _configuration["PayOS:CancelUrl"],
-                    returnUrl: _configuration["PayOS:ReturnUrl"]
+                    cancelUrl: $"{_baseUrl}{_configuration["PayOS:CancelUrl"]}",
+                    returnUrl: $"{_baseUrl}{_configuration["PayOS:ReturnUrl"]}"
                 );
                 var createPaymentResult = await _payOS.createPaymentLink(paymentData);
 
