@@ -9,6 +9,7 @@ using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
+using Cultural_Heritage_System.Repositories.Impl;
 using Microsoft.AspNetCore.Identity;
 
 namespace Cultural_Heritage_System.Services.Impl
@@ -26,8 +27,11 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly ISubscriptionRepository subscriptionRepository;
         private readonly IContributorRepository contributorRepository;
         private readonly IStaffRepository staffRepository;
-        public UserService(IUserRepository userRepository, IRoleRepository roleRepository, ILogger<UserService> logger, IMailService mailService,
-            IProfileRepository profileRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor, ISubscriptionRepository subscriptionRepository, IContributorRepository contributorRepository, IStaffRepository staffRepository)
+        private readonly IConfirmTokenRepository confirmTokenRepository;
+
+        private readonly string _baseUrl;
+        public UserService(IConfiguration configuration,IUserRepository userRepository, IRoleRepository roleRepository, ILogger<UserService> logger, IMailService mailService,
+            IProfileRepository profileRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor, ISubscriptionRepository subscriptionRepository, IContributorRepository contributorRepository, IStaffRepository staffRepository, IConfirmTokenRepository confirmTokenRepository)
         {
             this.userRepository = userRepository;
             this.roleRepository = roleRepository;
@@ -40,6 +44,10 @@ namespace Cultural_Heritage_System.Services.Impl
             this.subscriptionRepository = subscriptionRepository;
             this.contributorRepository = contributorRepository;
             this.staffRepository = staffRepository;
+            this.confirmTokenRepository = confirmTokenRepository;
+
+            _baseUrl = configuration["BaseUrl:FEUrl"]
+                ?? throw new ArgumentNullException("BaseUrl:FEUrl is required");
         }
 
         public async Task<UserCreationResponse> CreateUser(UserCreationRequest request)
@@ -53,6 +61,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
             User user = mapper.Map<User>(request);
             user.PasswordHash = passwordHasher.HashPassword(user, request.Password.Trim());
+            user.UserStatus = UserStatus.PENDING_VERIFICATION;
 
             var role = await roleRepository.FindByRoleName(DefinitionRole.MEMBER);
             if (role == null)
@@ -73,9 +82,16 @@ namespace Cultural_Heritage_System.Services.Impl
 
             await profileRepository.AddAsync(profile);
 
+            var confirmToken = Guid.NewGuid().ToString("N");
+            await confirmTokenRepository.AddAsync(new ConfirmToken
+            {
+                UserId = user.Id,
+                Token = confirmToken,
+            });
 
+            string confirmLink = $"{_baseUrl}/confirm-email-address?uid={user.Id}&token={confirmToken}";
 
-            await mailService.SendEmailWelcome(user.Email, user.UserName, user.CreatedAt);
+            await mailService.SendEmailWelcome(user.Email, user.UserName, user.CreatedAt,confirmLink);
 
             return mapper.Map<UserCreationResponse>(user);
         }
@@ -255,6 +271,7 @@ namespace Cultural_Heritage_System.Services.Impl
             User user = mapper.Map<User>(request);
             var generatedPassword = PasswordHelper.GenerateRandomPassword(8);
             user.PasswordHash = passwordHasher.HashPassword(user, generatedPassword);
+            user.UserStatus = UserStatus.PENDING_VERIFICATION;
 
             var role = await roleRepository.FindByRoleName(request.RoleName.ToUpper());
             if (role == null)
@@ -289,7 +306,8 @@ namespace Cultural_Heritage_System.Services.Impl
                     CanManageEvents = request.CanManageEvents,
                     CanAssignTasks = request.CanAssignTasks,
                     CanReplyReports = request.CanReplyReports,
-                    CreatedBy = accountIdClaim
+                    CreatedBy = accountIdClaim,
+                    StaffStatus = StaffStatus.PENDING
 
                 };
 
@@ -303,7 +321,8 @@ namespace Cultural_Heritage_System.Services.Impl
                     Bio = request.Bio,
                     Expertise = request.Expertise,
                     IsPremiumEligible = request.IsPremiumEligible,
-                    CreatedBy = accountIdClaim
+                    CreatedBy = accountIdClaim,     
+                    Status = ContributorStatus.APPLIED
                 };
 
                 await contributorRepository.AddAsync(contributor);

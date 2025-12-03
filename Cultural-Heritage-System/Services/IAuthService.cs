@@ -10,6 +10,7 @@ namespace Cultural_Heritage_System.Services
         Task<SignInResponse> SignInWithGoogle(string code);
 
         Task<SignInResponse> SignInWithFacebook(string code);
+        Task<bool> ConfirmEmail(int userId, string token);
         Task SignOut();
     }
 }

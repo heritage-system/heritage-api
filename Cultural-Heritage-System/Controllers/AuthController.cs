@@ -102,5 +102,18 @@ namespace Cultural_Heritage_System.Controllers
                 result = result
             };
         }
+
+        [HttpGet("confirm-email")]    
+        public async Task<ApiResponse<bool>> ConfirmEmail(int uid, string token)
+        {
+            var result = await authService.ConfirmEmail(uid, token);
+
+            return new ApiResponse<bool>
+            {
+                code = ((int)HttpStatusCode.OK),
+                message = "Confirm email Successfully",
+                result = result
+            };
+        }
     }
 }

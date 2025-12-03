@@ -71,6 +71,10 @@ namespace Cultural_Heritage_System.Middlewares
         public static readonly ErrorCode PANORAMA_SCENE_NOT_FOUND = new ErrorCode(404, "Panorama scene not found", HttpStatusCode.NotFound);
 
         public static readonly ErrorCode SUBSCRIPTION_USAGE_NOT_FOUND = new ErrorCode(404, " Subscription usage not found", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode INVALID_TOKEN = new ErrorCode(400, "Mã không hợp lệ", HttpStatusCode.BadRequest);
+        public static readonly ErrorCode NO_CONFIRM_EMAIL = new ErrorCode(400, "Bạn chưa xác nhận email", HttpStatusCode.BadRequest);
+
         public static readonly ErrorCode ROOM_NOT_FOUND = new ErrorCode(404, "Room not found", HttpStatusCode.NotFound);
         public static readonly ErrorCode STREAM_NOT_STARTED = new ErrorCode(400, "stream not started", HttpStatusCode.NotFound);
         public static readonly ErrorCode EVENT_NOT_FOUND = new ErrorCode(400, "Event not found", HttpStatusCode.NotFound);

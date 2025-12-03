@@ -129,6 +129,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<PremiumBenefitDAO>();
             builder.Services.AddScoped<SubscriptionDAO>();
             builder.Services.AddScoped<SubscriptionPaymentDAO>();
+            builder.Services.AddScoped<ConfirmTokenDAO>();
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
@@ -170,6 +171,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IPremiumBenefitRepository, PremiumBenefitRepository>();
             builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
             builder.Services.AddScoped<ISubscriptionUsageRepository, SubscriptionUsageRepository>();
+            builder.Services.AddScoped<ISubscriptionPaymentRepository, SubscriptionPaymentRepository>();
+            builder.Services.AddScoped<IConfirmTokenRepository, ConfirmTokenRepository>();
             builder.Services.AddScoped<ISubscriptionPaymentRepository, SubscriptionPaymentRepository>();        
             builder.Services.AddScoped<IEventRegistrationRepository, EventRegistrationRepository>();
             builder.Services.AddScoped<IEventRepository, EventRepository>();
