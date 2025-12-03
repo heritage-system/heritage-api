@@ -45,8 +45,8 @@ namespace Cultural_Heritage_System.Models
         public DbSet<ContributionReviewLike> ContributionReviewLike { get; set; }
         public DbSet<StreamingRoom> StreamingRooms { get; set; }
         public DbSet<StreamingParticipant> StreamingParticipants { get; set; }
-        public DbSet<RaiseHandRequest> RaiseHandRequests { get; set; }
-        public DbSet<RoomChatMessage> RoomChatMessages { get; set; }
+        public DbSet<Event> Events { get; set; }
+        public DbSet<EventRegistration> EventRegistrations { get; set; }
         public override int SaveChanges()
         {
             ApplyUnsignedFields();
@@ -155,7 +155,7 @@ namespace Cultural_Heritage_System.Models
                     _ => SystemLogAction.ADMIN_ACTION
                 },
 
-             
+
                 PaymentTransaction => entry.State switch
                 {
                     EntityState.Added => SystemLogAction.WALLET_TRANSACTION_ADDED,
@@ -451,13 +451,11 @@ namespace Cultural_Heritage_System.Models
             {
                 entity.HasKey(r => r.Id);
 
-                // CreatedBy (User 1 -> n Rooms)
                 entity.HasOne(r => r.CreatedBy)
-                      .WithMany() // không cần collection ở User
+                      .WithMany()
                       .HasForeignKey(r => r.CreatedByUserId)
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // Index room name để tìm nhanh
                 entity.HasIndex(r => r.RoomName).IsUnique();
             });
 
@@ -471,49 +469,53 @@ namespace Cultural_Heritage_System.Models
                       .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasOne(p => p.User)
-                      .WithMany() // không cần collection ở User
+                      .WithMany()
                       .HasForeignKey(p => p.UserId)
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // Mỗi user chỉ có 1 tham gia trong 1 room
                 entity.HasIndex(p => new { p.RoomId, p.UserId }).IsUnique();
-
-                // Tuỳ chọn: index theo (RoomId, RtcUid) nếu bạn dùng RtcUid để định danh client
                 entity.HasIndex(p => new { p.RoomId, p.RtcUid });
             });
-
-            modelBuilder.Entity<RaiseHandRequest>(entity =>
+            // ===== Events =====
+            modelBuilder.Entity<Event>(entity =>
             {
-                entity.HasKey(rh => rh.Id);
+                entity.HasKey(e => e.Id);
 
-                entity.HasOne(rh => rh.Room)
-                      .WithMany(r => r.RaiseHands)
-                      .HasForeignKey(rh => rh.RoomId)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                entity.HasOne(rh => rh.User)
+                entity.HasOne(e => e.CreatedBy)
                       .WithMany()
-                      .HasForeignKey(rh => rh.UserId)
+                      .HasForeignKey(e => e.CreatedByUserId)
                       .OnDelete(DeleteBehavior.Restrict);
-
-                entity.HasIndex(rh => new { rh.RoomId, rh.UserId, rh.Status });
             });
 
-            modelBuilder.Entity<RoomChatMessage>(entity =>
+            // ===== EventRegistration =====
+            modelBuilder.Entity<EventRegistration>(entity =>
             {
-                entity.HasKey(c => c.Id);
+                entity.HasKey(r => r.Id);
 
-                entity.HasOne(c => c.Room)
-                      .WithMany(r => r.ChatMessages)
-                      .HasForeignKey(c => c.RoomId)
+                entity.HasOne(r => r.Event)
+                      .WithMany(e => e.Registrations)
+                      .HasForeignKey(r => r.EventId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // User có thể null (system message)
-                entity.HasOne(c => c.User)
-                      .WithMany()
-                      .HasForeignKey(c => c.UserId)
+                entity.HasOne(r => r.User)
+                      .WithMany(u => u.EventRegistrations)
+                      .HasForeignKey(r => r.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(r => new { r.EventId, r.UserId }).IsUnique();
+            });
+
+            // ===== StreamingRoom → Event =====
+            modelBuilder.Entity<StreamingRoom>(entity =>
+            {
+
+                entity.HasOne(r => r.Event)
+                      .WithMany(e => e.StreamingRooms)
+                      .HasForeignKey(r => r.EventId)
                       .OnDelete(DeleteBehavior.SetNull);
             });
+
+
 
 
             modelBuilder.Entity<Heritage>()
@@ -539,7 +541,7 @@ namespace Cultural_Heritage_System.Models
                .WithOne(qq => qq.User)
                .HasForeignKey(qq => qq.UserId)
                .OnDelete(DeleteBehavior.Cascade);
-        
+
             modelBuilder.Entity<PremiumPackageBenefit>()
                 .HasOne(p => p.Package)
                 .WithMany(p => p.PackageBenefits)

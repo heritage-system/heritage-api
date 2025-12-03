@@ -1,9 +1,7 @@
-﻿// Services/Impl/StreamingRoomService.cs
-using AutoMapper;
+﻿using AutoMapper;
 using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Request.Streaming;
 using Cultural_Heritage_System.Dtos.Response.Streaming;
-using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
@@ -14,38 +12,33 @@ namespace Cultural_Heritage_System.Services.Impl
     public class StreamingRoomService : IStreamingRoomService
     {
         private readonly IStreamingRoomRepository roomRepo;
+        private readonly IEventRepository eventRepo;
         private readonly IStreamingParticipantRepository participantRepo;
-        private readonly IRaiseHandRepository raiseRepo;
-        private readonly IRoomChatRepository chatRepo;
         private readonly IUserRepository userRepo;
         private readonly IAgoraTokenService tokenSvc;
         private readonly AgoraOptions opt;
         private readonly IMapper mapper;
-        private readonly IHttpContextAccessor http;   // <— thêm
-        private readonly StreamAdmissionOptions admissionOpt; // <- new
+        private readonly IHttpContextAccessor http;
+
         public StreamingRoomService(
-       IStreamingRoomRepository roomRepo,
-       IStreamingParticipantRepository participantRepo,
-       IRaiseHandRepository raiseRepo,
-       IRoomChatRepository chatRepo,
-       IUserRepository userRepo,
-       IAgoraTokenService tokenSvc,
-       IOptions<AgoraOptions> opt,
-       IMapper mapper,
-       IHttpContextAccessor http,
-       IOptions<StreamAdmissionOptions> admissionOpt // <- new
-   )
+            IStreamingRoomRepository roomRepo,
+            IEventRepository eventRepo,
+            IStreamingParticipantRepository participantRepo,
+            IUserRepository userRepo,
+            IAgoraTokenService tokenSvc,
+            IOptions<AgoraOptions> opt,
+            IMapper mapper,
+            IHttpContextAccessor http
+        )
         {
             this.roomRepo = roomRepo;
+            this.eventRepo = eventRepo;
             this.participantRepo = participantRepo;
-            this.raiseRepo = raiseRepo;
-            this.chatRepo = chatRepo;
             this.userRepo = userRepo;
             this.tokenSvc = tokenSvc;
             this.opt = opt.Value;
             this.mapper = mapper;
             this.http = http;
-            this.admissionOpt = admissionOpt.Value; // <- new
         }
 
         private int GetCurrentUserId()
@@ -58,9 +51,12 @@ namespace Cultural_Heritage_System.Services.Impl
         private async Task EnsureHostOrCoHostAsync(int roomId, int userId)
         {
             var me = await participantRepo.GetByRoomAndUser(roomId, userId);
-            if (me == null || (me.Role != RoomRole.Host && me.Role != RoomRole.CoHost))
+            if (me == null || (me.Role != RoomRole.HOST && me.Role != RoomRole.COHOST))
                 throw new AppException(ErrorCode.FORBIDDEN);
         }
+
+        private static string EnsureRtcUid(string? rtcUid, int userId)
+            => string.IsNullOrWhiteSpace(rtcUid) ? userId.ToString() : rtcUid.Trim();
 
         public async Task<StreamingRoomResponse> CreateRoomAsync(StreamingRoomCreateRequest request)
         {
@@ -68,330 +64,201 @@ namespace Cultural_Heritage_System.Services.Impl
             var creator = await userRepo.FindUserById(currentUserId)
                           ?? throw new AppException(ErrorCode.USER_NOT_EXISTED);
 
+            Event? evt = null;
+            if (request.EventId.HasValue)
+            {
+                // inject IEventRepository vào constructor
+                evt = await eventRepo.GetByIdAsync(request.EventId.Value)
+                      ?? throw new AppException(ErrorCode.EVENT_NOT_FOUND);
+            }
+
             var room = new StreamingRoom
             {
                 RoomName = $"room-{Guid.NewGuid():N}",
                 Title = request.Title,
                 CreatedByUserId = creator.Id,
-                IsActive = true
+                EventId = request.EventId,        // 🔥 gắn room vào Event
+                IsActive = false,
+                StartAt = request.StartAt,
+                Type = StreamingRoomType.UPCOMING,
+                ClosedAt = null
             };
+
             await roomRepo.AddAsync(room);
 
+            // Người tạo phòng là Host
             await participantRepo.AddAsync(new StreamingParticipant
             {
                 RoomId = room.Id,
                 UserId = creator.Id,
-                Role = RoomRole.Host,
-                Status = ParticipantStatus.Admitted,
+                Role = RoomRole.HOST,
+                Status = ParticipantStatus.WAITING,
                 RtcUid = creator.Id.ToString()
-            });
-
-            await chatRepo.AddAsync(new RoomChatMessage
-            {
-                RoomId = room.Id,
-                IsSystem = true,
-                Content = $"Room created by {creator.UserName}"
             });
 
             return mapper.Map<StreamingRoomResponse>(room);
         }
-        private static string EnsureRtcUid(string? rtcUid, int userId)
-       => string.IsNullOrWhiteSpace(rtcUid) ? userId.ToString() : rtcUid.Trim();
-        public async Task RequestJoinAsync(string roomName, StreamingRequestJoinRequest request)
+
+
+
+        /// <summary>
+        /// User đăng ký event (trước khi bắt đầu).
+        /// </summary>
+        public async Task RegisterAsync(string roomName)
         {
             var currentUserId = GetCurrentUserId();
             var room = await roomRepo.GetByRoomName(roomName)
                       ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
-            var user = await userRepo.FindUserById(currentUserId)
-                      ?? throw new AppException(ErrorCode.USER_NOT_EXISTED);
 
-            var sp = await participantRepo.GetByRoomAndUser(room.Id, user.Id);
-            if (admissionOpt.OpenAdmission)
-            {
-                // ✅ Open admission: tạo mới nếu chưa có, đặt Admitted luôn, KHÔNG tạo RaiseHand
-                if (sp == null)
-                {
-                    await participantRepo.AddAsync(new StreamingParticipant
-                    {
-                        RoomId = room.Id,
-                        UserId = user.Id,
-                        Status = ParticipantStatus.Admitted,
-                        Role = RoomRole.Audience,
-                        RtcUid = EnsureRtcUid(request.RtcUid, user.Id)
-                    });
-                }
-                else
-                {
-                    sp.Status = ParticipantStatus.Admitted;
-                    sp.RtcUid = EnsureRtcUid(sp.RtcUid ?? request.RtcUid, user.Id);
-                    await participantRepo.UpdateAsync(sp);
-                }
+            var exists = await participantRepo.GetByRoomAndUser(room.Id, currentUserId);
+            if (exists != null) return;
 
-                await chatRepo.AddAsync(new RoomChatMessage
-                {
-                    RoomId = room.Id,
-                    IsSystem = true,
-                    Content = $"[Auto-admit] User {user.Id} joined."
-                });
-
-                return; // 🚪 xong, không tạo RaiseHand
-            }
-
-            // ❄️ Legacy (nếu sau này muốn tắt open admission)
-            if (sp == null)
-            {
-                await participantRepo.AddAsync(new StreamingParticipant
-                {
-                    RoomId = room.Id,
-                    UserId = user.Id,
-                    Status = ParticipantStatus.Waiting,
-                    Role = RoomRole.Audience,
-                    RtcUid = EnsureRtcUid(request.RtcUid, user.Id)
-                });
-            }
-            await raiseRepo.AddAsync(new RaiseHandRequest
+            // dùng ParticipantStatus.Waiting như "Registered"
+            await participantRepo.AddAsync(new StreamingParticipant
             {
                 RoomId = room.Id,
-                UserId = user.Id,
-                Status = RaiseHandStatus.Pending
+                UserId = currentUserId,
+                Role = RoomRole.AUDIENCE,
+                Status = ParticipantStatus.WAITING,
+                RtcUid = currentUserId.ToString()
             });
         }
 
-        public async Task AdmitAsync(string roomName, StreamingAdmitRejectRequest request)
-        {
-            if (admissionOpt.OpenAdmission)
-            {
-                // ✅ Không dùng nữa – có thể no-op an toàn
-                return;
-            }
-            var currentUserId = GetCurrentUserId();
-            var room = await roomRepo.GetByRoomName(roomName)
-                      ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
-
-            await EnsureHostOrCoHostAsync(room.Id, currentUserId);
-
-            var sp = await participantRepo.GetByRoomAndUser(room.Id, request.UserId)
-                     ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
-
-            sp.Status = ParticipantStatus.Admitted;
-            sp.IsRaisedHand = false;
-            await participantRepo.UpdateAsync(sp);
-
-            var pending = await raiseRepo.GetPending(room.Id);
-            foreach (var r in pending.Where(r => r.UserId == request.UserId))
-            {
-                r.Status = RaiseHandStatus.Approved;
-                r.ResolvedAt = DateTime.UtcNow;
-                await raiseRepo.UpdateAsync(r);
-            }
-
-            await chatRepo.AddAsync(new RoomChatMessage
-            {
-                RoomId = room.Id,
-                IsSystem = true,
-                Content = $"User {request.UserId} admitted."
-            });
-        }
-        public async Task HeartbeatAsync(string roomName)
-        {
-            var currentUserId = GetCurrentUserId();
-            var room = await roomRepo.GetByRoomName(roomName) ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
-
-            var sp = await participantRepo.GetByRoomAndUser(room.Id, currentUserId);
-
-            if (admissionOpt.OpenAdmission && sp == null)
-            {
-                await participantRepo.AddAsync(new StreamingParticipant
-                {
-                    RoomId = room.Id,
-                    UserId = currentUserId,
-                    Status = ParticipantStatus.Admitted,
-                    Role = RoomRole.Audience,
-                    RtcUid = currentUserId.ToString(),
-                    LastSeenAt = DateTime.UtcNow
-                });
-                return;
-            }
-
-            if (sp == null || sp.Status == ParticipantStatus.Kicked)
-                return; // ❌ không gia hạn/bật lại cho user đã bị kick
-
-            await participantRepo.TouchLastSeenAsync(room.Id, currentUserId);
-        }
-
-        public async Task LeaveAsync(string roomName)
-        {
-            var currentUserId = GetCurrentUserId();
-            var room = await roomRepo.GetByRoomName(roomName) ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
-
-            await participantRepo.MarkLeftAsync(room.Id, currentUserId, setStatusLeft: true);
-
-            await chatRepo.AddAsync(new RoomChatMessage
-            {
-                RoomId = room.Id,
-                IsSystem = true,
-                Content = $"User {currentUserId} left the room."
-            });
-        }
-        public async Task RejectAsync(string roomName, StreamingAdmitRejectRequest request)
-        {
-            if (admissionOpt.OpenAdmission)
-            {
-                // ✅ Không dùng nữa – no-op
-                return;
-            }
-            var currentUserId = GetCurrentUserId();
-            var room = await roomRepo.GetByRoomName(roomName)
-                      ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
-
-            await EnsureHostOrCoHostAsync(room.Id, currentUserId);
-
-            var sp = await participantRepo.GetByRoomAndUser(room.Id, request.UserId)
-                     ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
-
-            sp.Status = ParticipantStatus.Kicked;
-            sp.IsRaisedHand = false;
-            await participantRepo.UpdateAsync(sp);
-
-            var pending = await raiseRepo.GetPending(room.Id);
-            foreach (var r in pending.Where(r => r.UserId == request.UserId))
-            {
-                r.Status = RaiseHandStatus.Rejected;
-                r.ResolvedAt = DateTime.UtcNow;
-                await raiseRepo.UpdateAsync(r);
-            }
-        }
-
-
-        public async Task SetRoleAsync(string roomName, StreamingSetRoleRequest request)
-        {
-            var currentUserId = GetCurrentUserId();
-            var room = await roomRepo.GetByRoomName(roomName)
-                      ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
-
-            await EnsureHostOrCoHostAsync(room.Id, currentUserId);
-
-            var sp = await participantRepo.GetByRoomAndUser(room.Id, request.UserId)
-                     ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
-
-            sp.Role = request.Role; // ✅ enum đã bind từ string nhờ JsonStringEnumConverter
-            await participantRepo.UpdateAsync(sp);
-
-            await chatRepo.AddAsync(new RoomChatMessage
-            {
-                RoomId = room.Id,
-                IsSystem = true,
-                Content = $"User {request.UserId} role -> {request.Role}"
-            });
-        }
-        public async Task RaiseHandAsync(string roomName, StreamingRaiseHandRequest request)
-        {
-
-            var currentUserId = GetCurrentUserId();
-
-            var room = await roomRepo.GetByRoomName(roomName)
-                      ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
-            var sp = await participantRepo.GetByRoomAndUser(room.Id, currentUserId)
-                     ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
-            sp.IsRaisedHand = request.Raised;
-            if (admissionOpt.OpenAdmission)
-            {
-                // ✅ Open admission: giơ tay không cần thiết để vào phòng.
-                // Nếu bạn vẫn muốn dùng giơ tay làm tín hiệu xin phát biểu thì cứ giữ DB như cũ.
-                // Ở đây tối giản → chỉ tắt việc ghi RaiseHand để giảm tải:
-
-                await participantRepo.UpdateAsync(sp);
-                return;
-            }
-            if (request.Raised)
-            {
-                await raiseRepo.AddAsync(new RaiseHandRequest
-                {
-                    RoomId = room.Id,
-                    UserId = currentUserId,
-                    Status = RaiseHandStatus.Pending
-                });
-            }
-        }
-        public async Task<IReadOnlyList<StreamingRoomWithCountResponse>> GetRoomsHavingParticipantsAsync(
-            int minCount = 1, ParticipantStatus? status = ParticipantStatus.Admitted)
-        {
-            var list = await roomRepo.GetRoomsHavingParticipantsAsync(minCount, status);
-
-            // map thủ công để đưa Count vào DTO
-            var result = list.Select(x => new StreamingRoomWithCountResponse
-            {
-                Id = x.Room.Id,
-                RoomName = x.Room.RoomName,
-                Title = x.Room.Title ?? "",
-                IsActive = x.Room.IsActive,
-                CreatedAt = x.Room.CreatedAt,
-                ParticipantCount = x.Count
-            }).ToList();
-
-            return result;
-        }
-        public async Task<IReadOnlyList<StreamingParticipantResponse>> GetParticipantsAsync(string roomName, ParticipantStatus? status)
-        {
-            var room = await roomRepo.GetByRoomName(roomName) ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
-            var list = await participantRepo.GetByRoom(room.Id, status);
-            return list.Select(mapper.Map<StreamingParticipantResponse>).ToList();
-        }
-
+        /// <summary>
+        /// Cấp token join: auto tạo participant nếu chưa có, không cần admit/reject.
+        /// </summary>
         public async Task<StreamingJoinGrantResponse> IssueJoinTokensAsync(string roomName)
         {
             var currentUserId = GetCurrentUserId();
             var room = await roomRepo.GetByRoomName(roomName)
                       ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
 
+            // phòng đã đóng thì cấm join luôn
+            if (room.Type == StreamingRoomType.CLOSED)
+                throw new AppException(ErrorCode.FORBIDDEN);
+
+            var nowUtc = DateTime.UtcNow;
+
+            // StartAt là DateTime thường => chuẩn hoá về UTC để so sánh
+            var startAtUtc = room.StartAt.Kind == DateTimeKind.Utc
+                ? room.StartAt
+                : room.StartAt.ToUniversalTime();
+
             var sp = await participantRepo.GetByRoomAndUser(room.Id, currentUserId);
-            if (sp != null && sp.Status == ParticipantStatus.Kicked)
+            var isCreator = room.CreatedByUserId == currentUserId;
+
+            // 1️⃣ TRƯỚC GIỜ BẮT ĐẦU: ai join cũng chỉ là WAITING + bị chặn
+            if (nowUtc < startAtUtc)
             {
-                // KHÔNG cấp token cho user bị kick
-                throw new AppException(ErrorCode.UNAUTHORIZED); // hoặc ErrorCode.FORBIDDEN
-            }
-            if (admissionOpt.OpenAdmission)
-            {
-                // ✅ auto create or auto-upgrade lên Admitted
                 if (sp == null)
                 {
                     sp = new StreamingParticipant
                     {
                         RoomId = room.Id,
                         UserId = currentUserId,
-                        RtcUid = currentUserId.ToString(),
-                        Role = RoomRole.Audience,
-                        Status = ParticipantStatus.Admitted
+                        Role = isCreator ? RoomRole.HOST : RoomRole.AUDIENCE,
+                        Status = ParticipantStatus.WAITING,
+                        RtcUid = EnsureRtcUid(null, currentUserId)
                     };
                     await participantRepo.AddAsync(sp);
                 }
-                else if (sp.Status != ParticipantStatus.Admitted)
+                else
                 {
-                    sp.Status = ParticipantStatus.Admitted;
-                    if (string.IsNullOrWhiteSpace(sp.RtcUid)) sp.RtcUid = currentUserId.ToString();
-                    await participantRepo.UpdateAsync(sp);
+                    if (sp.Status != ParticipantStatus.WAITING)
+                    {
+                        sp.Status = ParticipantStatus.WAITING;
+                        if (string.IsNullOrWhiteSpace(sp.RtcUid))
+                            sp.RtcUid = EnsureRtcUid(sp.RtcUid, currentUserId);
+
+                        await participantRepo.UpdateAsync(sp);
+                    }
                 }
+
+                // FE đang hiểu message ROOM_NOT_FOUND là "sự kiện chưa mở/phòng không tồn tại"
+                throw new AppException(ErrorCode.ROOM_NOT_FOUND);
+            }
+
+            // 2️⃣ ĐÃ QUA GIỜ BẮT ĐẦU MÀ VẪN ĐANG UPCOMING
+            if (room.Type == StreamingRoomType.UPCOMING)
+            {
+                if (!isCreator)
+                {
+                    // Audience tới sớm hơn host -> vẫn chỉ Waiting, không cho vào
+                    if (sp == null)
+                    {
+                        sp = new StreamingParticipant
+                        {
+                            RoomId = room.Id,
+                            UserId = currentUserId,
+                            Role = RoomRole.AUDIENCE,
+                            Status = ParticipantStatus.WAITING,
+                            RtcUid = EnsureRtcUid(null, currentUserId)
+                        };
+                        await participantRepo.AddAsync(sp);
+                    }
+                    else if (sp.Status != ParticipantStatus.WAITING)
+                    {
+                        sp.Status = ParticipantStatus.WAITING;
+                        await participantRepo.UpdateAsync(sp);
+                    }
+
+                    // Host chưa start phòng → coi như "chưa mở"
+                    throw new AppException(ErrorCode.ROOM_NOT_FOUND);
+                }
+
+                // 👉 Host (creator) join lần đầu sau giờ start → chính thức mở phòng
+                room.Type = StreamingRoomType.LIVE;
+                room.IsActive = true;
+                room.ClosedAt = null;
+                await roomRepo.UpdateAsync(room);
+            }
+
+            // 3️⃣ Từ đây trở đi: chỉ xử lý phòng Live
+            if (room.Type != StreamingRoomType.LIVE)
+                throw new AppException(ErrorCode.ROOM_NOT_FOUND);
+
+            if (sp != null && sp.Status == ParticipantStatus.KICKED)
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            if (sp == null)
+            {
+                sp = new StreamingParticipant
+                {
+                    RoomId = room.Id,
+                    UserId = currentUserId,
+                    RtcUid = EnsureRtcUid(null, currentUserId),
+                    // Host đã có sẵn từ lúc create, path này thường chỉ cho audience
+                    Role = RoomRole.AUDIENCE,
+                    Status = ParticipantStatus.ADMITTED
+                };
+                await participantRepo.AddAsync(sp);
             }
             else
             {
-                if (sp == null || sp.Status != ParticipantStatus.Admitted)
-                    throw new AppException(ErrorCode.UNAUTHORIZED);
+                // chuyển sang Admitted nếu đang Waiting
+                if (sp.Status != ParticipantStatus.ADMITTED)
+                    sp.Status = ParticipantStatus.ADMITTED;
+
+                if (string.IsNullOrWhiteSpace(sp.RtcUid))
+                    sp.RtcUid = EnsureRtcUid(sp.RtcUid, currentUserId);
+
+                await participantRepo.UpdateAsync(sp);
             }
 
-            var rtcRole = (sp.Role is RoomRole.Host or RoomRole.CoHost or RoomRole.Speaker)
-                            ? AgoraRtcRole.HOST
-                            : AgoraRtcRole.AUDIENCE;
+            var rtcRole = (sp.Role is RoomRole.HOST or RoomRole.COHOST or RoomRole.SPEAKER)
+                ? AgoraRtcRole.HOST
+                : AgoraRtcRole.AUDIENCE;
 
             var (rtc, rtm) = await tokenSvc.CreateRteTokensAsync(
                 room.RoomName, sp.RtcUid!, currentUserId.ToString(), rtcRole);
 
-            // NEW: token riêng cho screen-client
             var screenUid = $"{sp.RtcUid}-s";
             var screenRtc = await tokenSvc.CreateRtcTokenAsync(
-                room.RoomName, screenUid, AgoraRtcRole.HOST); // screen nên là HOST để publish video
+                room.RoomName, screenUid, AgoraRtcRole.HOST);
 
             return new StreamingJoinGrantResponse
             {
+                AppId = opt.AppId,
                 Channel = room.RoomName,
                 RtcUid = sp.RtcUid!,
                 Role = sp.Role.ToString(),
@@ -404,21 +271,69 @@ namespace Cultural_Heritage_System.Services.Impl
         }
 
 
-        public async Task<IReadOnlyList<StreamingParticipantResponse>> GetWaitingListAsync(string roomName)
-        {
-            if (admissionOpt.OpenAdmission)
-            {
-                // ✅ Open admission: không chạm DB để đỡ query → trả về rỗng
-                return Array.Empty<StreamingParticipantResponse>();
-            }
 
+
+
+        public async Task<IReadOnlyList<StreamingParticipantResponse>> GetParticipantsAsync(
+            string roomName, ParticipantStatus? status)
+        {
+            var room = await roomRepo.GetByRoomName(roomName)
+                      ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
+
+            var list = await participantRepo.GetByRoom(room.Id, status);
+            return list.Select(mapper.Map<StreamingParticipantResponse>).ToList();
+        }
+
+        public async Task<IReadOnlyList<StreamingRoomWithCountResponse>> GetRoomsHavingParticipantsAsync(
+            int minCount = 1, ParticipantStatus? status = ParticipantStatus.ADMITTED)
+        {
+            var list = await roomRepo.GetRoomsHavingParticipantsAsync(minCount, status);
+            return list.Select(x => new StreamingRoomWithCountResponse
+            {
+                Id = x.Room.Id,
+                RoomName = x.Room.RoomName,
+                Title = x.Room.Title ?? "",
+                IsActive = x.Room.IsActive,
+                CreatedAt = x.Room.CreatedAt,
+                ParticipantCount = x.Count
+            }).ToList();
+        }
+
+        public async Task HeartbeatAsync(string roomName)
+        {
             var currentUserId = GetCurrentUserId();
             var room = await roomRepo.GetByRoomName(roomName)
                       ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
+
+            var sp = await participantRepo.GetByRoomAndUser(room.Id, currentUserId);
+            if (sp == null || sp.Status == ParticipantStatus.KICKED)
+                return;
+
+            await participantRepo.TouchLastSeenAsync(room.Id, currentUserId);
+        }
+
+        public async Task LeaveAsync(string roomName)
+        {
+            var currentUserId = GetCurrentUserId();
+            var room = await roomRepo.GetByRoomName(roomName)
+                      ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
+
+            await participantRepo.MarkLeftAsync(room.Id, currentUserId, setStatusLeft: true);
+        }
+
+        public async Task SetRoleAsync(string roomName, StreamingSetRoleRequest request)
+        {
+            var currentUserId = GetCurrentUserId();
+            var room = await roomRepo.GetByRoomName(roomName)
+                      ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
+
             await EnsureHostOrCoHostAsync(room.Id, currentUserId);
 
-            var waits = await participantRepo.GetWaitingList(room.Id);
-            return waits.Select(mapper.Map<StreamingParticipantResponse>).ToList();
+            var sp = await participantRepo.GetByRoomAndUser(room.Id, request.UserId)
+                     ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
+
+            sp.Role = request.Role;
+            await participantRepo.UpdateAsync(sp);
         }
 
         public async Task KickAsync(string roomName, StreamingAdmitRejectRequest request)
@@ -432,17 +347,152 @@ namespace Cultural_Heritage_System.Services.Impl
             var sp = await participantRepo.GetByRoomAndUser(room.Id, request.UserId)
                      ?? throw new AppException(ErrorCode.USER_NOT_EXISTED);
 
-            sp.Status = ParticipantStatus.Kicked;
-            sp.IsRaisedHand = false;
+            sp.Status = ParticipantStatus.KICKED;
             await participantRepo.UpdateAsync(sp);
-
-            await chatRepo.AddAsync(new RoomChatMessage
+        }
+        public async Task<IReadOnlyList<StreamingRoomResponse>> GetUpcomingRoomsAsync(DateTime? from = null)
+        {
+            var fromUtc = from?.ToUniversalTime() ?? DateTime.UtcNow;
+            var list = await roomRepo.GetUpcomingRoomsAsync(fromUtc, max: 20);
+            return list.Select(mapper.Map<StreamingRoomResponse>).ToList();
+        }
+        public async Task<IReadOnlyList<StreamingRoomResponse>> GetRoomsAdminAsync(StreamingRoomType? type = null)
+        {
+            // Tùy bạn: check role Admin ở đây hoặc bằng [Authorize(Roles="Admin")] ở controller
+            var rooms = await roomRepo.GetRooms(page: 1, size: int.MaxValue); // đơn giản, không phân trang
+            if (type.HasValue)
             {
-                RoomId = room.Id,
-                IsSystem = true,
-                Content = $"User {request.UserId} kicked by {currentUserId}."
-            });
+                rooms = rooms.Where(r => r.Type == type.Value).ToList();
+            }
+
+            return rooms.Select(mapper.Map<StreamingRoomResponse>).ToList();
+        }
+        public async Task<StreamingRoomDetailResponse> GetRoomDetailAsync(string roomName)
+        {
+            var room = await roomRepo.GetByRoomName(roomName)
+                      ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
+
+            var parts = await participantRepo.GetByRoom(room.Id, status: null);
+
+            var dto = mapper.Map<StreamingRoomDetailResponse>(room);
+            dto.Participants = parts.Select(mapper.Map<StreamingParticipantResponse>).ToList();
+
+            return dto;
+        }
+        public async Task<StreamingRoomResponse> UpdateRoomAsync(string roomName, StreamingRoomUpdateRequest request)
+        {
+            var room = await roomRepo.GetByRoomName(roomName)
+                      ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
+
+            if (!string.IsNullOrWhiteSpace(request.Title))
+            {
+                room.Title = request.Title.Trim();
+            }
+
+            if (request.StartAt.HasValue)
+            {
+                room.StartAt = request.StartAt.Value;
+            }
+
+            if (request.Type.HasValue)
+            {
+                var newType = request.Type.Value;
+
+                room.Type = newType;
+                switch (newType)
+                {
+                    case StreamingRoomType.UPCOMING:
+                        room.IsActive = false;
+                        room.ClosedAt = null;
+                        break;
+
+                    case StreamingRoomType.LIVE:
+                        room.IsActive = true;
+                        room.ClosedAt = null;
+                        break;
+
+                    case StreamingRoomType.CLOSED:
+                        room.IsActive = false;
+                        room.ClosedAt = DateTime.UtcNow;
+                        break;
+                }
+            }
+
+            await roomRepo.UpdateAsync(room);
+            return mapper.Map<StreamingRoomResponse>(room);
+        }
+        public async Task DeleteRoomAsync(string roomName)
+        {
+            var room = await roomRepo.GetByRoomName(roomName)
+                      ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
+
+            await roomRepo.DeleteAsync(room);
+        }
+        public async Task<StreamingJoinGrantResponse> IssueAdminJoinAsCoHostAsync(string roomName)
+        {
+            var currentUserId = GetCurrentUserId();
+            var room = await roomRepo.GetByRoomName(roomName)
+                      ?? throw new AppException(ErrorCode.ROOM_NOT_FOUND);
+
+            // Tùy bạn check role admin ở đây (ví dụ claim "role" == "Admin")
+
+            var sp = await participantRepo.GetByRoomAndUser(room.Id, currentUserId);
+
+            if (sp == null)
+            {
+                sp = new StreamingParticipant
+                {
+                    RoomId = room.Id,
+                    UserId = currentUserId,
+                    RtcUid = EnsureRtcUid(null, currentUserId),
+                    Role = RoomRole.COHOST,
+                    Status = ParticipantStatus.ADMITTED
+                };
+                await participantRepo.AddAsync(sp);
+            }
+            else
+            {
+                sp.Role = RoomRole.COHOST;
+                sp.Status = ParticipantStatus.ADMITTED;
+                if (string.IsNullOrWhiteSpace(sp.RtcUid))
+                    sp.RtcUid = EnsureRtcUid(sp.RtcUid, currentUserId);
+
+                await participantRepo.UpdateAsync(sp);
+            }
+
+            var rtcRole = AgoraRtcRole.HOST; // CoHost cũng là publisher
+            var (rtc, rtm) = await tokenSvc.CreateRteTokensAsync(
+                room.RoomName, sp.RtcUid!, currentUserId.ToString(), rtcRole);
+
+            var screenUid = $"{sp.RtcUid}-s";
+            var screenRtc = await tokenSvc.CreateRtcTokenAsync(
+                room.RoomName, screenUid, AgoraRtcRole.HOST);
+
+            return new StreamingJoinGrantResponse
+            {
+                AppId = opt.AppId,
+                Channel = room.RoomName,
+                RtcUid = sp.RtcUid!,
+                Role = sp.Role.ToString(),
+                RtcToken = rtc,
+                RtmToken = rtm,
+                RtmUid = currentUserId.ToString(),
+                ScreenRtcUid = screenUid,
+                ScreenRtcToken = screenRtc
+            };
         }
 
+        public async Task<IReadOnlyList<StreamingRoomResponse>> GetRoomsByEventAsync(long eventId)
+        {
+            var evt = await eventRepo.GetEventByIdAsync(eventId)
+                      ?? throw new AppException(ErrorCode.EVENT_NOT_FOUND);
+
+
+            var rooms = (evt.StreamingRooms ?? new List<StreamingRoom>())
+                .OrderBy(r => r.StartAt)
+                .ToList();
+
+            return rooms.Select(mapper.Map<StreamingRoomResponse>).ToList();
+        }
     }
 }

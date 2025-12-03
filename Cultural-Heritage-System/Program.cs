@@ -31,8 +31,6 @@ namespace Cultural_Heritage_System
                      options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                      options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
                  });
-            builder.Services.Configure<StreamAdmissionOptions>(
-    builder.Configuration.GetSection("Streaming"));
             builder.Services.Configure<StreamCleanupOptions>(builder.Configuration.GetSection("StreamCleanup"));
 
             builder.Services.AddHttpClient<GoogleAuthClient>(client =>
@@ -122,11 +120,11 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<ContributionUnlockDAO>();
             builder.Services.AddScoped<SubscriptionUsageDAO>();
             builder.Services.AddScoped<PanoramaSceneUnlockDAO>();
-
+            builder.Services.AddScoped<EventDAO>();
+            builder.Services.AddScoped<EventRegistrationDAO>();
             builder.Services.AddScoped<StreamingRoomDAO>();
             builder.Services.AddScoped<StreamingParticipantDAO>();
-            builder.Services.AddScoped<RaiseHandDAO>();
-            builder.Services.AddScoped<RoomChatDAO>();
+
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
             builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -163,6 +161,10 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IContributionUnlockRepository, ContributionUnlockRepository>();
             builder.Services.AddScoped<ISubscriptionUsageRepository, SubscriptionUsageRepository>();
             builder.Services.AddScoped<IPanoramaSceneUnlockRepository, PanoramaSceneUnlockRepository>();
+            builder.Services.AddScoped<IEventRegistrationRepository, EventRegistrationRepository>();
+            builder.Services.AddScoped<IEventRepository, EventRepository>();
+            builder.Services.AddScoped<IStreamingRoomRepository, StreamingRoomRepository>();
+            builder.Services.AddScoped<IStreamingParticipantRepository, StreamingParticipantRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();
@@ -186,18 +188,18 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IQuizService, QuizService>();
             builder.Services.AddScoped<IPanoramaTourService, PanoramaTourService>();
             builder.Services.AddScoped<IStaffService, StaffService>();
-
+            builder.Services.AddScoped<IEventService, EventService>();
+            builder.Services.AddScoped<IStreamingRoomService, StreamingRoomService>();
 
             builder.Services.Configure<AgoraOptions>(
             builder.Configuration.GetSection("Agora"));
 
-            builder.Services.AddScoped<IStreamingRoomRepository, StreamingRoomRepository>();
-            builder.Services.AddScoped<IStreamingParticipantRepository, StreamingParticipantRepository>();
-            builder.Services.AddScoped<IRaiseHandRepository, RaiseHandRepository>();
-            builder.Services.AddScoped<IRoomChatRepository, RoomChatRepository>();
+
+
             builder.Services.AddSingleton<IAgoraTokenService, AgoraTokenService>();
             builder.Services.AddHostedService<RoomIdleWatcher>();
-            builder.Services.AddScoped<IStreamingRoomService, StreamingRoomService>();
+            builder.Services.AddHostedService<EventStatusWatcher>();
+
 
             // Controllers / MVC
             builder.Services.AddControllers();

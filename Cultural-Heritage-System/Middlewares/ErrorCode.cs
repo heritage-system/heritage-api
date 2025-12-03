@@ -72,6 +72,8 @@ namespace Cultural_Heritage_System.Middlewares
 
         public static readonly ErrorCode SUBSCRIPTION_USAGE_NOT_FOUND = new ErrorCode(404, " Subscription usage not found", HttpStatusCode.NotFound);
         public static readonly ErrorCode ROOM_NOT_FOUND = new ErrorCode(404, "Room not found", HttpStatusCode.NotFound);
+        public static readonly ErrorCode STREAM_NOT_STARTED = new ErrorCode(400, "stream not started", HttpStatusCode.NotFound);
+        public static readonly ErrorCode EVENT_NOT_FOUND = new ErrorCode(400, "Event not found", HttpStatusCode.NotFound);
     }
 }
 

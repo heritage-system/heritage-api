@@ -21,12 +21,20 @@ namespace Cultural_Heritage_System.DataAccessObjects
                   .FirstOrDefaultAsync(r => r.RoomName == roomName);
         public async Task<List<StreamingRoom>> GetActiveRoomsAsync() =>
     await _dbSet.Where(r => r.IsActive).ToListAsync();
+        public async Task<List<StreamingRoom>> GetUpcomingRoomsAsync(DateTime fromUtc, int max = 20)
+        {
+            return await _dbSet
+                .Where(r => r.StartAt >= fromUtc && !r.IsActive)
+                .OrderBy(r => r.StartAt)
+                .Take(max)
+                .ToListAsync();
+        }
         public async Task<List<StreamingRoom>> GetRooms(int page, int size) =>
             await _dbSet.OrderByDescending(x => x.CreatedAt)
                   .Skip((page - 1) * size)
                   .Take(size).ToListAsync();
         public async Task<List<RoomWithCount>> GetRoomsHavingParticipantsAsync(
-          int minCount = 1, ParticipantStatus? status = ParticipantStatus.Admitted)
+          int minCount = 1, ParticipantStatus? status = ParticipantStatus.ADMITTED)
         {
             // Đếm participants theo status (nếu null thì đếm tất cả)
             var countsQry =
@@ -45,6 +53,7 @@ namespace Cultural_Heritage_System.DataAccessObjects
             return await query.ToListAsync();
         }
 
+
     }
 
     public class StreamingParticipantDAO : BaseDAO<StreamingParticipant>
@@ -56,19 +65,16 @@ namespace Cultural_Heritage_System.DataAccessObjects
         {
             _logger = logger;
         }
-        public async Task<List<StreamingParticipant>> GetByRoom(int roomId, ParticipantStatus? status) =>
-        await _dbSet.Include(p => p.User).Include(p => p.Room)
-      .Where(p => p.RoomId == roomId && (status == null || p.Status == status))
-      .OrderBy(p => p.CreatedAt)
-      .ToListAsync();
-        public async Task<StreamingParticipant?> GetByRoomAndUser(int roomId, int userId) =>
-           await _dbSet.Include(p => p.User).Include(p => p.Room)
-                  .FirstOrDefaultAsync(p => p.RoomId == roomId && p.UserId == userId);
 
-        public async Task<List<StreamingParticipant>> GetWaitingList(int roomId) =>
-           await _dbSet.Include(p => p.User)
-                  .Where(p => p.RoomId == roomId && p.Status == ParticipantStatus.Waiting)
-                  .ToListAsync();
+        public async Task<List<StreamingParticipant>> GetByRoom(int roomId, ParticipantStatus? status) =>
+            await _dbSet.Include(p => p.User).Include(p => p.Room)
+                .Where(p => p.RoomId == roomId && (status == null || p.Status == status))
+                .OrderBy(p => p.CreatedAt)
+                .ToListAsync();
+
+        public async Task<StreamingParticipant?> GetByRoomAndUser(int roomId, int userId) =>
+            await _dbSet.Include(p => p.User).Include(p => p.Room)
+                .FirstOrDefaultAsync(p => p.RoomId == roomId && p.UserId == userId);
 
         public async Task TouchLastSeenAsync(int roomId, int userId)
         {
@@ -82,38 +88,17 @@ namespace Cultural_Heritage_System.DataAccessObjects
         {
             var sp = await _dbSet.FirstOrDefaultAsync(p => p.RoomId == roomId && p.UserId == userId);
             if (sp == null) return;
+
             sp.LeftAt = DateTime.UtcNow;
             sp.LastSeenAt = sp.LeftAt;
-            if (setStatusLeft && Enum.IsDefined(typeof(ParticipantStatus), "Left"))
-                sp.Status = ParticipantStatus.Left;       // nếu đã thêm enum Left
+
+            if (setStatusLeft && Enum.IsDefined(typeof(ParticipantStatus), "LEFT"))
+            {
+                sp.Status = ParticipantStatus.LEFT;
+            }
+
             await _context.SaveChangesAsync();
         }
     }
 
-    public class RaiseHandDAO : BaseDAO<RaiseHandRequest>
-    {
-        private readonly ILogger<RaiseHandDAO> _logger;
-
-        public RaiseHandDAO(AppDbContext context, ILogger<RaiseHandDAO> logger)
-            : base(context)
-        {
-            _logger = logger;
-        }
-
-        public async Task<List<RaiseHandRequest>> GetPending(int roomId) =>
-           await _dbSet.Include(r => r.User).Where(r => r.RoomId == roomId && r.Status == RaiseHandStatus.Pending).ToListAsync();
-    }
-
-    public class RoomChatDAO : BaseDAO<RoomChatMessage>
-    {
-        private readonly ILogger<RoomChatDAO> _logger;
-
-        public RoomChatDAO(AppDbContext context, ILogger<RoomChatDAO> logger)
-            : base(context)
-        {
-            _logger = logger;
-        }
-        public async Task<List<RoomChatMessage>> GetRecent(int roomId, int take = 100) =>
-           await _dbSet.Where(c => c.RoomId == roomId).OrderByDescending(c => c.CreatedAt).Take(take).ToListAsync();
-    }
 }

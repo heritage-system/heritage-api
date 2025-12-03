@@ -1,23 +1,33 @@
-﻿// Dtos/Request/Streaming/StreamingRequests.cs
-using Cultural_Heritage_System.Common;
+﻿using Cultural_Heritage_System.Common;
 using System.ComponentModel.DataAnnotations;
 
 namespace Cultural_Heritage_System.Dtos.Request.Streaming
 {
     public class StreamingRoomCreateRequest
     {
-        [Required] public string Title { get; set; } = default!;
+        public string Title { get; set; } = default!;
+        public DateTime StartAt { get; set; }
+        public long? EventId { get; set; } // NEW// ✨
     }
 
-    public class StreamingRequestJoinRequest
+    public class StreamingRoomUpsertDto
     {
-        // Tuỳ chọn: nếu null/empty => dùng userId (từ claims) làm RtcUid
-        public string? RtcUid { get; set; }
+        public long? Id { get; set; } // null => room mới, có Id => update
+
+        [Required]
+        public string Title { get; set; } = default!;
+
+        public DateTime? StartAt { get; set; }
+
+        // cho phép client set, hoặc luôn UPCOMING tuỳ bạn
+        public StreamingRoomType Type { get; set; } = StreamingRoomType.UPCOMING;
     }
+    // ❌ KHÔNG CẦN StreamingRequestJoinRequest nữa
+    // public class StreamingRequestJoinRequest { ... }
 
     public class StreamingAdmitRejectRequest
     {
-        [Required] public int UserId { get; set; }   // user mục tiêu (được host thao tác)
+        [Required] public int UserId { get; set; }
     }
 
     public class StreamingSetRoleRequest
@@ -25,10 +35,11 @@ namespace Cultural_Heritage_System.Dtos.Request.Streaming
         [Required] public int UserId { get; set; }
         [Required] public RoomRole Role { get; set; }
     }
-
-    public class StreamingRaiseHandRequest
+    public class StreamingRoomUpdateRequest
     {
-        [Required] public bool Raised { get; set; }
+        public string? Title { get; set; }
+        public DateTime? StartAt { get; set; }
+        public StreamingRoomType? Type { get; set; }
     }
-
+    // ❌ KHÔNG CẦN StreamingRaiseHandRequest nữa
 }

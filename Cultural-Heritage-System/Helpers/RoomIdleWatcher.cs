@@ -43,7 +43,7 @@ namespace Cultural_Heritage_System.Helpers
             var recentCut = now.AddSeconds(-_opt.HeartbeatTtlSeconds);
             foreach (var room in activeRooms)
             {
-                var parts = await partRepo.GetByRoom(room.Id, ParticipantStatus.Admitted);
+                var parts = await partRepo.GetByRoom(room.Id, ParticipantStatus.ADMITTED);
                 var anyActive = parts.Any(p => p.LastSeenAt.HasValue && p.LastSeenAt.Value > recentCut);
                 if (anyActive) continue;
 
@@ -55,6 +55,8 @@ namespace Cultural_Heritage_System.Helpers
                     if (lastSeenMax <= now.AddMinutes(-_opt.RoomIdleMinutes))
                     {
                         room.IsActive = false;
+                        room.Type = StreamingRoomType.CLOSED;      // 🔥 NEW
+                        room.ClosedAt = now;
                         await roomRepo.UpdateAsync(room);
                         _logger.LogInformation("Deactivated room {Room}", room.RoomName);
                     }

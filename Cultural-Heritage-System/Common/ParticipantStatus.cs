@@ -1,5 +1,5 @@
 ﻿namespace Cultural_Heritage_System.Common
 {
-    public enum ParticipantStatus { Waiting, Admitted, Kicked, Banned, Left } // ✅ thêm Left
+    public enum ParticipantStatus { WAITING, ADMITTED, KICKED, BANNED, LEFT } // ✅ thêm Left
 
 }

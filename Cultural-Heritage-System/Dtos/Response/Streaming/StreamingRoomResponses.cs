@@ -2,14 +2,27 @@
 
 namespace Cultural_Heritage_System.Dtos.Response.Streaming
 {
+    public class StreamingRoomDetailResponse : StreamingRoomResponse
+    {
+        public List<StreamingParticipantResponse> Participants { get; set; } = new();
+    }
     public class StreamingRoomResponse
     {
         public int Id { get; set; }
-        public string RoomName { get; set; } = default!;
+        public string RoomName { get; set; } = null!;
         public string? Title { get; set; }
+
         public bool IsActive { get; set; }
         public int CreatedByUserId { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        // 🔥 NEW
+        public DateTime StartAt { get; set; }
+        public StreamingRoomType Type { get; set; }
+        public DateTime? ClosedAt { get; set; }
+
+        // 🔥 NEW: EventId của sự kiện gắn với room này
+        public long? EventId { get; set; }
     }
     public class StreamingRequestJoinResponse
     {
@@ -24,7 +37,6 @@ namespace Cultural_Heritage_System.Dtos.Response.Streaming
         public int UserId { get; set; }
         public RoomRole Role { get; set; }
         public ParticipantStatus Status { get; set; }
-        public bool IsRaisedHand { get; set; }
         public string RtcUid { get; set; } = default!;
         public DateTime CreatedAt { get; set; }
     }

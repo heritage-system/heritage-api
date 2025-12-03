@@ -1,10 +1,10 @@
-﻿using CloudinaryDotNet.Core;
-using Cultural_Heritage_System.Common;
+﻿using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Models;
 using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.Category;
 using Cultural_Heritage_System.Dtos.Request.ContribtutionReport;
 using Cultural_Heritage_System.Dtos.Request.Contributor;
+using Cultural_Heritage_System.Dtos.Request.Event;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Request.Location;
 using Cultural_Heritage_System.Dtos.Request.Media;
@@ -18,6 +18,7 @@ using Cultural_Heritage_System.Dtos.Request.User;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Category;
 using Cultural_Heritage_System.Dtos.Response.Contributor;
+using Cultural_Heritage_System.Dtos.Response.Event;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Location;
 using Cultural_Heritage_System.Dtos.Response.Media;
@@ -27,8 +28,8 @@ using Cultural_Heritage_System.Dtos.Response.Quiz;
 using Cultural_Heritage_System.Dtos.Response.QuizQuestion;
 using Cultural_Heritage_System.Dtos.Response.Report;
 using Cultural_Heritage_System.Dtos.Response.Review;
-using Cultural_Heritage_System.Dtos.Response.Streaming;
 using Cultural_Heritage_System.Dtos.Response.Staff;
+using Cultural_Heritage_System.Dtos.Response.Streaming;
 using Cultural_Heritage_System.Dtos.Response.Tag;
 using Cultural_Heritage_System.Dtos.Response.User;
 using Cultural_Heritage_System.Models;
@@ -378,7 +379,7 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<QuizResult, QuizResultInfo>();
 
 
-            CreateMap<PanoramaScene, PanoramaSceneResponse>();         
+            CreateMap<PanoramaScene, PanoramaSceneResponse>();
 
             CreateMap<UserCreationByAdminRequest, User>();
             CreateMap<User, UserSearchResponse>();
@@ -460,7 +461,46 @@ namespace Cultural_Heritage_System.Helpers
 
             CreateMap<StreamingRoom, StreamingRoomResponse>();
             CreateMap<StreamingParticipant, StreamingParticipantResponse>();
+            CreateMap<StreamingRoom, StreamingRoomResponse>();
+            CreateMap<StreamingRoom, StreamingRoomDetailResponse>();
+            CreateMap<EventCreateRequest, Event>()
+    .ForMember(dest => dest.Status, opt => opt.Ignore())     // set trong service
+    .ForMember(dest => dest.CreatedByUserId, opt => opt.Ignore());
+
+            // EventUpdateRequest → Event (nếu dùng)
+            CreateMap<EventUpdateRequest, Event>()
+                .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
+
+            // Event → EventResponse
+            CreateMap<Event, EventResponse>()
+                .ForMember(dest => dest.CreatedByUserName, opt => opt.MapFrom(src => src.CreatedBy.UserName))
+                .ForMember(dest => dest.RegisteredCount,
+                    opt => opt.MapFrom(src =>
+                        src.Registrations != null ?
+                        src.Registrations.Count(r => !r.IsCancelled) : 0))
+                .ForMember(dest => dest.StreamingRooms,
+                    opt => opt.MapFrom(src => src.StreamingRooms));
+
+            // StreamingRoom → StreamingRoomSummaryResponse
+            CreateMap<StreamingRoom, StreamingRoomSummaryResponse>();
+
+            // EventRegistration → EventRegistrationResponse
+            CreateMap<EventRegistration, EventRegistrationResponse>()
+                .ForMember(dest => dest.EventId, opt => opt.MapFrom(src => src.EventId))
+                .ForMember(dest => dest.Registered, opt => opt.MapFrom(src => !src.IsCancelled));
+            CreateMap<EventRegistration, EventRegistrationResponse>()
+    .ForMember(dest => dest.EventId, opt => opt.MapFrom(src => src.EventId))
+    .ForMember(dest => dest.Registered, opt => opt.MapFrom(src => !src.IsCancelled));
+
+            // 🔥 NEW: EventRegistration → EventRegistrationUserResponse (có thông tin user)
+            CreateMap<EventRegistration, EventRegistrationUserResponse>()
+                .ForMember(dest => dest.EventId, opt => opt.MapFrom(src => src.EventId))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.UserName))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
+                .ForMember(dest => dest.RegisteredAt, opt => opt.MapFrom(src => src.RegisteredAt));
         }
+
 
     }
 }
