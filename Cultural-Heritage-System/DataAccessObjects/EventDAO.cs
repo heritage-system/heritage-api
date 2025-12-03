@@ -21,7 +21,6 @@ namespace Cultural_Heritage_System.DataAccessObjects
         public IQueryable<Event> GetEventsWithIncludes()
         {
             return _dbSet
-                .Include(e => e.CreatedBy)
                 .Include(e => e.StreamingRooms)
                 .Include(e => e.Registrations);
         }

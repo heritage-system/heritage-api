@@ -459,27 +459,31 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<PanoramaTour, PanoramaTourDetailForAdminResponse>();
 
 
-            CreateMap<StreamingRoom, StreamingRoomResponse>();
-            CreateMap<StreamingParticipant, StreamingParticipantResponse>();
+            // Chỉ cần 1 cái map StreamingRoom -> Response
             CreateMap<StreamingRoom, StreamingRoomResponse>();
             CreateMap<StreamingRoom, StreamingRoomDetailResponse>();
-            CreateMap<EventCreateRequest, Event>()
-    .ForMember(dest => dest.Status, opt => opt.Ignore())     // set trong service
-    .ForMember(dest => dest.CreatedByUserId, opt => opt.Ignore());
+            CreateMap<StreamingParticipant, StreamingParticipantResponse>();
 
-            // EventUpdateRequest → Event (nếu dùng)
+            CreateMap<EventCreateRequest, Event>()
+                .ForMember(dest => dest.Status, opt => opt.Ignore())  // set trong service
+                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore()); // service tự set Id user
+
             CreateMap<EventUpdateRequest, Event>()
                 .ForAllMembers(opt => opt.Condition((src, dest, srcMember) => srcMember != null));
 
             // Event → EventResponse
             CreateMap<Event, EventResponse>()
-                .ForMember(dest => dest.CreatedByUserName, opt => opt.MapFrom(src => src.CreatedBy.UserName))
+                // Nếu EventResponse.CreatedByUserName là string -> map trực tiếp từ CreatedBy (userId string)
+                .ForMember(dest => dest.CreatedByUserName,
+                    opt => opt.MapFrom(src => src.CreatedBy))
                 .ForMember(dest => dest.RegisteredCount,
                     opt => opt.MapFrom(src =>
-                        src.Registrations != null ?
-                        src.Registrations.Count(r => !r.IsCancelled) : 0))
+                        src.Registrations != null
+                            ? src.Registrations.Count(r => !r.IsCancelled)
+                            : 0))
                 .ForMember(dest => dest.StreamingRooms,
                     opt => opt.MapFrom(src => src.StreamingRooms));
+
 
             // StreamingRoom → StreamingRoomSummaryResponse
             CreateMap<StreamingRoom, StreamingRoomSummaryResponse>();

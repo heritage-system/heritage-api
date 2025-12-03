@@ -446,18 +446,20 @@ namespace Cultural_Heritage_System.Models
                 .WithMany(c => c.ContributionAcceptances)
                 .HasForeignKey(ca => ca.ContributionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
             // ================== Streaming (Google Meet-like) ==================
             modelBuilder.Entity<StreamingRoom>(entity =>
             {
                 entity.HasKey(r => r.Id);
 
-                entity.HasOne(r => r.CreatedBy)
-                      .WithMany()
-                      .HasForeignKey(r => r.CreatedByUserId)
-                      .OnDelete(DeleteBehavior.Restrict);
-
                 entity.HasIndex(r => r.RoomName).IsUnique();
+
+                entity.HasOne(r => r.Event)
+                      .WithMany(e => e.StreamingRooms)
+                      .HasForeignKey(r => r.EventId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
+
 
             modelBuilder.Entity<StreamingParticipant>(entity =>
             {
@@ -476,16 +478,7 @@ namespace Cultural_Heritage_System.Models
                 entity.HasIndex(p => new { p.RoomId, p.UserId }).IsUnique();
                 entity.HasIndex(p => new { p.RoomId, p.RtcUid });
             });
-            // ===== Events =====
-            modelBuilder.Entity<Event>(entity =>
-            {
-                entity.HasKey(e => e.Id);
 
-                entity.HasOne(e => e.CreatedBy)
-                      .WithMany()
-                      .HasForeignKey(e => e.CreatedByUserId)
-                      .OnDelete(DeleteBehavior.Restrict);
-            });
 
             // ===== EventRegistration =====
             modelBuilder.Entity<EventRegistration>(entity =>

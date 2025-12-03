@@ -76,13 +76,14 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 RoomName = $"room-{Guid.NewGuid():N}",
                 Title = request.Title,
-                CreatedByUserId = creator.Id,
-                EventId = request.EventId,        // 🔥 gắn room vào Event
+                CreatedBy = creator.Id.ToString(),    // ✅
+                EventId = request.EventId,
                 IsActive = false,
                 StartAt = request.StartAt,
                 Type = StreamingRoomType.UPCOMING,
                 ClosedAt = null
             };
+
 
             await roomRepo.AddAsync(room);
 
@@ -145,7 +146,8 @@ namespace Cultural_Heritage_System.Services.Impl
                 : room.StartAt.ToUniversalTime();
 
             var sp = await participantRepo.GetByRoomAndUser(room.Id, currentUserId);
-            var isCreator = room.CreatedByUserId == currentUserId;
+            var isCreator = room.CreatedBy == currentUserId.ToString();
+
 
             // 1️⃣ TRƯỚC GIỜ BẮT ĐẦU: ai join cũng chỉ là WAITING + bị chặn
             if (nowUtc < startAtUtc)

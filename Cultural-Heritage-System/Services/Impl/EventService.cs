@@ -50,7 +50,7 @@ namespace Cultural_Heritage_System.Services.Impl
             var userId = GetCurrentUserId();
 
             var entity = _mapper.Map<Event>(request);
-            entity.CreatedByUserId = userId;
+            entity.CreatedBy = userId.ToString(); ;
 
             var nowUtc = DateTime.UtcNow;
             var startUtc = request.StartAt.Kind == DateTimeKind.Utc
@@ -249,7 +249,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 CloseAt = request.CloseAt,
                 Category = request.Category,
                 Tags = request.Tags,
-                CreatedByUserId = userId,
+                CreatedBy = userId.ToString(),
             };
 
             // ---- Tính status dựa trên thời gian ----
@@ -294,7 +294,7 @@ namespace Cultural_Heritage_System.Services.Impl
                         Title = string.IsNullOrWhiteSpace(rDto.Title)
                             ? entity.Title
                             : rDto.Title.Trim(),
-                        CreatedByUserId = userId,
+                        CreatedBy = userId.ToString(),
                         StartAt = roomStart,
                         Type = type,
                         IsActive = type == StreamingRoomType.LIVE,
@@ -383,9 +383,13 @@ namespace Cultural_Heritage_System.Services.Impl
             var existingRooms = (e.StreamingRooms ?? new List<StreamingRoom>()).ToList();
             var existingById = existingRooms.ToDictionary(r => r.Id, r => r);
 
-            var creatorId = e.CreatedByUserId;
+            // Lấy id người tạo từ Event.CreatedBy (string), nếu fail thì fallback sang current user
+            int creatorId;
+            if (!int.TryParse(e.CreatedBy ?? string.Empty, out creatorId))
+            {
+                creatorId = GetCurrentUserId();
+            }
 
-            // 🆕 list room mới
             var newRooms = new List<StreamingRoom>();
 
             if (request.Rooms != null && request.Rooms.Count > 0)
@@ -436,7 +440,7 @@ namespace Cultural_Heritage_System.Services.Impl
                             Title = string.IsNullOrWhiteSpace(rDto.Title)
                                 ? e.Title
                                 : rDto.Title.Trim(),
-                            CreatedByUserId = creatorId,
+                            CreatedBy = creatorId.ToString(),   // ✅ dùng string
                             StartAt = startAt,
                             Type = type,
                             IsActive = type == StreamingRoomType.LIVE,
@@ -445,23 +449,15 @@ namespace Cultural_Heritage_System.Services.Impl
 
                         e.StreamingRooms ??= new List<StreamingRoom>();
                         e.StreamingRooms.Add(newRoom);
-
-                        // 🆕 ghi lại để sau khi SaveChanges xong mới tạo participant
-                        newRooms.Add(newRoom);
+                        newRooms.Add(newRoom);  // gom lại để tạo participant SAU khi save
                     }
                 }
             }
 
-            // NOTE: Ở đây mình KHÔNG xoá room nào.
-
-
-            // NOTE: Ở đây mình KHÔNG xoá room nào.
-            // Nếu muốn xoá: dùng API DeleteRoomAsync hiện có, hoặc thêm flag IsDeleted vào rDto.
-
-            // Lưu event + rooms (EF sẽ cấp Id cho các room mới)
+            // Lưu Event + Rooms (EF sẽ gán Id cho newRooms)
             await _eventRepo.UpdateAsync(e);
 
-            // 🆕 Bây giờ newRooms đã có Id thật -> tạo host participant
+            // Tạo host participant cho các room mới sau khi Id đã có
             foreach (var room in newRooms)
             {
                 await _participantRepo.AddAsync(new StreamingParticipant
@@ -480,7 +476,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 e.Registrations.Any(r => r.UserId == currentUserId && !r.IsCancelled);
 
             return resp;
-        }
 
+        }
     }
 }
