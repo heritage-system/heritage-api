@@ -485,6 +485,12 @@ namespace Cultural_Heritage_System.Models
                .WithOne(qq => qq.Subscription)
                .HasForeignKey(qq => qq.SubscriptionId)
                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ConfirmToken>()
+                .HasOne(rt => rt.User)
+                .WithMany(u => u.ConfirmTokens)
+                .HasForeignKey(rt => rt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
