@@ -147,7 +147,17 @@ namespace Cultural_Heritage_System.Services.Impl
 
             try
             {
-                await _mailService.SendEmailAnswerReport(user.Email, reportId, answer);
+                var createdAtFormatted = report.CreatedAt.ToString("dd/MM/yyyy HH:mm");
+
+                await _mailService.SendEmailAnswerReport(
+                    user.Email,
+                    user.UserName,
+                    report.Heritage.Name,
+                    createdAtFormatted,   
+                    report.Reason,
+                    answer
+                );
+
                 _logger.LogInformation("Answer email sent successfully to {Email} for report {ReportId}", user.Email, reportId);
             }
             catch (Exception ex)
@@ -157,6 +167,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
             return true;
         }
+
 
 
         private int? GetCurrentUserId()
