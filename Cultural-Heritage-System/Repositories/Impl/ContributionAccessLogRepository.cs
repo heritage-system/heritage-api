@@ -18,5 +18,10 @@ namespace Cultural_Heritage_System.Repositories.Impl
         {
             return await _entityDAO.GetContributionAccessLogs(userId, contributionId);
         }
+
+        public IQueryable<ContributionAccessLog> GetContributionAccessLogsQueryable()
+        {
+            return  _entityDAO.GetContributionAccessLogsQueryable();
+        }
     }
 }

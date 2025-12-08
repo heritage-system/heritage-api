@@ -1,9 +1,13 @@
 ﻿using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Models;
+using Cultural_Heritage_System.Dtos.Request.UserPoint;
 using Cultural_Heritage_System.Dtos.Response.QuizQuestion;
+using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
+using Cultural_Heritage_System.Repositories.Impl;
 using Cultural_Heritage_System.Services;
+using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Cultural_Heritage_System.GameHubs
@@ -15,106 +19,223 @@ namespace Cultural_Heritage_System.GameHubs
         private static readonly List<WaitingPlayer> WaitingPlayers = new();
         private static readonly Dictionary<string, List<QuizQuestionResponse>> PreGeneratedQuestions = new();
         private readonly IQuizService _quizService;
+        private readonly IUserPointService _userPointService;
+        private readonly IGameMatchHistoryService _gameMatchHistoryService;
+        private readonly IUserService _userService;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         private const int QUESTION_TIME = 10; // giây
         private const int READING_TIME = 3;
+        private const int QUESTION_QUANTITY = 5;
+        private const int MIN_TIME_BOT_ANSWER = 1;
+        private const int MAX_TIME_BOT_ANSWER = 3;
         // === DỮ LIỆU MẪU ===
-        
-        public GameHub(IHubContext<GameHub> hubContext, IQuizService quizService)
+
+        public GameHub(IHubContext<GameHub> hubContext, IQuizService quizService,IUserPointService userPointService, IUserService userService, IServiceScopeFactory scopeFactory, IGameMatchHistoryService gameMatchHistoryService)
         {
             _hubContext = hubContext;
             _quizService = quizService;
+            _userPointService = userPointService;
+            _userService = userService;
+            _scopeFactory = scopeFactory;
+            _gameMatchHistoryService = gameMatchHistoryService;
         }
 
         // === GHÉP TRẬN ===
         public async Task FindMatch(string username, string avatarUrl)
         {
+            var accountIdClaim = Context.User?.FindFirst("userId")?.Value;
+            if (accountIdClaim == null)
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            var userId = int.Parse(accountIdClaim);
             var connectionId = Context.ConnectionId;
 
-            // 🧩 Nếu đã tồn tại trong hàng chờ thì loại bỏ trước
+            // Xóa chờ cũ (nếu có)
             var existing = WaitingPlayers.FirstOrDefault(p => p.ConnectionId == connectionId);
             if (existing != null)
             {
+                existing.CancelToken.Cancel();
                 WaitingPlayers.Remove(existing);
-                Console.WriteLine($"♻️ Removed old waiting record for {username}");
             }
 
-            // 🧩 Kiểm tra nếu đang trong session cũ (bị mất đồng bộ)
+            // Kiểm tra session cũ
             var inSession = Sessions.Values.FirstOrDefault(s => s.Players.Any(p => p.ConnectionId == connectionId));
             if (inSession != null)
             {
-                Console.WriteLine($"⚠️ Player {username} already in session {inSession.Name}, cleaning up...");
                 Sessions.Remove(Sessions.First(x => x.Value == inSession).Key);
             }
 
+            var ip = GetClientIp();
+
+            // Tạo player
             var player = new Player
             {
                 Id = Guid.NewGuid(),
+                UserId = userId,
                 Username = username,
                 AvatarUrl = avatarUrl,
-                ConnectionId = connectionId
+                ConnectionId = connectionId,
+                IpAddress = ip
             };
+
             await Clients.Caller.SendAsync("WaitingForOpponent");
-            // 🧩 Nếu đang chờ ai khác — ghép
-            if (WaitingPlayers.Count > 0)
+
+            // Nếu có người chờ → ghép ngay
+            var waiting = WaitingPlayers.FirstOrDefault(p => p.ConnectionId != connectionId);
+            if (waiting != null)
             {
-                var waiting = WaitingPlayers.FirstOrDefault(p => p.ConnectionId != connectionId);
-                if (waiting == null)
+                // --- AntiSpam: Check 2 thằng này có được ghép hay không ---
+                bool isSpam = await _gameMatchHistoryService.IsSpamMatch(
+                    userId: player.UserId,
+                    userIP: player.IpAddress,
+                    opponentId: waiting.Player.UserId,
+                    opponentIP: waiting.Player.IpAddress
+                );
+
+                if (!isSpam)
                 {
-                    // Không có ai khác -> thêm mới
-                    WaitingPlayers.Add(new WaitingPlayer { ConnectionId = connectionId, Player = player });
+                    // OK, GHÉP BÌNH THƯỜNG
+                    waiting.CancelToken.Cancel();
+                    WaitingPlayers.Remove(waiting);
 
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            var preQuestions = await _quizService.GenerateQuestionSet(10);
-                            PreGeneratedQuestions[connectionId] = preQuestions;
-                            Console.WriteLine($"🧩 Pre-generated questions for {username}");
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"⚠️ Failed to pre-generate questions for {username}: {ex.Message}");
-                        }
-                    });
-
-
-                    
+                    await CreateMatch(waiting.Player, player, waiting.ConnectionId, connectionId);
                     return;
                 }
-
-                WaitingPlayers.Remove(waiting);
-                var roomId = Guid.NewGuid().ToString();
-
-                var session = new GameSession
-                {
-                    Id = Guid.Parse(roomId),
-                    Name = $"Match {roomId}",
-                    Players = new List<Player> { waiting.Player, player },
-                    Questions = PreGeneratedQuestions.ContainsKey(waiting.ConnectionId)
-                                ? PreGeneratedQuestions[waiting.ConnectionId]
-                                : await _quizService.GenerateQuestionSet(10),
-                    CurrentQuestionIndex = 0
-                };
-                Sessions[roomId] = session;
-
-                PreGeneratedQuestions.Remove(waiting.ConnectionId);
-                PreGeneratedQuestions.Remove(connectionId);
-
-                await Groups.AddToGroupAsync(waiting.ConnectionId, roomId);
-                await Groups.AddToGroupAsync(connectionId, roomId);
-
-                Console.WriteLine($"✅ Match created: {waiting.Player.Username} vs {player.Username} (room {roomId})");
-
-                await Clients.Client(waiting.ConnectionId).SendAsync("MatchFound", roomId, session.Players);
-                await Clients.Client(connectionId).SendAsync("MatchFound", roomId, session.Players);
-                return;
+                else
+                {                
+                    Console.WriteLine("⛔ AntiSpam: phát hiện spam → không ghép cặp này.");
+                }
             }
 
-            // Không có ai chờ -> thêm mình vào
-            WaitingPlayers.Add(new WaitingPlayer { ConnectionId = connectionId, Player = player });
-            await Clients.Caller.SendAsync("WaitingForOpponent");
+            var preQuestions = await _quizService.GenerateQuestionSet(QUESTION_QUANTITY);
+            PreGeneratedQuestions[connectionId] = preQuestions;
+
+
+            // ➕ Không ai chờ → đưa vào hàng chờ + bật timer 30s
+            var cancelToken = new CancellationTokenSource();
+            var waitingObj = new WaitingPlayer
+            {
+                ConnectionId = connectionId,
+                Player = player,
+                AddedAt = DateTime.UtcNow,
+                CancelToken = cancelToken
+            };
+
+            WaitingPlayers.Add(waitingObj);
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var rnd = new Random();
+                    int delayMs = rnd.Next(2000, 5000); // 5000ms = 5s, 20000ms = 20s
+                    await Task.Delay(delayMs, cancelToken.Token);
+
+                    // Nếu sau 30s mà vẫn còn trong hàng chờ → đấu bot
+                    if (WaitingPlayers.Contains(waitingObj))
+                    {
+                        WaitingPlayers.Remove(waitingObj);
+                        Console.WriteLine($"🤖 {username} chờ quá {delayMs / 1000}s → đấu với BOT");
+
+                        await CreateBotMatch(player, connectionId);
+                    }
+                }
+                catch (TaskCanceledException)
+                {
+                    // Bị ghép rồi
+                }
+            });
+
+           
+          
         }
+
+        private string? GetClientIp()
+        {
+            var http = Context.GetHttpContext();
+            if (http == null) return null;
+
+            // Nếu có proxy
+            if (http.Request.Headers.TryGetValue("X-Forwarded-For", out var forwarded))
+            {
+                var raw = forwarded.ToString().Split(',').FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(raw)) return raw.Trim();
+            }
+
+            return http.Connection.RemoteIpAddress?.ToString();
+        }
+
+
+        private async Task CreateMatch(Player p1, Player p2, string c1, string c2)
+        {
+            var roomId = Guid.NewGuid().ToString();
+
+            var questions = PreGeneratedQuestions.ContainsKey(c1)
+                ? PreGeneratedQuestions[c1]
+                : await _quizService.GenerateQuestionSet(QUESTION_QUANTITY);
+
+            var session = new GameSession
+            {
+                Id = Guid.Parse(roomId),
+                Name = $"Match {roomId}",
+                Players = new List<Player> { p1, p2 },
+                Questions = questions,
+                CurrentQuestionIndex = 0
+            };
+
+            Sessions[roomId] = session;
+            PreGeneratedQuestions.Remove(c1);
+            PreGeneratedQuestions.Remove(c2);
+
+            await Groups.AddToGroupAsync(c1, roomId);
+            await Groups.AddToGroupAsync(c2, roomId);
+
+            await Clients.Client(c1).SendAsync("MatchFound", roomId, session.Players);
+            await Clients.Client(c2).SendAsync("MatchFound", roomId, session.Players);
+        }
+
+        private async Task CreateBotMatch(Player player, string connectionId)
+        {
+
+            using var scope = _scopeFactory.CreateScope();
+            var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+
+            var botUser = await userService.GetRandomUserExcept(player.UserId);
+
+            var bot = new Player
+            {
+                Id = Guid.NewGuid(),
+                UserId = -1,
+                Username = botUser.UserName,
+                AvatarUrl = botUser.Profile.AvatarUrl,
+                ConnectionId = "BOT"
+            };
+
+            var roomId = Guid.NewGuid().ToString();
+
+            var questions = PreGeneratedQuestions.ContainsKey(connectionId)
+                ? PreGeneratedQuestions[connectionId]
+                : await _quizService.GenerateQuestionSet(QUESTION_QUANTITY);
+
+            var session = new GameSession
+            {
+                Id = Guid.Parse(roomId),
+                Name = $"BotMatch {roomId}",
+                Players = new List<Player> { player, bot },
+                Questions = questions,
+                CurrentQuestionIndex = 0,
+                RoomType = RoomType.BOT
+            };
+
+            Sessions[roomId] = session;
+            PreGeneratedQuestions.Remove(connectionId);
+
+            await _hubContext.Groups.AddToGroupAsync(connectionId, roomId);
+            await _hubContext.Clients.Client(connectionId).SendAsync("MatchFound", roomId, session.Players);
+        }
+      
+
 
 
         // === GỬI CÂU HỎI ===
@@ -149,6 +270,12 @@ namespace Cultural_Heritage_System.GameHubs
 
             // Bắt đầu đếm giờ toàn cục (background)
             _ = RunQuestionTimer(roomId, session.TimerCts.Token);
+            var existingBot = session.Players.FirstOrDefault(p => p.ConnectionId == "BOT");
+            if (existingBot != null)
+            {
+                _ = Task.Run(async () => await SimulateBotAnswer(session, existingBot));
+            }
+            return;
         }
 
         // === TIMER NỀN ===
@@ -273,16 +400,130 @@ namespace Cultural_Heritage_System.GameHubs
             }
             else
             {
-                await Task.Delay(1000);
+                await Task.Delay(1000);               
+                await AwardPointsAfterMatch(roomId, session);        
+                
                 if (useHubContext)
                    
                     await _hubContext.Clients.Group(roomId).SendAsync("GameFinished", session.Players);
                 else
                     await Clients.Group(roomId).SendAsync("GameFinished", session.Players);
+
+                foreach (var p in session.Players)
+                {
+                    await Groups.RemoveFromGroupAsync(p.ConnectionId, roomId);
+                }
+
             }
         }
 
-        
+
+        private async Task AwardPointsAfterMatch(string roomId, GameSession gameSession)
+        {
+            var players = gameSession.Players;
+            if (players.Count != 2) return;
+
+            var p1 = players[0];
+            var p2 = players[1];
+
+            Winner winnerResult;
+            Player? winner = null;
+            Player? loser = null;
+
+            // -------------------------
+            // XÁC ĐỊNH KẾT QUẢ TRẬN
+            // -------------------------
+            if (p1.Score == p2.Score)
+            {
+                winnerResult = Winner.DRAW;
+            }
+            else if (p1.Score > p2.Score)
+            {
+                winnerResult = Winner.PLAYER_1;
+                winner = p1;
+                loser = p2;
+            }
+            else
+            {
+                winnerResult = Winner.PLAYER_2;
+                winner = p2;
+                loser = p1;
+            }
+
+            // -------------------------
+            // TÍNH ĐIỂM THƯỞNG
+            // -------------------------
+            int totalGain = 0;
+
+            if (winnerResult != Winner.DRAW)
+            {
+                int diff = Math.Abs(p1.Score - p2.Score);
+
+                int baseGain = 20;
+                int bonusGain = diff / 20;
+                totalGain = baseGain + bonusGain;
+
+                if (totalGain > 60)
+                    totalGain = 60;
+            }
+
+            // -------------------------
+            // LƯU MATCH HISTORY
+            // -------------------------
+            using var scope = _scopeFactory.CreateScope();
+            var gameMatchHistoryService =
+                scope.ServiceProvider.GetRequiredService<IGameMatchHistoryService>();
+
+            var gameMatch = new GameMatchHistory
+            {
+                MatchId = gameSession.Id,
+                MatchType = gameSession.RoomType,
+                QuestionCount = gameSession.Questions.Count,
+                Player1Id = gameSession.Players[0].UserId,
+                Player1Name = gameSession.Players[0].Username,
+                Player1Avatar = gameSession.Players[0].AvatarUrl,
+                Player1Score = gameSession.Players[0].Score,
+                Player1IP = gameSession.Players[0].IpAddress,
+                Player2Id = gameSession.Players[1].UserId == -1 ? null : gameSession.Players[1].UserId,
+                Player2Name = gameSession.Players[1].Username,
+                Player2Avatar = gameSession.Players[1].AvatarUrl,
+                Player2Score = gameSession.Players[1].Score,
+                Player2IP = gameSession.Players[1].IpAddress,
+                WinnerPlayer = winnerResult,
+                PlusPoint = totalGain
+            };
+            await gameMatchHistoryService.CreateGameMatchHistory(
+                gameMatch
+            );
+
+            // -------------------------
+            // BOT thì KHÔNG TÍNH ĐIỂM
+            // -------------------------
+            if (winnerResult != Winner.DRAW && winner?.ConnectionId == "BOT")
+                return;
+
+            // -------------------------
+            // UPDATE POINT RANKING
+            // -------------------------
+            if (winnerResult != Winner.DRAW &&
+                (gameSession.RoomType == RoomType.RANDOM ||
+                 gameSession.RoomType == RoomType.BOT))
+            {
+                winner!.BonusPoint = totalGain;
+
+                var userPoint = new UserPointUpdateRequest
+                {
+                    UserId = winner.UserId,
+                    ChangeAmount = totalGain,
+                    Reason = PointHistoriesReason.PVP_WIN
+                };
+
+                await _userPointService.UpdateUserPoint(userPoint);
+            }
+        }
+
+
+
 
         private static int LetterToIndex(string? letter) => letter?.Trim().ToUpper() switch
         {
@@ -303,6 +544,11 @@ namespace Cultural_Heritage_System.GameHubs
                 session.CurrentQuestionIndex = 0;
                 session.CurrentQuestion = session.Questions[0];
                 await SendQuestion(roomId); // broadcast + khởi tạo timer
+                var existingBot = session.Players.FirstOrDefault(p => p.ConnectionId == "BOT");
+                if (existingBot != null)
+                {
+                    _ = Task.Run(async () => await SimulateBotAnswer(session, existingBot));
+                }
                 return;
             }
 
@@ -316,7 +562,10 @@ namespace Cultural_Heritage_System.GameHubs
                 startTimeUtcMs = session.QuestionStartTime,
                 readingDuration = READING_TIME,
                 answerDuration = QUESTION_TIME,
+
             });
+
+           
         }
 
 
@@ -364,6 +613,13 @@ namespace Cultural_Heritage_System.GameHubs
         {
             var connectionId = Context.ConnectionId;
 
+            var accountIdClaim = Context.User?.FindFirst("userId")?.Value;
+            if (accountIdClaim == null)
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            var userId = int.Parse(accountIdClaim);
+
             // 🧹 Xóa session cũ (nếu có)
             var existingSession = Sessions.Values.FirstOrDefault(s => s.Players.Any(p => p.ConnectionId == connectionId));
             if (existingSession != null)
@@ -371,14 +627,17 @@ namespace Cultural_Heritage_System.GameHubs
                 Sessions.Remove(Sessions.First(x => x.Value == existingSession).Key);
             }
 
+            var ip = GetClientIp();
             // 🧩 Tạo phòng mới
             var roomId = Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper(); // ví dụ: "AB12CD"
             var player = new Player
             {
                 Id = Guid.NewGuid(),
+                UserId = userId,
                 Username = username,
                 AvatarUrl = avatarUrl,
-                ConnectionId = connectionId
+                ConnectionId = connectionId,
+                IpAddress = ip
             };
 
             var session = new GameSession
@@ -386,8 +645,9 @@ namespace Cultural_Heritage_System.GameHubs
                 Id = Guid.NewGuid(),
                 Name = $"Private Room {roomId}",
                 Players = new List<Player> { player },
-                Questions = await _quizService.GenerateQuestionSet(5),
-                CurrentQuestionIndex = 0
+                Questions = await _quizService.GenerateQuestionSet(QUESTION_QUANTITY),
+                CurrentQuestionIndex = 0,
+                RoomType = RoomType.PLAY_WITH_FRIEND
             };
             Sessions[roomId] = session;
 
@@ -417,12 +677,22 @@ namespace Cultural_Heritage_System.GameHubs
                 return;
             }
 
+            var accountIdClaim = Context.User?.FindFirst("userId")?.Value;
+            if (accountIdClaim == null)
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            var userId = int.Parse(accountIdClaim);
+
+            var ip = GetClientIp();
             var player = new Player
             {
                 Id = Guid.NewGuid(),
+                UserId = userId,
                 Username = username,
                 AvatarUrl = avatarUrl,
-                ConnectionId = connectionId
+                ConnectionId = connectionId,
+                IpAddress = ip
             };
 
             session.Players.Add(player);
@@ -462,9 +732,52 @@ namespace Cultural_Heritage_System.GameHubs
             await Clients.Caller.SendAsync("MatchCanceled");
         }
 
+
+
+        private async Task SimulateBotAnswer(GameSession session, Player bot)
+        {
+            var rnd = new Random();
+            int min = READING_TIME * 1000 + MIN_TIME_BOT_ANSWER * 1000;
+            int max = READING_TIME * 1000 + MAX_TIME_BOT_ANSWER * 1000;
+            int delayMs = rnd.Next(min, max); 
+            await Task.Delay(delayMs);
+
+            // Chọn kiểu trả lời
+            int chance = rnd.Next(1, 101); // 1 - 100
+            int answerIndex = -1; // -1 = không trả lời
+
+            if (chance <= 98)
+            {
+                // 90% → trả lời đúng
+                answerIndex = LetterToIndex(session.CurrentQuestion.CorrectOption);
+            }
+            else if (chance <= 1)
+            {
+                // 5% → trả lời sai
+                var correctIndex = LetterToIndex(session.CurrentQuestion.CorrectOption);
+                var options = new List<int> { 0, 1, 2, 3 };
+                options.Remove(correctIndex);
+                answerIndex = options[rnd.Next(options.Count)];
+            }
+            else
+            {
+                // 5% → không trả lời, answerIndex = -1
+            }
+
+            if (answerIndex >= 0)
+            {
+                // Thời gian elapsed tính bằng giây
+                double elapsedSec = delayMs / 1000.0;
+                await SubmitAnswer(session.Id.ToString(), bot.Id.ToString(), (int)session.CurrentQuestion.Id, answerIndex, elapsedSec);
+                Console.WriteLine($"🤖 Bot answered in {elapsedSec:F2}s - {(answerIndex == LetterToIndex(session.CurrentQuestion.CorrectOption) ? "correct" : "wrong")}");
+            }
+            else
+            {
+                Console.WriteLine($"🤖 Bot did not answer (timeout)");
+            }
+        }
+
     }
 
-   
 
-  
 }

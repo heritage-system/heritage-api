@@ -13,7 +13,12 @@ namespace Cultural_Heritage_System.DataAccessObjects
         {
             _logger = logger;
         }
-      
+
+        public IQueryable<ContributionAccessLog> GetContributionAccessLogsQueryable()
+        {
+            return _dbSet                
+                .AsQueryable();
+        }
         public async Task<ContributionAccessLog?> GetContributionAccessLogs(int userId, int contributionId)
         {
             return await _dbSet.FirstOrDefaultAsync(u => u.UserId == userId && u.ContributionId == contributionId);

@@ -6,6 +6,9 @@ namespace Cultural_Heritage_System.Dtos.Models
     {
         public string ConnectionId { get; set; } = "";
         public Player Player { get; set; } = new();
+        public DateTime AddedAt { get; set; }
+        public CancellationTokenSource CancelToken { get; set; }
     }
 
+   
 }

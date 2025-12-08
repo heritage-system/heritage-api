@@ -28,8 +28,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddControllers()
                  .AddJsonOptions(options =>
                  {
-                     options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-                     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                     //options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+                     //options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                      options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
                  });
             builder.Services.Configure<StreamCleanupOptions>(builder.Configuration.GetSection("StreamCleanup"));
@@ -130,6 +130,9 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<SubscriptionDAO>();
             builder.Services.AddScoped<SubscriptionPaymentDAO>();
             builder.Services.AddScoped<ConfirmTokenDAO>();
+            builder.Services.AddScoped<UserPointDAO>();
+            builder.Services.AddScoped<PointHistoryDAO>();
+            builder.Services.AddScoped<GameMatchHistoryDAO>();
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
@@ -178,6 +181,9 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IEventRepository, EventRepository>();
             builder.Services.AddScoped<IStreamingRoomRepository, StreamingRoomRepository>();
             builder.Services.AddScoped<IStreamingParticipantRepository, StreamingParticipantRepository>();
+            builder.Services.AddScoped<IUserPointRepository, UserPointRepository>();
+            builder.Services.AddScoped<IPointHistoryRepository, PointHistoryRepository>();
+            builder.Services.AddScoped<IGameMatchHistoryRepository, GameMatchHistoryRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();
@@ -203,6 +209,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IStaffService, StaffService>();
             builder.Services.AddScoped<IEventService, EventService>();
             builder.Services.AddScoped<IStreamingRoomService, StreamingRoomService>();
+            builder.Services.AddScoped<IUserPointService, UserPointService>();
+            builder.Services.AddScoped<IGameMatchHistoryService, GameMatchHistoryService>();
 
             builder.Services.Configure<AgoraOptions>(
             builder.Configuration.GetSection("Agora"));
@@ -273,10 +281,11 @@ namespace Cultural_Heritage_System
             app.UseHttpsRedirection();
             app.UseCors("AllowReactApp");
 
+              app.UseAuthentication();
+  app.UseAuthorization();
 
             app.UseMiddleware<ExceptionMiddleware>();
-            app.UseAuthentication();
-            app.UseAuthorization();
+          
 
 
 

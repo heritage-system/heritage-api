@@ -60,9 +60,15 @@ namespace Cultural_Heritage_System.Models
         public ICollection<ContributionReport> ContributionReports { get; set; } = new List<ContributionReport>();
         public ICollection<EventRegistration> EventRegistrations { get; set; } = new List<EventRegistration>();
 
+        public ICollection<PointHistory> PointHistories { get; set; } = new List<PointHistory>();
+
+        public ICollection<GameMatchHistory> MatchHistoriesAsPlayer1 { get; set; } = new List<GameMatchHistory>();
+        public ICollection<GameMatchHistory> MatchHistoriesAsPlayer2 { get; set; } = new List<GameMatchHistory>();
+
         public Contributor? Contributor { get; set; }
         public Profile? Profile { get; set; }
         public Staff? Staff { get; set; }
+        public UserPoint? UserPoint { get; set; }
 
         [Column("user_name_unsigned")]
         public string UserNameUnsigned { get; set; }
