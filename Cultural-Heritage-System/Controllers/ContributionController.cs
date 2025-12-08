@@ -197,5 +197,15 @@ namespace Cultural_Heritage_System.Controllers
                 result: users
             );
         }
+
+        [HttpPost("register_access_log")]
+        public async Task<ApiResponse<bool>> RegisterContributionAccessLog([FromBody] ContributionAccessLogCreationRequest request)
+        {
+            return new ApiResponse<bool>(
+                code: 200,
+                message: "Register access log successfully",
+                result: await contributionService.RegisterContributionAccessLog(request)
+            );
+        }
     }
 }

@@ -11,6 +11,7 @@ using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 using Cultural_Heritage_System.Repositories.Impl;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
@@ -28,10 +29,11 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly IContributorRepository contributorRepository;
         private readonly IStaffRepository staffRepository;
         private readonly IConfirmTokenRepository confirmTokenRepository;
+        private readonly IUserPointRepository userPointRepository;
 
         private readonly string _baseUrl;
         public UserService(IConfiguration configuration,IUserRepository userRepository, IRoleRepository roleRepository, ILogger<UserService> logger, IMailService mailService,
-            IProfileRepository profileRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor, ISubscriptionRepository subscriptionRepository, IContributorRepository contributorRepository, IStaffRepository staffRepository, IConfirmTokenRepository confirmTokenRepository)
+            IProfileRepository profileRepository, IMapper mapper, IHttpContextAccessor httpContextAccessor, ISubscriptionRepository subscriptionRepository, IContributorRepository contributorRepository, IStaffRepository staffRepository, IConfirmTokenRepository confirmTokenRepository, IUserPointRepository userPointRepository)
         {
             this.userRepository = userRepository;
             this.roleRepository = roleRepository;
@@ -48,6 +50,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
             _baseUrl = configuration["BaseUrl:FEUrl"]
                 ?? throw new ArgumentNullException("BaseUrl:FEUrl is required");
+            this.userPointRepository = userPointRepository;
         }
 
         public async Task<UserCreationResponse> CreateUser(UserCreationRequest request)
@@ -81,6 +84,13 @@ namespace Cultural_Heritage_System.Services.Impl
             };
 
             await profileRepository.AddAsync(profile);
+
+            var userPoint = new UserPoint
+            {
+                UserId = user.Id,
+            };
+
+            await userPointRepository.AddAsync(userPoint);
 
             var confirmToken = Guid.NewGuid().ToString("N");
             await confirmTokenRepository.AddAsync(new ConfirmToken
@@ -297,6 +307,13 @@ namespace Cultural_Heritage_System.Services.Impl
 
             await profileRepository.AddAsync(profile);
 
+            var userPoint = new UserPoint
+            {
+                UserId = user.Id,
+            };
+
+            await userPointRepository.AddAsync(userPoint);
+
             if (request.RoleName.ToUpper() == DefinitionRole.STAFF)
             {
                 var staff = new Staff
@@ -364,5 +381,25 @@ namespace Cultural_Heritage_System.Services.Impl
                 _ => "Người dùng"
             };
         }
+
+        public async Task<User> GetRandomUserExcept(int userId)
+        {
+            // Lấy danh sách ID để không giữ IQueryable quá lâu
+            var ids = await userRepository.GetQueryable()
+                .Where(u => u.Id != userId && u.Role.Name == DefinitionRole.MEMBER)
+                .Select(u => u.Id)
+                .ToListAsync();
+
+            if (ids.Count == 0) return null;
+
+            var rnd = new Random();
+            var randomId = ids[rnd.Next(ids.Count)];
+
+            // Lấy đúng user theo ID (truy vấn ngắn, sạch)
+            return await userRepository.GetQueryable()
+                .FirstOrDefaultAsync(u => u.Id == randomId);
+        }
+
+
     }
 }

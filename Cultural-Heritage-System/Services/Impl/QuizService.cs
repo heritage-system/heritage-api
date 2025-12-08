@@ -286,6 +286,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 quiz.Title = request.Title;
                 //quiz.Description = request.Description;
                 quiz.BannerUrl = request.BannerUrl;
+                quiz.PremiumType = request.PremiumType;
 
                 quiz.UpdatedAt = DateTime.Now;
 

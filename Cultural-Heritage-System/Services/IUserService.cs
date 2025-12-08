@@ -3,6 +3,7 @@ using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.User;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.User;
+using Cultural_Heritage_System.Models;
 
 namespace Cultural_Heritage_System.Services
 {
@@ -16,6 +17,7 @@ namespace Cultural_Heritage_System.Services
         Task<UserCreationResponse> CreateUserForAdmin(UserCreationByAdminRequest request);
         Task<UserDetailResponse> GetUserDetailForAdmin(int id);
         Task<bool> ChangeUserStatusForAdmin(int id, UserStatus status);
+        Task<User> GetRandomUserExcept(int userId);
 
     }
 }
