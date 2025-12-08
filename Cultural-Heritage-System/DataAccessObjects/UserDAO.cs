@@ -20,6 +20,7 @@ namespace Cultural_Heritage_System.DataAccessObjects
             return await _context.Users
                 .Include(u => u.Role)
                 .Include(u => u.Profile)
+                .Include(u => u.UserPoint)
                 .FirstOrDefaultAsync(u => u.Email == emailOrUserName || u.UserName == emailOrUserName);
         }
 
@@ -28,6 +29,7 @@ namespace Cultural_Heritage_System.DataAccessObjects
             return await _dbSet
                 .Include(u => u.Role)
                 .Include(u => u.Profile)
+                .Include(u => u.UserPoint)
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
@@ -50,6 +52,7 @@ namespace Cultural_Heritage_System.DataAccessObjects
             return await _dbSet
                 .Include(u => u.Role)
                 .Include(u => u.Profile)
+                .Include(u => u.UserPoint)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
@@ -58,6 +61,7 @@ namespace Cultural_Heritage_System.DataAccessObjects
             return _dbSet
                 .Include(u => u.Role)
                 .Include(u => u.Profile)
+                .Include(u => u.UserPoint)
                 .Where(u => u.Role.Name == DefinitionRole.MEMBER);
         }
 
@@ -66,8 +70,8 @@ namespace Cultural_Heritage_System.DataAccessObjects
             return await _dbSet
                 // --- 1:1 (Reference navigations)
                 .Include(u => u.Role)
-                .Include(u => u.Profile)            
-
+                .Include(u => u.Profile)
+                .Include(u => u.UserPoint)
                 // --- 1:n (Collection navigations)
                 .Include(u => u.Favorites)
                 .Include(u => u.Reviews)
@@ -80,7 +84,7 @@ namespace Cultural_Heritage_System.DataAccessObjects
                 .Include(u => u.ContributionSaves)
                 .Include(u => u.ContributionReviews)              
                 .Include(u => u.ContributionReports)
-                
+                .Include(u => u.PointHistories)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 

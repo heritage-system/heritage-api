@@ -36,6 +36,7 @@ using Cultural_Heritage_System.Dtos.Response.Staff;
 using Cultural_Heritage_System.Dtos.Response.Streaming;
 using Cultural_Heritage_System.Dtos.Response.Tag;
 using Cultural_Heritage_System.Dtos.Response.User;
+using Cultural_Heritage_System.Dtos.Response.UserPoint;
 using Cultural_Heritage_System.Models;
 using System.Text.Json;
 
@@ -541,6 +542,8 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<PremiumBenefitCreateRequest, PremiumBenefit>();
             CreateMap<PremiumBenefitUpdateRequest, PremiumBenefit>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<UserPoint, UserPointResponse>();
         }
 
 

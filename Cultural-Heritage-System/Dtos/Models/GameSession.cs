@@ -1,4 +1,5 @@
-﻿using Cultural_Heritage_System.Dtos.Response.QuizQuestion;
+﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Dtos.Response.QuizQuestion;
 using Cultural_Heritage_System.GameHubs;
 using Cultural_Heritage_System.Models;
 
@@ -16,5 +17,7 @@ namespace Cultural_Heritage_System.Dtos.Models
         public bool IsRevealing { get; set; } = false;
         public List<QuizQuestionResponse> Questions { get; set; } = new();
         public CancellationTokenSource? TimerCts { get; set; }
+
+        public RoomType RoomType { get; set; } = RoomType.RANDOM;
     }
 }

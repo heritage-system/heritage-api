@@ -28,6 +28,7 @@ namespace Cultural_Heritage_System.Services
         Task<PageResponse<ContributionOverviewListItemResponse>> GetListContributionsOverview(ContributionOverviewSearchRequest request);
         Task<ContributionDetailUpdatedResponse> GetContributionDetailForUpdated(int id);
         Task<ContributionResponse> UpdateContribution(ContributionUpdateRequest request);
+        Task<bool> RegisterContributionAccessLog(ContributionAccessLogCreationRequest request);
     }
 }
 

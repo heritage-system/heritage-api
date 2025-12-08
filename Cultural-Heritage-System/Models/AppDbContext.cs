@@ -558,6 +558,18 @@ namespace Cultural_Heritage_System.Models
                 .WithMany(u => u.ConfirmTokens)
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<GameMatchHistory>()
+                .HasOne(m => m.Player1)
+                .WithMany(u => u.MatchHistoriesAsPlayer1)
+                .HasForeignKey(m => m.Player1Id)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<GameMatchHistory>()
+                .HasOne(m => m.Player2)
+                .WithMany(u => u.MatchHistoriesAsPlayer2)
+                .HasForeignKey(m => m.Player2Id)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }
