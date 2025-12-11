@@ -35,6 +35,7 @@ using Cultural_Heritage_System.Dtos.Response.QuizQuestion;
 using Cultural_Heritage_System.Dtos.Response.Report;
 using Cultural_Heritage_System.Dtos.Response.Review;
 using Cultural_Heritage_System.Dtos.Response.Staff;
+using Cultural_Heritage_System.Dtos.Response.Subscription;
 using Cultural_Heritage_System.Dtos.Response.Tag;
 using Cultural_Heritage_System.Dtos.Response.User;
 using Cultural_Heritage_System.Models;
@@ -497,8 +498,18 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<PremiumBenefitCreateRequest, PremiumBenefit>();
             CreateMap<PremiumBenefitUpdateRequest, PremiumBenefit>()
                 .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
-        }
+            //Subscription
+            CreateMap<Subscription, SubscriptionResponse>()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+            .ForMember(dest => dest.Package, opt => opt.MapFrom(src => src.Package));
 
+            CreateMap<SubscriptionPayment, SubscriptionPaymentDto>()
+                .ForMember(dest => dest.PaymentStatus, opt => opt.MapFrom(src => src.PaymentStatus.ToString()));
+
+            CreateMap<SubscriptionUsage, SubscriptionUsageDto>()
+                .ForMember(dest => dest.BenefitName, opt => opt.MapFrom(src => src.BenefitName.ToString()))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+        }
     }
 }
 

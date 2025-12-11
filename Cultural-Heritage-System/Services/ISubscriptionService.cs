@@ -8,11 +8,11 @@ namespace Cultural_Heritage_System.Services
     {
         Task<CreatePaymentResponse> CreateSubscriptionAsync(CreateSubscriptionRequest request);
         Task<bool> CheckPaymentStatusAsync(long orderCode);
-        Task<bool> HandlePaymentWebhookAsync(PayOSWebhookData webhookData);
         Task<Subscription?> GetActiveSubscriptionAsync();
         Task<Subscription?> GetSubscriptionByIdAsync(int subscriptionId);
         Task<bool> CancelSubscriptionAsync(int userId, int subscriptionId);
         Task<SubscriptionPayment?> GetPaymentByOrderCodeAsync(long orderCode);
+        Task<List<SubscriptionResponse>> GetSubscriptionsByUserIdAsync();
     }
 
 }

@@ -252,5 +252,38 @@ namespace Cultural_Heritage_System.Controllers
             }
         }
 
+        /// <summary>
+        /// Lấy subscription đang active của một user (theo userId)
+        /// </summary>
+        [HttpGet("SubscriptionByUserId")]
+        [Authorize]
+        public async Task<IActionResult> GetSubscriptionByUserId()
+        {
+            try
+            {
+                var subscription = await _subscriptionService.GetSubscriptionsByUserIdAsync();
+
+                if (subscription == null)
+                    return NotFound(new ApiResponse<object>(
+                        code: 404,
+                        message: "No active subscription found for this user"
+                    ));
+
+                return Ok(new ApiResponse<object>(
+                    code: 200,
+                    message: "Subscription retrieved successfully",
+                    result: subscription
+                ));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting subscription by user id");
+                return BadRequest(new ApiResponse<object>(
+                    code: 400,
+                    message: ex.Message
+                ));
+            }
+        }
+
     }
 }

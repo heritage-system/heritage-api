@@ -33,5 +33,19 @@ namespace Cultural_Heritage_System.DataAccessObjects
                                        && s.EndAt >= now);
         }
 
+        public async Task<List<Subscription>> GetSubscriptionsByUserIdAsync(int userId)
+        {
+            return await _dbSet
+                .Where(s => s.UserId == userId && s.Status == SubscriptionStatus.ACTIVE)
+                .Include(s => s.Package)
+                    .ThenInclude(p => p.PackageBenefits)
+                    .ThenInclude(pb => pb.Benefit)
+                .Include(s => s.Payments)
+                .Include(s => s.UsageRecords)
+                .OrderBy(s => s.StartAt)
+                .ToListAsync();
+        }
+
+
     }
 }
