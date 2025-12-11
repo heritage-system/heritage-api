@@ -58,5 +58,18 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
 
+        [HttpPost("trade_point_quiz")]
+        [Authorize]
+        public async Task<ApiResponse<bool>> TradePointToUnlockQuiz(PointToUnlockTokenRequest request)
+        {
+            var result = await userPointService.TradePointToUnlockQuiz(request);
+
+            return new ApiResponse<bool>(
+                code: 201,
+                message: "Trade successfully",
+                result: result
+            );
+        }
+
     }
 }

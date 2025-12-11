@@ -19,6 +19,7 @@ using Cultural_Heritage_System.Dtos.Request.Tag;
 using Cultural_Heritage_System.Dtos.Request.User;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Category;
+using Cultural_Heritage_System.Dtos.Response.ContributionReport;
 using Cultural_Heritage_System.Dtos.Response.Contributor;
 using Cultural_Heritage_System.Dtos.Response.Event;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
@@ -292,6 +293,10 @@ namespace Cultural_Heritage_System.Helpers
 
             CreateMap<ContributionReportCreationRequest, ContributionReport>();
 
+            CreateMap<ContributionReport, ContributionReportResponse>()
+                .ForMember(dest => dest.ContributionName, opt => opt.MapFrom(src => src.Contribution.Title))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.UserName));
+
             CreateMap<Contributor, ContributorResponse>()
              .ForMember(dest => dest.Email,
                 opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty))
@@ -375,6 +380,9 @@ namespace Cultural_Heritage_System.Helpers
 
             CreateMap<QuizQuestion, QuizQuestionResponse>();
             CreateMap<Quiz, QuizDetailResponse>();
+            CreateMap<Quiz, QuizOverviewResponse>()
+                .ForMember(dest => dest.NumberOfQuestion,
+                opt => opt.MapFrom(src => src.Questions.Count));
             CreateMap<Quiz, QuizListResponse>()
             .ForMember(dest => dest.TotalQuestions,
                 opt => opt.MapFrom(src => src.Questions.Count))

@@ -6,6 +6,7 @@ using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Request.Quiz;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
+using Cultural_Heritage_System.Dtos.Response.Panorama;
 using Cultural_Heritage_System.Dtos.Response.Quiz;
 using Cultural_Heritage_System.Dtos.Response.QuizQuestion;
 using Cultural_Heritage_System.Helpers;
@@ -27,12 +28,15 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly IUserRepository userRepository;
         private readonly ISubscriptionRepository subscriptionRepository;
         private readonly IMapper mapper;
+        private readonly IUserPointService userPointService;
+        private readonly IQuizUnlockRepository quizUnlockRepository;
+        private readonly ISubscriptionUsageRepository subscriptionUsageRepository;
 
         private readonly ILogger<QuizService> logger;
 
         public QuizService(IQuizRepository quizRepository, IUserRepository userRepository, ILogger<QuizService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor, 
-            ISubscriptionRepository subscriptionRepository, IQuizResultRepository quizResultRepository, IQuizQuestionRepository quizQuestionRepository)
+            ISubscriptionRepository subscriptionRepository, IQuizResultRepository quizResultRepository, IQuizQuestionRepository quizQuestionRepository, IUserPointService userPointService, IQuizUnlockRepository quizUnlockRepository, ISubscriptionUsageRepository subscriptionUsageRepository)
         {
             this.quizRepository = quizRepository;
             this.userRepository = userRepository;
@@ -42,6 +46,9 @@ namespace Cultural_Heritage_System.Services.Impl
             this.subscriptionRepository = subscriptionRepository;
             this.quizResultRepository = quizResultRepository;
             this.quizQuestionRepository = quizQuestionRepository;
+            this.userPointService = userPointService;
+            this.quizUnlockRepository = quizUnlockRepository;
+            this.subscriptionUsageRepository = subscriptionUsageRepository;
         }
 
         private static readonly List<QuizQuestion> QuestionBank = new() { new QuizQuestion { Question = "Hội Gióng đền Phù Đổng được UNESCO công nhận là Di sản văn hóa phi vật thể đại diện của nhân loại vào năm nào?", OptionA = "2008", OptionB = "2009", OptionC = "2010", OptionD = "2011", CorrectOption = "C", QuizCategory = QuizCategory.RITUAL, QuizLevel = QuizLevel.EASY }, new QuizQuestion { Question = "Hội Gióng đền Sóc được tổ chức hằng năm tại đâu?", OptionA = "Sóc Sơn, Hà Nội", OptionB = "Gia Lâm, Hà Nội", OptionC = "Phù Đổng, Bắc Ninh", OptionD = "Phù Linh, Bắc Giang", CorrectOption = "A", QuizCategory = QuizCategory.RITUAL, QuizLevel = QuizLevel.EASY }, new QuizQuestion { Question = "Nhân vật trung tâm được tôn vinh trong Hội Gióng là ai?", OptionA = "Thánh Gióng", OptionB = "Thánh Tản Viên", OptionC = "Thánh Trần Hưng Đạo", OptionD = "Thánh Linh Lang", CorrectOption = "A", QuizCategory = QuizCategory.RITUAL, QuizLevel = QuizLevel.EASY }, new QuizQuestion { Question = "Lễ hội Yên Thế tưởng niệm cuộc khởi nghĩa nào trong lịch sử Việt Nam?", OptionA = "Khởi nghĩa Lam Sơn", OptionB = "Khởi nghĩa Hương Khê", OptionC = "Khởi nghĩa Yên Thế", OptionD = "Khởi nghĩa Ba Đình", CorrectOption = "C", QuizCategory = QuizCategory.RITUAL, QuizLevel = QuizLevel.MEDIUM }, new QuizQuestion { Question = "Thủ lĩnh của cuộc khởi nghĩa Yên Thế là ai?", OptionA = "Nguyễn Huệ", OptionB = "Phan Đình Phùng", OptionC = "Hoàng Hoa Thám (Đề Thám)", OptionD = "Trương Định", CorrectOption = "C", QuizCategory = QuizCategory.RITUAL, QuizLevel = QuizLevel.MEDIUM }, new QuizQuestion { Question = "Lễ hội Thổ Hà được tổ chức để tưởng nhớ vị vua nào?", OptionA = "Lý Nhân Tông", OptionB = "Lý Thánh Tông", OptionC = "Trần Nhân Tông", OptionD = "Lý Công Uẩn", CorrectOption = "B", QuizCategory = QuizCategory.RITUAL, QuizLevel = QuizLevel.MEDIUM }, new QuizQuestion { Question = "Lễ hội Thổ Hà có phong tục đặc trưng nào sau đây?", OptionA = "Rước nước từ sông Cầu", OptionB = "Chọi trâu", OptionC = "Đua thuyền", OptionD = "Đấu vật và ném còn", CorrectOption = "A", QuizCategory = QuizCategory.RITUAL, QuizLevel = QuizLevel.MEDIUM }, new QuizQuestion { Question = "Lễ hội Nhảy lửa là nghi lễ của dân tộc nào?", OptionA = "Người Dao", OptionB = "Người Pà Thẻn", OptionC = "Người Tày", OptionD = "Người H'Mông", CorrectOption = "B", QuizCategory = QuizCategory.RITUAL, QuizLevel = QuizLevel.HARD }, new QuizQuestion { Question = "Ý nghĩa của nghi lễ Nhảy lửa của người Pà Thẻn là gì?", OptionA = "Thể hiện sức mạnh, niềm tin vào thần linh và xua đuổi tà ma", OptionB = "Cầu mùa màng bội thu", OptionC = "Tưởng nhớ tổ tiên", OptionD = "Chào mừng năm mới", CorrectOption = "A", QuizCategory = QuizCategory.RITUAL, QuizLevel = QuizLevel.HARD }, new QuizQuestion { Question = "Lễ hội Nhảy lửa thường diễn ra vào thời điểm nào trong năm?", OptionA = "Đầu năm mới", OptionB = "Sau vụ thu hoạch, cuối năm âm lịch", OptionC = "Giữa mùa hè", OptionD = "Trong dịp Tết Trung thu", CorrectOption = "B", QuizCategory = QuizCategory.RITUAL, QuizLevel = QuizLevel.HARD } };
@@ -118,9 +125,10 @@ namespace Cultural_Heritage_System.Services.Impl
             }
 
             // Lấy subscription active
-            var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+            var unlockQuiz = await quizUnlockRepository
+                            .GetQuizUnlockByUserAndQuiz(userId, quizId);
 
-            if (activeSub == null)
+            if (unlockQuiz == null)
             {
                 // không có sub → chỉ preview
                 response.Questions = new List<QuizQuestionResponse>();
@@ -134,6 +142,150 @@ namespace Cultural_Heritage_System.Services.Impl
             }
   
             return response;
+        }
+
+        public async Task<QuizOverviewResponse> GetQuizOverview(long quizId)
+        {
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            // Premium → check used        
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                // chưa login → chỉ preview
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            var userId = int.Parse(accountIdClaim);
+
+            var existingQuiz = await quizRepository.GetQuizById(quizId);
+
+            if (existingQuiz == null)
+                throw new AppException(ErrorCode.QUIZ_NOT_FOUND);
+
+            var response = mapper.Map<QuizOverviewResponse>(existingQuiz);
+
+            //response.UserPoint = (await userPointService.GetUserPointByUserId()).TotalPoints;           
+            
+            // Nếu free thì trả luôn          
+            if (existingQuiz.PremiumType == PremiumType.FREE)
+            {
+                var resultFree = await quizResultRepository.GetQuizResult(quizId, userId);
+                if (resultFree != null)
+                {
+                    response.NumberOfClear = resultFree.NumberOfClear;
+                }
+                return response;
+            }
+
+            var unlockQuiz = await quizUnlockRepository
+                            .GetQuizUnlockByUserAndQuiz(userId, quizId);
+
+            // --------------------------
+            // CASE 1: CHƯA MỞ → PREVIEW
+            // --------------------------
+            if (unlockQuiz == null)
+            {             
+                // Lấy subscription info CHỈ KHI user chưa mở và có sub active
+                var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+                if (activeSub != null)
+                {
+                    var usage = activeSub.UsageRecords
+                        .FirstOrDefault(c => c.BenefitName == BenefitName.QUIZ);
+
+                    if (usage != null)
+                    {
+                        response.Subscription = mapper.Map<SubscriptionDto>(activeSub);
+                        if (usage.Total != null)
+                            response.Subscription.Total = (int)usage.Total;
+                        else
+                        {
+                            response.Subscription.IsUnlimited = true;
+                        }
+
+                        response.Subscription.Used = usage.Used;
+                    }
+                }
+
+                response.UserPoint = (await userPointService.GetUserPointByUserId()).TotalPoints;
+
+                return response;
+            }
+
+            // --------------------------
+            // CASE 2: ĐÃ MỞ BẰNG POINT → FULL
+            // --------------------------
+            if (unlockQuiz.UnlockingMethod == UnlockingMethod.BY_POINT)
+            {
+                response.IsUnlock = true;
+                return response; // Không lấy subscription info nữa
+            }
+
+            // --------------------------
+            // CASE 3: ĐÃ MỞ BẰNG SUB → CẦN CHECK SUB CÒN HẠN
+            // --------------------------
+            if (unlockQuiz.UnlockingMethod == UnlockingMethod.BY_SUBSCRIPTION)
+            {
+                var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+
+                response.UserPoint = (await userPointService.GetUserPointByUserId()).TotalPoints;
+                // Sub hết hạn → mất quyền, về PREVIEW
+                if (activeSub == null)
+                {
+                    response.UnSubscriptionLock = true;                
+                    return response;
+                }
+
+                // Sub còn hạn → FULL nhưng KHÔNG trả Subscription info nữa
+                response.IsUnlock = true;
+                return response;
+            }
+
+            return response;
+        }
+
+        public async Task<bool> UnlockQuiz(long quizId)
+        {
+            var existingQuiz = await quizRepository.GetQuizById(quizId);
+
+            if (existingQuiz == null)
+                throw new AppException(ErrorCode.QUIZ_NOT_FOUND);
+
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+
+            var userId = int.Parse(accountIdClaim);
+
+            // Lấy subscription active
+            var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+
+
+            if (activeSub == null)
+            {
+                throw new AppException(ErrorCode.USER_NOT_PREMIUM);
+            }
+
+            var quizUnlock = activeSub.UsageRecords.FirstOrDefault(c => c.BenefitName == BenefitName.QUIZ);
+            if (quizUnlock == null)
+            {
+                throw new AppException(ErrorCode.SUBSCRIPTION_USAGE_NOT_FOUND);
+            }
+            if (quizUnlock.Used >= quizUnlock.Total)
+            {
+                throw new AppException(ErrorCode.OVER_OPEN_LIMIT);
+            }
+
+            quizUnlock.Used++;
+            await subscriptionUsageRepository.UpdateAsync(quizUnlock);
+
+            var unlock = new QuizUnlock
+            {
+                UserId = userId,
+                QuizId = quizId,
+                UnlockingMethod = UnlockingMethod.BY_SUBSCRIPTION
+            };
+            await quizUnlockRepository.AddAsync(unlock);          
+            return true;
         }
 
         public async Task<PageResponse<QuizListResponse>> GetListQuiz(QuizListRequest request)
@@ -150,7 +302,7 @@ namespace Cultural_Heritage_System.Services.Impl
                     var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
 
                     query = query.Where(h =>
-                        // Contribution title
+                        // Quiz title
                         h.Title.ToLower().Contains(searchTerm) ||
                         h.TitleUnsigned.Contains(unsignedTerm)               
                     );
@@ -194,6 +346,8 @@ namespace Cultural_Heritage_System.Services.Impl
                         {
                             item.NumberOfClear = result.NumberOfClear;
                         }
+                        await HidePremiumContentIfNeeded(item, accountIdClaim);
+
                     }
                 }
 
@@ -207,6 +361,56 @@ namespace Cultural_Heritage_System.Services.Impl
             }
         }
 
+        private async Task HidePremiumContentIfNeeded(QuizListResponse response, string? accountIdClaim)
+        {
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {             
+                return;
+            }
+
+            int userId = int.Parse(accountIdClaim);
+
+            var unlockQuiz = await quizUnlockRepository
+                            .GetQuizUnlockByUserAndQuiz(userId, response.Id);
+
+            // --------------------------
+            // CASE 1: CHƯA MỞ → PREVIEW
+            // --------------------------
+            if (unlockQuiz == null)
+            {
+                return;
+            }
+
+            // --------------------------
+            // CASE 2: ĐÃ MỞ BẰNG POINT → FULL
+            // --------------------------
+            if (unlockQuiz.UnlockingMethod == UnlockingMethod.BY_POINT)
+            {
+                response.IsUnlock = true;
+                return;
+            }
+
+            // --------------------------
+            // CASE 3: ĐÃ MỞ BẰNG SUB → CẦN CHECK SUB CÒN HẠN
+            // --------------------------
+            if (unlockQuiz.UnlockingMethod == UnlockingMethod.BY_SUBSCRIPTION)
+            {
+                var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+            
+                // Sub hết hạn → mất quyền, về PREVIEW
+                if (activeSub == null)
+                {
+                    return;
+                }
+
+                // Sub còn hạn → FULL nhưng KHÔNG trả Subscription info nữa
+                response.IsUnlock = true;
+                return;
+            }
+
+            return;
+            // Khi đã unlock rồi (dù bằng sub hay point) → KHÔNG trả subscription info nữa
+        }
         public async Task<bool> SaveQuizResult(SaveQuizResultRequest request)
         {
             var existingQuiz = await quizRepository.GetQuizById(request.QuizId);

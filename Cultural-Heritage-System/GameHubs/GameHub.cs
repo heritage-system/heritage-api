@@ -26,9 +26,9 @@ namespace Cultural_Heritage_System.GameHubs
 
         private const int QUESTION_TIME = 10; // giây
         private const int READING_TIME = 3;
-        private const int QUESTION_QUANTITY = 5;
+        private const int QUESTION_QUANTITY = 10;
         private const int MIN_TIME_BOT_ANSWER = 1;
-        private const int MAX_TIME_BOT_ANSWER = 3;
+        private const int MAX_TIME_BOT_ANSWER = 2;
         // === DỮ LIỆU MẪU ===
 
         public GameHub(IHubContext<GameHub> hubContext, IQuizService quizService,IUserPointService userPointService, IUserService userService, IServiceScopeFactory scopeFactory, IGameMatchHistoryService gameMatchHistoryService)

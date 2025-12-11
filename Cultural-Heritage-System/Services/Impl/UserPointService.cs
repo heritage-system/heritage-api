@@ -30,13 +30,15 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly IContributionUnlockRepository contributionUnlockRepository;
         private readonly IPanoramaSceneRepository panoramaSceneRepository;
         private readonly IPanoramaSceneUnlockRepository panoramaSceneUnlockRepository;
+        private readonly IQuizUnlockRepository quizUnlockRepository;
+        private readonly IQuizRepository quizRepository;
         private readonly IMapper mapper;
 
         private readonly ILogger<UserPointService> logger;
 
         public UserPointService(IUserPointRepository userPointRepository, IUserRepository userRepository, ILogger<UserPointService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor, IPointHistoryRepository pointHistoryRepository,
-            ISubscriptionRepository subscriptionRepository, IContributionRepository contributionRepository, IContributionUnlockRepository contributionUnlockRepository, IPanoramaSceneRepository panoramaSceneRepository, IPanoramaSceneUnlockRepository panoramaSceneUnlockRepository)
+            ISubscriptionRepository subscriptionRepository, IContributionRepository contributionRepository, IContributionUnlockRepository contributionUnlockRepository, IPanoramaSceneRepository panoramaSceneRepository, IPanoramaSceneUnlockRepository panoramaSceneUnlockRepository, IQuizRepository quizRepository, IQuizUnlockRepository quizUnlockRepository)
         {
             this.userPointRepository = userPointRepository;
             this.userRepository = userRepository;
@@ -49,6 +51,8 @@ namespace Cultural_Heritage_System.Services.Impl
             this.contributionUnlockRepository = contributionUnlockRepository;
             this.panoramaSceneRepository = panoramaSceneRepository;
             this.panoramaSceneUnlockRepository = panoramaSceneUnlockRepository;
+            this.quizRepository = quizRepository;
+            this.quizUnlockRepository = quizUnlockRepository;
         }
 
         public async Task<UserPointResponse> GetUserPointByUserId()
@@ -236,6 +240,57 @@ namespace Cultural_Heritage_System.Services.Impl
 
             var result = mapper.Map<PanoramaSceneResponse>(existingPanoramaScene);
             return result;
+
+
+        }
+
+        public async Task<bool> TradePointToUnlockQuiz(PointToUnlockTokenRequest request)
+        {
+            var existingQuiz = await quizRepository.GetQuizById(request.ReferenceId);
+
+            if (existingQuiz == null)
+                throw new AppException(ErrorCode.QUIZ_NOT_FOUND);
+
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+
+            var userPoint = await GetUserPointByUserId();
+
+            if (userPoint == null)
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            if (userPoint.TotalPoints < request.ChangeAmount)
+            {
+                throw new AppException(ErrorCode.NO_ENOUGH_POINT);
+            }
+            var userId = int.Parse(accountIdClaim);
+
+            var unlockExisted = await quizUnlockRepository.GetQuizUnlockByUserAndQuiz(userId, request.ReferenceId);
+
+            if (unlockExisted != null && unlockExisted.UnlockingMethod == UnlockingMethod.BY_SUBSCRIPTION)
+            {
+                unlockExisted.UnlockingMethod = UnlockingMethod.BY_POINT;
+                unlockExisted.UpdatedAt = DateTime.Now;
+                await quizUnlockRepository.UpdateAsync(unlockExisted);
+            }
+            else
+            {
+                var unlock = new QuizUnlock
+                {
+                    UserId = userId,
+                    QuizId = (int)request.ReferenceId,
+                    UnlockingMethod = UnlockingMethod.BY_POINT
+                };
+                await quizUnlockRepository.AddAsync(unlock);
+            }
+
+            await UpdateUserPoint(new UserPointUpdateRequest { UserId = int.Parse(accountIdClaim), ChangeAmount = -request.ChangeAmount, Reason = request.Reason, ReferenceId = request.ReferenceId });
+       
+            return true;
 
 
         }

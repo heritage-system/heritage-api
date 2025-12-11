@@ -105,7 +105,7 @@ namespace Cultural_Heritage_System.Services.Impl
                         query = query.OrderByDescending(h => h.Title);
                         break;
                     default:
-                        query = query.OrderByDescending(h => h.CreatedAt);
+                        query = query.OrderByDescending(h => h.PublishedAt);
                         break;
                 }
 
@@ -815,24 +815,35 @@ namespace Cultural_Heritage_System.Services.Impl
             return mapper.Map<ContributionResponse>(contribution);
         }
 
-        public async Task<bool> UpdateStatusContribution(long contributionId, ContributionStatus status)
+        public async Task<bool> UpdateStatusContribution(long contributionId, ContributionStatus status, bool isAdmin)
         {
-            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
-            if (string.IsNullOrEmpty(accountIdClaim))
-                throw new AppException(ErrorCode.UNAUTHORIZED);
-
-            var currentContributor = await contributorRepository
-                .GetContributorByUserId(int.Parse(accountIdClaim));
-            if (currentContributor == null)
-                throw new AppException(ErrorCode.UNAUTHORIZED);
-
             var contribution = await contributionRepository.GetContributionById(contributionId);
             if (contribution == null)
                 throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
 
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            int userId = int.Parse(accountIdClaim);
 
-            if (contribution.ContributorId != currentContributor.Id)
-                throw new AppException(ErrorCode.FORBIDDEN);
+            if (!isAdmin)
+            {                          
+                var currentContributor = await contributorRepository
+                    .GetContributorByUserId(int.Parse(accountIdClaim));
+                if (currentContributor == null)
+                    throw new AppException(ErrorCode.UNAUTHORIZED);
+
+                if (contribution.ContributorId != currentContributor.Id)
+                    throw new AppException(ErrorCode.FORBIDDEN);
+            }
+            else
+            {
+                var staff = await staffRepository.GetByUserIdAsync(userId);
+                if(staff == null)
+                {
+                    throw new AppException(ErrorCode.UNAUTHORIZED);
+                }             
+            }
 
             if(contribution.Status != ContributionStatus.APPROVED && contribution.Status != ContributionStatus.DISABLE)
             {

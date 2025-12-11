@@ -49,6 +49,17 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
 
+        [HttpGet("get_quiz_overview")]
+        public async Task<ApiResponse<QuizOverviewResponse>> GetQuizOverview(long id)
+        {
+            var result = await quizService.GetQuizOverview(id);
+            return new ApiResponse<QuizOverviewResponse>(
+                code: 200,
+                message: "Get quiz overview successfully",
+                result: result
+            );
+        }
+
         [HttpPost("save_quiz_result")]
         public async Task<ApiResponse<bool>> SaveQuizResult([FromBody] SaveQuizResultRequest request)
         {
@@ -58,6 +69,16 @@ namespace Cultural_Heritage_System.Controllers
                 result: await quizService.SaveQuizResult(request)
             );
 
+        }
+
+        [HttpPost("unlock_quiz")]
+        public async Task<ApiResponse<bool>> UnlockContribution(int id)
+        {
+            return new ApiResponse<bool>(
+                code: 201,
+                message: "Unlock quiz successfully",
+                result: await quizService.UnlockQuiz(id)
+            );
         }
 
         [HttpPost("create_quiz")]

@@ -22,5 +22,7 @@ namespace Cultural_Heritage_System.Services
         Task<bool> UpdateQuizQuestion(QuizQuestionUpdateRequest request);
         Task<long?> DeleteQuizQuestion(long id);
         Task<QuizDetailAdminResponse> GetQuizDetailAdmin(long quizId);
+        Task<QuizOverviewResponse> GetQuizOverview(long quizId);
+        Task<bool> UnlockQuiz(long quizId);
     }
 }
