@@ -235,11 +235,11 @@ namespace Cultural_Heritage_System.Controllers
                 var payment = await _subscriptionService.GetPaymentByOrderCodeAsync(orderCode);
                 if (payment == null)
                 {
-                    return Redirect($"{_configuration["PayOS:ReturnUrl"]}?error=payment_not_found");
+                    return Redirect($"{_configuration["BaseUrl:FEUrl"]}{_configuration["PayOS:ReturnUrl"]}?error=payment_not_found");
                 }
 
                 // Redirect về frontend với thông tin payment
-                var frontendUrl = _configuration["PayOS:ReturnUrl"];
+                var frontendUrl = $"{ _configuration["BaseUrl:FEUrl"] }{_configuration["PayOS:ReturnUrl"]}";
                 var redirectUrl = $"{frontendUrl}?orderCode={orderCode}&status={payment.PaymentStatus}";
 
                 return Redirect(redirectUrl);
@@ -247,7 +247,7 @@ namespace Cultural_Heritage_System.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing payment return");
-                var frontendUrl = _configuration["PayOS:ReturnUrl"];
+                var frontendUrl = $"{_configuration["BaseUrl:FEUrl"]}{_configuration["PayOS:ReturnUrl"]}";
                 return Redirect($"{frontendUrl}?error=processing_error");
             }
         }

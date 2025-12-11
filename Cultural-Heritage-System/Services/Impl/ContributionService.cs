@@ -1,27 +1,19 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using Azure.Core;
 using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Models;
-using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.ContribtutionReport;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
-using Cultural_Heritage_System.Dtos.Request.Report;
-using Cultural_Heritage_System.Dtos.Request.Review;
+using Cultural_Heritage_System.Dtos.Request.UserPoint;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Contribution;
-using Cultural_Heritage_System.Dtos.Response.Heritage;
-using Cultural_Heritage_System.Dtos.Response.Report;
-using Cultural_Heritage_System.Dtos.Response.Review;
 using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using OfficeOpenXml.Packaging.Ionic.Zlib;
-using System.Threading.Tasks;
+using System.Net;
+using System.Reflection;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
@@ -34,20 +26,21 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly IMapper mapper;
         private readonly IMailService mailService;
         private readonly ILogger<ContributionService> logger;
-        private readonly IContributionAccessLogRepository contributionAccessLogRepository;     
+        private readonly IContributionAccessLogRepository contributionAccessLogRepository;
         private readonly IContributionSaveRepository contributionSaveRepository;
         private readonly IContributionUnlockRepository contributionUnlockRepository;
         private readonly IContributionHeritageTagRepository contributionHeritageTagRepository;
         private readonly IContributionReportRepository contributionReportRepository;
         private readonly IStaffRepository staffRepository;
         private readonly ISubscriptionUsageRepository subscriptionUsageRepository;
+        private readonly IUserPointService userPointService;
         public ContributionService(IContributorRepository contributorRepository, IContributionRepository contributionRepository, ILogger<ContributionService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor, ISubscriptionRepository subscriptionRepository,
             IContributionAccessLogRepository contributionAccessLogRepository,
-            IContributionSaveRepository contributionSaveRepository, 
-            IContributionHeritageTagRepository contributionHeritageTagRepository, 
-            IContributionReportRepository contributionReportRepository, 
-            IStaffRepository staffRepository, IContributionUnlockRepository contributionUnlockRepository, ISubscriptionUsageRepository subscriptionUsageRepository)
+            IContributionSaveRepository contributionSaveRepository,
+            IContributionHeritageTagRepository contributionHeritageTagRepository,
+            IContributionReportRepository contributionReportRepository,
+            IStaffRepository staffRepository, IContributionUnlockRepository contributionUnlockRepository, ISubscriptionUsageRepository subscriptionUsageRepository, IUserPointService userPointService)
         {
             this.contributorRepository = contributorRepository;
             this.logger = logger;
@@ -56,13 +49,14 @@ namespace Cultural_Heritage_System.Services.Impl
             this.mapper = mapper;
             this.httpContextAccessor = httpContextAccessor;
             this.subscriptionRepository = subscriptionRepository;
-            this.contributionAccessLogRepository = contributionAccessLogRepository;           
+            this.contributionAccessLogRepository = contributionAccessLogRepository;
             this.contributionSaveRepository = contributionSaveRepository;
             this.contributionHeritageTagRepository = contributionHeritageTagRepository;
             this.contributionReportRepository = contributionReportRepository;
             this.staffRepository = staffRepository;
             this.contributionUnlockRepository = contributionUnlockRepository;
             this.subscriptionUsageRepository = subscriptionUsageRepository;
+            this.userPointService = userPointService;
         }
 
         public async Task<PageResponse<ContributionSearchResponse>> SearchContributionsAsync(ContributionSearchRequest request)
@@ -179,7 +173,7 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 contribution.ContributionAcceptances.Add(new ContributionAcceptance
                 {
-                    StaffId = nextStaffId.Value,                 
+                    StaffId = nextStaffId.Value,
                     Note = "Bài viết mới, chờ duyệt"
                 });
             }
@@ -192,7 +186,8 @@ namespace Cultural_Heritage_System.Services.Impl
 
         public async Task<ContributionResponse> GetContributionDetail(int id)
         {
-            var existingContribution = await contributionRepository.GetContributionByIdAndStatus(id, ContributionStatus.APPROVED);
+            var existingContribution = await contributionRepository
+                .GetContributionByIdAndStatus(id, ContributionStatus.APPROVED);
 
             if (existingContribution == null)
                 throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
@@ -200,43 +195,21 @@ namespace Cultural_Heritage_System.Services.Impl
             var response = mapper.Map<ContributionResponse>(existingContribution);
 
             var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
-            // Nếu free thì trả luôn          
+
+            // ========== FREE CONTENT ==========
             if (existingContribution.PremiumType == PremiumType.FREE)
             {
-
                 if (!string.IsNullOrEmpty(accountIdClaim))
                 {
-                    var userFreeId = int.Parse(accountIdClaim);
-
-                    response.IsSave = await contributionSaveRepository.IsContributionSaveExists(userFreeId, id);
-                    // kiểm tra đã có log chưa
-                    var existingFreeLog = await contributionAccessLogRepository.GetContributionAccessLogs(userFreeId, existingContribution.Id);
-
-                    if (existingFreeLog == null)
-                    {
-                        var log = new ContributionAccessLog
-                        {
-                            UserId = userFreeId,
-                            ContributionId = existingContribution.Id,
-                        };
-
-                        await contributionAccessLogRepository.AddAsync(log);
-                    }
-                    else
-                    {
-                        existingFreeLog.UpdatedAt = DateTime.UtcNow;
-                        await contributionAccessLogRepository.UpdateAsync(existingFreeLog);
-                    }
+                    var userIdFree = int.Parse(accountIdClaim);
+                    response.IsSave = await contributionSaveRepository.IsContributionSaveExists(userIdFree, id);
                 }
-
-                return response;
+                return response; // FULL
             }
 
-
-            // Premium → check used        
+            // ========== PREMIUM + NOT LOGIN → PREVIEW ==========
             if (string.IsNullOrEmpty(accountIdClaim))
             {
-                // chưa login → chỉ preview
                 response.Content = null;
                 return response;
             }
@@ -245,43 +218,77 @@ namespace Cultural_Heritage_System.Services.Impl
 
             response.IsSave = await contributionSaveRepository.IsContributionSaveExists(userId, id);
 
-            // Lấy subscription active
-            var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+            // ========== CHECK UNLOCK STATUS ==========
+            var unlockContribution = await contributionUnlockRepository
+                .GetContributionUnlockByUserAndContribution(userId, id);
 
-            if (activeSub == null)
-            {
-                // không có sub → chỉ preview
-                response.Content = null;
-                return response;
-            }
-
-            var contributionUnlock = activeSub.UsageRecords.FirstOrDefault(c => c.BenefitName == BenefitName.CONTRIBUTION);
-            if (contributionUnlock == null)
-            {
-                throw new AppException(ErrorCode.SUBSCRIPTION_USAGE_NOT_FOUND);
-            }
-
-            response.Subscription = mapper.Map<SubscriptionDto>(activeSub);
-            if(contributionUnlock.Total != null)
-            {
-                response.Subscription.Total = (int)contributionUnlock.Total;
-               
-            }
-            response.Subscription.Used = contributionUnlock.Used;
-
-            var unlockContribution = await contributionUnlockRepository.GetContributionUnlockByUserAndContribution(userId, id);
-
+            // --------------------------
+            // CASE 1: CHƯA MỞ → PREVIEW
+            // --------------------------
             if (unlockContribution == null)
             {
-                // không có sub → chỉ preview
                 response.Content = null;
+
+                // Lấy subscription info CHỈ KHI user chưa mở và có sub active
+                var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+                if (activeSub != null)
+                {
+                    var usage = activeSub.UsageRecords
+                        .FirstOrDefault(c => c.BenefitName == BenefitName.CONTRIBUTION);
+
+                    if (usage != null)
+                    {
+                        response.Subscription = mapper.Map<SubscriptionDto>(activeSub);
+                        if (usage.Total != null)
+                            response.Subscription.Total = (int)usage.Total;
+                        else
+                        {
+                            response.Subscription.IsUnlimited = true;
+                        }
+
+                        response.Subscription.Used = usage.Used;
+                    }
+                }
+
+                response.UserPoint = (await userPointService.GetUserPointByUserId()).TotalPoints;
+
                 return response;
             }
 
+            // --------------------------
+            // CASE 2: ĐÃ MỞ BẰNG POINT → FULL
+            // --------------------------
+            if (unlockContribution.UnlockingMethod == UnlockingMethod.BY_POINT)
+            {
+                response.UserPoint = (await userPointService.GetUserPointByUserId()).TotalPoints;
+                return response; // Không lấy subscription info nữa
+            }
 
+            // --------------------------
+            // CASE 3: ĐÃ MỞ BẰNG SUB → CẦN CHECK SUB CÒN HẠN
+            // --------------------------
+            if (unlockContribution.UnlockingMethod == UnlockingMethod.BY_SUBSCRIPTION)
+            {
+                var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+
+                response.UserPoint = (await userPointService.GetUserPointByUserId()).TotalPoints;
+                // Sub hết hạn → mất quyền, về PREVIEW
+                if (activeSub == null)
+                {
+                    response.UnSubscriptionLock = true;
+                    response.Content = null;
+                    return response;
+                }
+
+                // Sub còn hạn → FULL nhưng KHÔNG trả Subscription info nữa
+                
+                return response;
+            }
 
             return response;
         }
+
+
 
         public async Task<ContributionResponse> UnlockContribution(int contributionId)
         {
@@ -301,7 +308,7 @@ namespace Cultural_Heritage_System.Services.Impl
             // Lấy subscription active
             var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
 
-            
+
             if (activeSub == null)
             {
                 throw new AppException(ErrorCode.USER_NOT_PREMIUM);
@@ -323,33 +330,34 @@ namespace Cultural_Heritage_System.Services.Impl
             var unlock = new ContributionUnlock
             {
                 UserId = userId,
-                ContributionId = contributionId
+                ContributionId = contributionId,
+                UnlockingMethod = UnlockingMethod.BY_SUBSCRIPTION
             };
             await contributionUnlockRepository.AddAsync(unlock);
 
-            var existingLog = await contributionAccessLogRepository.GetContributionAccessLogs(userId, existingContribution.Id);
+            //var existingLog = await contributionAccessLogRepository.GetContributionAccessLogs(userId, existingContribution.Id);
 
-            if (existingLog == null)
-            {
-                // Chưa mở bài này
+            //if (existingLog == null)
+            //{
+            //    // Chưa mở bài này
 
-                var log = new ContributionAccessLog
-                {
-                    UserId = userId,
-                    ContributionId = existingContribution.Id,
-                    SubscriptionId = activeSub.Id,
-                    CountedForQuota = true
-                };
+            //    var log = new ContributionAccessLog
+            //    {
+            //        UserId = userId,
+            //        ContributionId = existingContribution.Id,
+            //        SubscriptionId = activeSub.Id,
 
-                await contributionAccessLogRepository.AddAsync(log);
+            //    };
 
-            }
-            else
-            {
-                // Đã mở → update LastOpenedAt
-                existingLog.UpdatedAt = DateTime.UtcNow;
-                await contributionAccessLogRepository.UpdateAsync(existingLog);
-            }
+            //    await contributionAccessLogRepository.AddAsync(log);
+
+            //}
+            //else
+            //{
+            //    // Đã mở → update LastOpenedAt
+            //    existingLog.UpdatedAt = DateTime.UtcNow;
+            //    await contributionAccessLogRepository.UpdateAsync(existingLog);
+            //}
 
             var result = mapper.Map<ContributionResponse>(existingContribution);
             return result;
@@ -448,7 +456,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 }
 
 
-                var existingContribution = await contributionRepository.GetContributionByIdAndStatus(contributionId,ContributionStatus.APPROVED);
+                var existingContribution = await contributionRepository.GetContributionByIdAndStatus(contributionId, ContributionStatus.APPROVED);
                 if (existingContribution == null)
                 {
 
@@ -508,7 +516,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
 
-            var existingContribution = await contributionRepository.GetContributionByIdAndStatus(request.ContributionId,ContributionStatus.APPROVED);
+            var existingContribution = await contributionRepository.GetContributionByIdAndStatus(request.ContributionId, ContributionStatus.APPROVED);
             if (existingContribution == null)
             {
 
@@ -555,10 +563,10 @@ namespace Cultural_Heritage_System.Services.Impl
                         c.TitleUnsigned.Contains(unsignedKeyword));
                 }
 
-               
+
                 var dtoQuery = query.ProjectTo<ContributionSearchResponse>(mapper.ConfigurationProvider);
 
-               
+
                 dtoQuery = dtoQuery.OrderBy(x => Guid.NewGuid());
 
                 // Lấy các bài liên quan trước
@@ -600,7 +608,7 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
-      
+
             var currentContributor = await contributorRepository.GetContributorByUserId(int.Parse(accountIdClaim));
             if (currentContributor == null)
             {
@@ -612,7 +620,7 @@ namespace Cultural_Heritage_System.Services.Impl
             if (existingContribution == null)
                 throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
 
-            if(existingContribution.ContributorId != currentContributor.Id)
+            if (existingContribution.ContributorId != currentContributor.Id)
             {
                 throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
             }
@@ -634,7 +642,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 .OrderByDescending(x => x.Year)
                 .ThenByDescending(x => x.Month)
                 .Take(6)
-                .OrderBy(x => x.Year).ThenBy(x => x.Month) 
+                .OrderBy(x => x.Year).ThenBy(x => x.Month)
                 .ToList();
 
             response.MonthlyViews = monthlyViews;
@@ -645,7 +653,7 @@ namespace Cultural_Heritage_System.Services.Impl
         public async Task<PageResponse<ContributionOverviewListItemResponse>> GetListContributionsOverview(ContributionOverviewSearchRequest request)
         {
             try
-            {        
+            {
                 var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
 
                 if (accountIdClaim == null)
@@ -673,14 +681,14 @@ namespace Cultural_Heritage_System.Services.Impl
                     var unsignedTerm = StringHelper.RemoveDiacritics(searchTerm);
 
                     query = query.Where(h =>
-                      
+
                         h.Title.ToLower().Contains(searchTerm) ||
                         h.TitleUnsigned.Contains(unsignedTerm) ||
 
-                     
+
                         h.Contributor.User.UserName.ToLower().Contains(searchTerm) ||
                         h.Contributor.User.UserNameUnsigned.Contains(unsignedTerm) ||
-                     
+
                         h.ContributionHeritageTags.Any(tag =>
                             tag.Heritage.Name.ToLower().Contains(searchTerm) ||
                             tag.Heritage.NameUnsigned.Contains(unsignedTerm)
@@ -747,7 +755,7 @@ namespace Cultural_Heritage_System.Services.Impl
             }
 
             var response = mapper.Map<ContributionDetailUpdatedResponse>(existingContribution);
-               
+
             return response;
         }
 
@@ -766,7 +774,7 @@ namespace Cultural_Heritage_System.Services.Impl
             if (contribution == null)
                 throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
 
-         
+
             if (contribution.ContributorId != currentContributor.Id)
                 throw new AppException(ErrorCode.FORBIDDEN);
 
@@ -807,6 +815,38 @@ namespace Cultural_Heritage_System.Services.Impl
             return mapper.Map<ContributionResponse>(contribution);
         }
 
+        public async Task<bool> UpdateStatusContribution(long contributionId, ContributionStatus status)
+        {
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            var currentContributor = await contributorRepository
+                .GetContributorByUserId(int.Parse(accountIdClaim));
+            if (currentContributor == null)
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            var contribution = await contributionRepository.GetContributionById(contributionId);
+            if (contribution == null)
+                throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
+
+
+            if (contribution.ContributorId != currentContributor.Id)
+                throw new AppException(ErrorCode.FORBIDDEN);
+
+            if(contribution.Status != ContributionStatus.APPROVED && contribution.Status != ContributionStatus.DISABLE)
+            {
+                throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
+            }
+
+            // Update fields
+            contribution.Status = status;
+            contribution.UpdatedAt = DateTime.Now;
+
+            await contributionRepository.UpdateAsync(contribution);
+
+            return true;
+        }
         private async Task<int?> GetNextStaffForContributionAsync()
         {
             var staffList = await staffRepository.GetActiveReviewersAsync();
@@ -845,5 +885,178 @@ namespace Cultural_Heritage_System.Services.Impl
 
             return selectedStaffId;
         }
+
+        public async Task<bool> RegisterContributionAccessLog(ContributionAccessLogCreationRequest request)
+        {
+            var existingContribution = await contributionRepository.GetContributionByIdAndStatus(request.ContributionId, ContributionStatus.APPROVED);
+
+            if (existingContribution == null)
+                throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
+
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            var IpAddress = httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+
+            var query = contributionAccessLogRepository
+                            .GetContributionAccessLogsQueryable()
+                            .Where(x => x.ContributionId == request.ContributionId);
+
+            ContributionAccessLog? existingLog = null;
+
+            if (accountIdClaim != null)
+            {
+                int userId = int.Parse(accountIdClaim);
+                existingLog = await query.FirstOrDefaultAsync(x => x.UserId == userId);
+            }
+            else
+            {
+                existingLog = await query.FirstOrDefaultAsync(x =>
+                    x.ClientUuid == request.ClientUuid &&
+                    x.IpAddress == IpAddress &&
+                    x.UserId == null);
+            }
+
+            // --- CASE 1: existed but has points = 0 → recalc ---
+            if (existingLog != null)
+            {
+                if (existingLog.CalculatedPoints == 0 && existingLog.FlaggedAsSpam == false)
+                {
+                    // Update runtime metrics
+                    existingLog.TimeSpentMs = request.TimeSpentMs;
+                    existingLog.ScrollDepth = request.ScrollDepth;
+                    existingLog.ScrollVelocity = request.ScrollVelocity;
+                    existingLog.Interactions = request.Interactions;
+
+                    // Recalculate points
+                    int newPoints = CalculatePoints(existingLog);
+
+                    if (newPoints == 0)
+                        existingLog.FlaggedAsSpam = true;
+                    else if(newPoints > 0)
+                    {                      
+                        await userPointService.UpdateUserPoint(new UserPointUpdateRequest
+                        {
+                            UserId = existingContribution.Contributor.UserId,
+                            ChangeAmount = newPoints,
+                            Reason = PointHistoriesReason.CONTRIBUTION_VIEW
+                        });
+                    }
+
+                        await contributionAccessLogRepository.UpdateAsync(existingLog);
+                }
+
+                return false;
+            }
+
+            // --- CASE 2: create new log ---
+            var log = new ContributionAccessLog
+            {
+                UserId = accountIdClaim != null ? int.Parse(accountIdClaim) : null,
+                ContributionId = request.ContributionId,
+                ClientUuid = request.ClientUuid,
+                IpAddress = IpAddress,
+                TimeSpentMs = request.TimeSpentMs,
+                ScrollDepth = request.ScrollDepth,
+                ScrollVelocity = request.ScrollVelocity,
+                Interactions = request.Interactions,
+                Processed = false,
+                CalculatedPoints = null,
+                FlaggedAsSpam = false,
+            };
+
+            int point = CalculatePoints(log);
+
+            await contributionAccessLogRepository.AddAsync(log);
+
+            if(point > 0)
+            {
+                var userPoint = new UserPointUpdateRequest
+                {
+                    UserId = existingContribution.Contributor.UserId,
+                    ChangeAmount = point,
+                    Reason = PointHistoriesReason.CONTRIBUTION_VIEW
+                };
+                await userPointService.UpdateUserPoint(userPoint);
+            }    
+            return true;
+        }
+
+
+        private int CalculatePoints(ContributionAccessLog log)
+        {
+            long time = log.TimeSpentMs ?? 0;
+            double depth = log.ScrollDepth ?? 0;
+            double velocity = log.ScrollVelocity ?? 0;
+            int interactions = log.Interactions ?? 0;
+            bool loggedIn = log.UserId != null;
+
+            // Nếu thời gian < 10 giây → xem như spam
+            if (time < 10_000)
+            {
+                log.CalculatedPoints = 0;
+                log.Processed = true;
+                return 0;
+            }
+
+            /* =============================
+               A. BASE TIME SCORE
+            ============================== */
+            int baseScore =
+                time < 30_000 ? 0 :
+                time < 120_000 ? 1 :
+                time < 300_000 ? 3 :
+                time < 600_000 ? 5 : 6;
+
+            /* =============================
+               B. DEPTH FACTOR (0 → 1.5)
+            ============================== */
+            double depthFactor =
+                depth > 0.7 ? 1.5 :
+                depth > 0.5 ? 1.3 :
+                depth > 0.3 ? 1.1 :
+                1.0;
+
+            /* =============================
+               C. PENALTIES
+            ============================== */
+
+            // Nếu depth thấp nhưng thời gian quá cao → treo máy
+            if (depth < 0.3 && time > 60_000)
+                depthFactor = 0.5; // phạt nặng
+
+            // Nếu depth quá cao nhưng time quá thấp → lướt nhanh
+            if (depth > 0.9 && time < 20_000)
+                depthFactor = 0.3;
+
+            /* =============================
+               D. Interaction bonus
+            ============================== */
+            //int interactionBonus =
+            //    interactions > 3 ? 2 :
+            //    interactions > 0 ? 1 :
+            //    0;
+
+            /* =============================
+               E. Logged-in bonus
+            ============================== */
+            int loginBonus = loggedIn ? 1 : 0;
+
+            /* =============================
+               FINAL SCORE
+            ============================== */
+            int finalPoints = (int)Math.Round(baseScore * depthFactor)
+                              //+ interactionBonus
+                              + loginBonus;
+
+            log.CalculatedPoints = finalPoints;
+            log.Processed = true;
+
+            return finalPoints;
+        }
+
+
+
+
+
     }
+
 }

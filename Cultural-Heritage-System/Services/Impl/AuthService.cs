@@ -7,8 +7,10 @@ using Cultural_Heritage_System.Repositories;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
@@ -20,10 +22,13 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly PasswordHasher<User> passwordHasher;
         private readonly IUserRepository userRepository;
         private readonly IRoleRepository roleRepository;
+        private readonly IStaffRepository staffRepository;
+        private readonly IContributorRepository contributorRepository;
         private readonly GoogleAuthClient googleAuthClient;
         private readonly GoogleUserInfoClient googleUserInfoClient;
         private readonly IProfileRepository profileRepository;
         private readonly IRefreshTokenRepository refreshTokenRepository;
+        private readonly IConfirmTokenRepository confirmTokenRepository;
         //private readonly FacebookAuthClient facebookAuthClient;
         //private readonly FacebookUserInfoClient facebookUserInfoClient;
 
@@ -36,7 +41,10 @@ namespace Cultural_Heritage_System.Services.Impl
             GoogleUserInfoClient googleUserInfoClient,
             IProfileRepository profileRepository,
             IRefreshTokenRepository refreshTokenRepository,
-            IHttpContextAccessor httpContextAccessor
+            IHttpContextAccessor httpContextAccessor,
+            IStaffRepository staffRepository,
+             IContributorRepository contributorRepository,
+             IConfirmTokenRepository confirmTokenRepository
             )
         {
             this.logger = logger;
@@ -51,6 +59,9 @@ namespace Cultural_Heritage_System.Services.Impl
             //this.facebookUserInfoClient = facebookUserInfoClient;
             this.refreshTokenRepository = refreshTokenRepository;
             this.httpContextAccessor = httpContextAccessor;
+            this.staffRepository = staffRepository;
+            this.contributorRepository = contributorRepository;
+            this.confirmTokenRepository = confirmTokenRepository;
         }
 
         public async Task<SignInResponse> SignIn(SignInRequest request)
@@ -81,8 +92,44 @@ namespace Cultural_Heritage_System.Services.Impl
 
             if (user.UserStatus == UserStatus.PENDING_VERIFICATION)
             {
+                if(user.Role?.Name == DefinitionRole.MEMBER)
+                {
+                    var confirm = await confirmTokenRepository.FindTokenByUserIdAsync(user.Id);
+                    if (confirm == null)
+                    {
+                        throw new AppException(ErrorCode.UNAUTHORIZED);
+                    }
+                    if (confirm.Expires < DateTime.UtcNow)
+                    {
+                        throw new AppException(ErrorCode.ACCOUNT_LOCKED);
+                    }
+                    throw new AppException(ErrorCode.NO_CONFIRM_EMAIL);
 
-                return new SignInResponse(TwoFaStep.SETUP_REQUIRED);
+                   
+                }
+                user.UserStatus = UserStatus.ACTIVE;
+                await userRepository.UpdateAsync(user);
+                // Nếu là staff
+                if (user.Role?.Name?.ToLower() == "staff")
+                {
+                    var staff = await staffRepository.GetStaffByUserId(user.Id);
+                    if (staff != null)
+                    {
+                        staff.StaffStatus = StaffStatus.ACTIVE;
+                        await staffRepository.UpdateAsync(staff);
+                    }
+                }
+
+                // Nếu là contributor
+                if (user.Role?.Name?.ToLower() == "contributor")
+                {
+                    var contributor = await contributorRepository.GetContributorByUserId(user.Id);
+                    if (contributor != null)
+                    {
+                        contributor.Status = ContributorStatus.ACTIVE;
+                        await contributorRepository.UpdateAsync(contributor);
+                    }
+                }
             }
             
             if (user.Enable2FA)
@@ -289,6 +336,55 @@ namespace Cultural_Heritage_System.Services.Impl
         public Task SignOut()
         {
             throw new NotImplementedException();
+        }
+
+
+        public async Task<bool> ConfirmEmail(int userId, string token)
+        {
+           
+            var user = await userRepository.FindUserById(userId);
+            if (user == null)
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
+
+            if (user.UserStatus == UserStatus.ACTIVE)
+                return true;
+            
+            var confirm = await confirmTokenRepository.FindByTokenAsync(userId, token);
+            
+            if (confirm == null)
+                throw new AppException(ErrorCode.INVALID_TOKEN);
+
+            
+            confirm.Revoked = DateTime.UtcNow;
+            confirm.UpdatedAt = DateTime.UtcNow;
+            await confirmTokenRepository.UpdateAsync(confirm);
+
+            user.UserStatus = UserStatus.ACTIVE;
+            await userRepository.UpdateAsync(user);
+
+            // Nếu là staff
+            if (user.Role?.Name?.ToLower() == "staff")
+            {
+                var staff = await staffRepository.GetStaffByUserId(user.Id);
+                if (staff != null)
+                {
+                    staff.StaffStatus = StaffStatus.ACTIVE;
+                    await staffRepository.UpdateAsync(staff);
+                }
+            }
+
+            // Nếu là contributor
+            if (user.Role?.Name?.ToLower() == "contributor")
+            {
+                var contributor = await contributorRepository.GetContributorByUserId(user.Id);
+                if (contributor != null)
+                {
+                    contributor.Status = ContributorStatus.ACTIVE;
+                    await contributorRepository.UpdateAsync(contributor);
+                }
+            }
+
+            return true;
         }
 
 

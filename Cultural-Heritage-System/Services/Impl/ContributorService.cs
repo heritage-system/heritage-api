@@ -216,6 +216,10 @@ public class ContributorService : IContributorService
         contributor.Bio = request.Bio;
         contributor.Expertise = request.Expertise;
         contributor.DocumentsUrl = request.DocumentsUrl;
+        
+        contributor.IsPremiumEligible = request.IsPremiumEligible;
+       
+        
 
         // parse string sang enum (nếu null thì giữ nguyên status cũ)
         if (!string.IsNullOrWhiteSpace(request.Status))

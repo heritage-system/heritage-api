@@ -5,6 +5,7 @@ using Cultural_Heritage_System.Dtos.Request.User;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.User;
+using Cultural_Heritage_System.Dtos.Response.UserPoint;
 using Cultural_Heritage_System.Services;
 using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.Authorization;
@@ -19,11 +20,14 @@ namespace Cultural_Heritage_System.Controllers
     {
 
         private readonly IUserService userService;
-      
-        public UsersController(IUserService userService)
+        private readonly IMailService mailService;
+        private readonly IUserPointService userPointService;
+
+        public UsersController(IUserService userService, IMailService mailService, IUserPointService userPointService)
         {
             this.userService = userService;
-           
+            this.mailService = mailService;
+            this.userPointService = userPointService;
         }
 
         [HttpPost]
@@ -123,5 +127,45 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
 
+        [HttpGet("remind_mail")]
+        public async Task<ApiResponse<bool>> SendRemindMailTest()
+        {
+            var vnZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+
+            var scheduleVNTime = DateTime.Now.AddMinutes(2);
+
+            // Convert Local → Unspecified để tránh lỗi Kind
+            var vnUnspecified = DateTime.SpecifyKind(scheduleVNTime, DateTimeKind.Unspecified);
+
+            // Convert VN → UTC
+            var scheduleUtc = TimeZoneInfo.ConvertTimeToUtc(vnUnspecified, vnZone);
+
+
+            await mailService.SendRemindEmail(
+                to: "ginokami24@gmail.com",
+                userName: "Thịnh",
+                eventName: "Hội thảo Online",
+                startTime: "19:00",
+                eventDate: "05/12/2025",
+                joinUrl: "https://vtfp.com/join/xyz",
+                scheduleTimeUtc: scheduleUtc
+            );
+            return new ApiResponse<bool>(
+                code: 200,
+                message: "Change user status successfully",
+                result: true
+            );
+        }
+
+        [HttpGet("user_point")]
+        public async Task<ApiResponse<UserPointResponse>> GetUserPoint()
+        {
+            var result = await userPointService.GetUserPointByUserId();
+            return new ApiResponse<UserPointResponse>(
+                code: 200,
+                message: "Get user point successfully",
+                result: result
+            );
+        }
     }
 }

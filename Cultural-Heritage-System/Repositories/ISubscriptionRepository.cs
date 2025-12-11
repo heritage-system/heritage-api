@@ -13,6 +13,9 @@ namespace Cultural_Heritage_System.Repositories
     public interface ISubscriptionRepository : IBaseRepository<Subscription>
     {
         Task<Subscription?> GetActiveSubscription(int userId);
+        IQueryable<Subscription> GetActiveSubscriptionQueryByUserId(int userId);
+
+        Task<Subscription?> GetSubscriptionById(int id);
         Task<List<Subscription>> GetAllSubscriptionsByUserIdAsync(int userId);
     }
 }

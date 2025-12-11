@@ -12,6 +12,6 @@ namespace Cultural_Heritage_System.Dtos.Request.Contributor
         public string? Expertise { get; set; }
         public string? Status { get; set; }
         public string? DocumentsUrl { get; set; }
-        public bool? IsPremiumEligible { get; set; }
+        public bool IsPremiumEligible { get; set; }
     }
 }

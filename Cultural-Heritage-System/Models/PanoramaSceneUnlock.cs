@@ -19,6 +19,9 @@ namespace Cultural_Heritage_System.Models
         public long PanoramaSceneId { get; set; }
         public PanoramaScene PanoramaScene { get; set; }
 
+        [Column("unlocking_method", TypeName = "nvarchar(30)")]
+        public UnlockingMethod UnlockingMethod { get; set; } = UnlockingMethod.BY_SUBSCRIPTION;
+
 
     }
 
