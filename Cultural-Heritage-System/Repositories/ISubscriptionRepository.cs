@@ -17,5 +17,6 @@ namespace Cultural_Heritage_System.Repositories
 
         Task<Subscription?> GetSubscriptionById(int id);
         Task<List<Subscription>> GetAllSubscriptionsByUserIdAsync(int userId);
+        Task<IEnumerable<Subscription>> GetSubscriptionsAsync();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Dtos.Models;
 using Cultural_Heritage_System.Dtos.Request.Subscription;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Subscription;
@@ -245,7 +246,7 @@ namespace Cultural_Heritage_System.Services.Impl
                             {
                               
                                 // CASE 2: Nâng cấp → hủy gói hiện tại và điều chỉnh scheduled
-                                activeSubscription.Status = SubscriptionStatus.CANCELLED;
+                                activeSubscription.Status = SubscriptionStatus.UPGRADED;
                                 activeSubscription.UpdatedAt = DateTime.UtcNow;
                                 await _subscriptionRepository.UpdateAsync(activeSubscription);
 
@@ -413,7 +414,13 @@ namespace Cultural_Heritage_System.Services.Impl
             return mapper.Map<List<SubscriptionResponse>>(subscriptions);
         }
 
+        public async Task<IEnumerable<SubscriptionResponse>> GetAllSubscriptionsAsync()
+        {
+            var entities = await _subscriptionRepository.GetAllAsync();
 
+            // map sang DTO
+            return mapper.Map<IEnumerable<SubscriptionResponse>>(entities);
+        }
     }
 
 }

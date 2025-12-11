@@ -38,6 +38,10 @@ namespace Cultural_Heritage_System.Repositories.Impl
         {
             return _entityDAO.GetSubscriptionsByUserIdAsync(userId);
         }
+        public async Task<IEnumerable<Subscription>> GetSubscriptionsAsync()
+        {
+            return await _entityDAO.GetAllAsync();
+        }
 
     }
 }

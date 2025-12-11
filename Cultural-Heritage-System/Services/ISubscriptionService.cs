@@ -13,6 +13,7 @@ namespace Cultural_Heritage_System.Services
         Task<bool> CancelSubscriptionAsync(int userId, int subscriptionId);
         Task<SubscriptionPayment?> GetPaymentByOrderCodeAsync(long orderCode);
         Task<List<SubscriptionResponse>> GetSubscriptionsByUserIdAsync();
+        Task<IEnumerable<SubscriptionResponse>> GetAllSubscriptionsAsync();
     }
 
 }

@@ -1,7 +1,10 @@
-﻿using Cultural_Heritage_System.Dtos.Request.Subscription;
+﻿using Cultural_Heritage_System.Dtos.Models;
+using Cultural_Heritage_System.Dtos.Request.Subscription;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Subscription;
+using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Services;
+using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -283,6 +286,19 @@ namespace Cultural_Heritage_System.Controllers
                     message: ex.Message
                 ));
             }
+        }
+
+        [HttpGet]
+        //[AllowAnonymous]
+        public async Task<ApiResponse<IEnumerable<SubscriptionResponse>>> GetAll()
+        {
+            var data = await _subscriptionService.GetAllSubscriptionsAsync();
+
+            return new ApiResponse<IEnumerable<SubscriptionResponse>>(
+                code : 200,
+                message: "Get all subscriptions successfully",
+                result: data
+            );
         }
 
     }
