@@ -142,7 +142,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("is_contributor_premium_eligible")]
-        [Authorize(Roles = "CONTRIBUTOR")]
+        [Authorize]
         public async Task<ApiResponse<bool>> IsContributorPremiumEligible()
         {
             return new ApiResponse<bool>(

@@ -42,9 +42,10 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly ILogger<PanoramaTourService> logger;     
         private readonly IStaffRepository staffRepository;
         private readonly ISubscriptionUsageRepository subscriptionUsageRepository;
+        private readonly IUserPointService userPointService;
         public PanoramaTourService(IContributorRepository contributorRepository, IPanoramaTourRepository panoramaTourRepository, ILogger<PanoramaTourService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor, ISubscriptionRepository subscriptionRepository,
-            IStaffRepository staffRepository, IPanoramaSceneRepository panoramaSceneRepository, IPanoramaSceneUnlockRepository panoramaSceneUnlockRepository, ISubscriptionUsageRepository subscriptionUsageRepository)
+            IStaffRepository staffRepository, IPanoramaSceneRepository panoramaSceneRepository, IPanoramaSceneUnlockRepository panoramaSceneUnlockRepository, ISubscriptionUsageRepository subscriptionUsageRepository, IUserPointService userPointService)
         {
             this.contributorRepository = contributorRepository;
             this.logger = logger;
@@ -57,6 +58,7 @@ namespace Cultural_Heritage_System.Services.Impl
             this.panoramaSceneRepository = panoramaSceneRepository;
             this.panoramaSceneUnlockRepository = panoramaSceneUnlockRepository;
             this.subscriptionUsageRepository = subscriptionUsageRepository;
+            this.userPointService = userPointService;
         }
 
         public async Task<bool> CreatePanoramaTour(PanoramaTourCreationRequest request)
@@ -140,7 +142,8 @@ namespace Cultural_Heritage_System.Services.Impl
         }
 
         private async Task HidePremiumScenesIfNeeded(PanoramaTourDetailResponse response, string? accountIdClaim)
-        {           
+        {
+            // ===================== CASE 1: CHƯA LOGIN → PREVIEW =====================
             if (string.IsNullOrEmpty(accountIdClaim))
             {
                 foreach (var scene in response.Scenes)
@@ -153,56 +156,113 @@ namespace Cultural_Heritage_System.Services.Impl
 
             int userId = int.Parse(accountIdClaim);
 
+            // Lấy danh sách cảnh đã unlock
+            var unlockedScenesQuery = panoramaSceneUnlockRepository
+                .GetPanoramaSceneUnlocksQueryByUserId(userId);
 
-            // Lấy subscription active của người dùng
-            var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+            var unlockedSceneIds = unlockedScenesQuery
+                .Select(x => x.PanoramaSceneId)
+                .ToHashSet();
 
-            if (activeSub == null)
+            // Tìm xem user đã unlock ÍT NHẤT 1 cảnh chưa
+            bool hasAnyUnlock = unlockedSceneIds.Count > 0;
+
+            // ===================== CASE 2: CHƯA UNLOCK → PREVIEW + SUB INFO =====================
+            if (!hasAnyUnlock)
             {
+                // Hidden preview
                 foreach (var scene in response.Scenes)
                 {
                     if (scene.PremiumType != PremiumType.FREE)
                         scene.PanoramaUrl = null;
                 }
-                return;
-            }
-            
-            var panoramaUnlock = activeSub.UsageRecords.FirstOrDefault(c => c.BenefitName == BenefitName.TOUR);
 
-            if (panoramaUnlock == null)
-            {
-                foreach (var scene in response.Scenes)
+                response.UserPoint = (await userPointService.GetUserPointByUserId()).TotalPoints;
+                // Lấy Subscription info giống Contribution
+                var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+                if (activeSub != null)
                 {
-                    if (scene.PremiumType != PremiumType.FREE)
-                        scene.PanoramaUrl = null;
+                    var usage = activeSub.UsageRecords
+                        .FirstOrDefault(c => c.BenefitName == BenefitName.TOUR);
+
+                    if (usage != null)
+                    {
+                        response.Subscription = mapper.Map<SubscriptionDto>(activeSub);
+
+                        if (usage.Total != null)
+                            response.Subscription.Total = (int)usage.Total;
+                        else
+                            response.Subscription.IsUnlimited = true;
+
+                        response.Subscription.Used = usage.Used;
+                    }
                 }
+
                 return;
             }
 
-            // Đã có Subscription => map
-            response.Subscription = mapper.Map<SubscriptionDto>(activeSub);
-            response.Subscription.Total = panoramaUnlock.Total ?? int.MaxValue;
-            response.Subscription.Used = panoramaUnlock.Used;
+            // ===================== CASE 3: ĐÃ UNLOCK → CHECK TỪNG CẢNH =====================
+            // Đầu tiên lấy active subscription để xử lý unlock-by-sub
+            var activeSubscription = await subscriptionRepository.GetActiveSubscription(userId);
 
+            if (activeSubscription != null)
+            {
+                var usage = activeSubscription.UsageRecords
+                    .FirstOrDefault(c => c.BenefitName == BenefitName.TOUR);
 
-            var unlockedScenes = panoramaSceneUnlockRepository.GetPanoramaSceneUnlocksQueryByUserId(userId);
+                if (usage != null)
+                {
+                    response.Subscription = mapper.Map<SubscriptionDto>(activeSubscription);
 
-            var unlockedSceneIds = unlockedScenes.Select(x => x.PanoramaSceneId).ToHashSet();
+                    if (usage.Total != null)
+                        response.Subscription.Total = (int)usage.Total;
+                    else
+                        response.Subscription.IsUnlimited = true;
 
+                    response.Subscription.Used = usage.Used;
+                }
+            }
+
+            response.UserPoint = (await userPointService.GetUserPointByUserId()).TotalPoints;
             foreach (var scene in response.Scenes)
             {
-                // FREE thì luôn cho xem
+                // FREE luôn mở
                 if (scene.PremiumType == PremiumType.FREE)
                     continue;
 
-                // Nếu đã unlock → giữ nguyên URL
-                if (unlockedSceneIds.Contains(scene.Id))
-                    continue;
+                // ĐÃ UNLOCK BẰNG POINT → MỞ MÃI
+                var unlockRecord = unlockedScenesQuery
+                    .FirstOrDefault(x => x.PanoramaSceneId == scene.Id);
 
-                // Chưa unlock → ẨN URL
-                scene.PanoramaUrl = null;
+                if (unlockRecord?.UnlockingMethod == UnlockingMethod.BY_POINT)
+                {
+                    // Không map subscription info
+                    continue;
+                }
+
+                // ĐÃ UNLOCK BẰNG SUB → PHỤ THUỘC SUB ACTIVE
+                if (unlockRecord?.UnlockingMethod == UnlockingMethod.BY_SUBSCRIPTION)
+                {
+                    if (activeSubscription == null)
+                    {
+                        // Sub hết hạn → Preview lại
+                        scene.PanoramaUrl = null;
+                        scene.UnSubscriptionLock = true;
+                    }
+
+                    continue;
+                }
+
+                // Chưa unlock gì cả → preview
+                if (!unlockedSceneIds.Contains(scene.Id))
+                {
+                    scene.PanoramaUrl = null;
+                }
             }
+
+            // Khi đã unlock rồi (dù bằng sub hay point) → KHÔNG trả subscription info nữa
         }
+
 
         public async Task<PanoramaSceneResponse> GetPanoramaSceneDetail(long id)
         {
@@ -485,7 +545,8 @@ namespace Cultural_Heritage_System.Services.Impl
             var unlock = new PanoramaSceneUnlock
             {
                 UserId = userId,
-                PanoramaSceneId = sceneId
+                PanoramaSceneId = sceneId,
+                UnlockingMethod = UnlockingMethod.BY_SUBSCRIPTION
             };
             await panoramaSceneUnlockRepository.AddAsync(unlock);            
 

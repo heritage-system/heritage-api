@@ -72,19 +72,40 @@ namespace Cultural_Heritage_System.Services.Impl
                 {
                     throw new AppException(ErrorCode.UNAUTHORIZED);
                 }
-
+                var startAt = DateTime.UtcNow;
                 //2.Kiểm tra user có subscription đang active không
                 var activeSubscription = await GetActiveSubscriptionAsync();
-                if (activeSubscription != null)
-                    throw new Exception("Bạn đang có gói đăng ký đang hoạt động");
+
+                if(activeSubscription != null)
+                {
+                    var listScheduleSubscription = _subscriptionRepository.GetActiveSubscriptionQueryByUserId((int)userId).ToList();
+
+                    var currentValue = activeSubscription.Package.Price * activeSubscription.Package.DurationDays;
+                    var newValue = package.Price * package.DurationDays;
+
+                    if (newValue <= currentValue)
+                    {
+
+                        // CASE 1: Gia hạn → gói mới vào cuối hàng đợi
+                        // Bao gồm active + scheduled
+                        startAt = activeSubscription.EndAt;
+
+                        if (listScheduleSubscription.Any())
+                        {
+                            startAt = listScheduleSubscription.Last().EndAt;
+                        }
+                    }
+                }
+                //if (activeSubscription != null)
+                //    throw new Exception("Bạn đang có gói đăng ký đang hoạt động");
 
                 // 3. Tạo Subscription mới với status PENDING
                 var subscription = new Subscription
                 {
                     UserId = (int)userId,
                     PackageId = request.PackageId,
-                    StartAt = DateTime.UtcNow,
-                    EndAt = DateTime.UtcNow.AddDays((double)package.DurationDays),
+                    StartAt = startAt,
+                    EndAt = startAt.AddDays((double)package.DurationDays),
                     Status = SubscriptionStatus.PENDING,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -201,12 +222,53 @@ namespace Cultural_Heritage_System.Services.Impl
                     await _paymentRepository.SaveChangesAsync();
 
                     // 5. Cập nhật subscription status to ACTIVE
-                    var subscription = await _subscriptionRepository.GetByIdAsync(payment.SubscriptionId);
+                    var subscription = await _subscriptionRepository.GetSubscriptionById(payment.SubscriptionId);
                     if (subscription != null)
                     {
+                        var userId = subscription.UserId;
+                        var activeSubscription = await GetActiveSubscriptionAsync();
+
+                        if (activeSubscription != null)
+                        {
+                            
+
+                            var currentValue = activeSubscription.Package.Price * activeSubscription.Package.DurationDays;
+                            var newValue = subscription.Package.Price * subscription.Package.DurationDays;
+
+                            if (newValue > currentValue)
+                            {
+                              
+                                // CASE 2: Nâng cấp → hủy gói hiện tại và điều chỉnh scheduled
+                                activeSubscription.Status = SubscriptionStatus.CANCELLED;
+                                activeSubscription.UpdatedAt = DateTime.UtcNow;
+                                await _subscriptionRepository.UpdateAsync(activeSubscription);
+
+                               
+                                var startAt = subscription.StartAt;
+
+                                // Đẩy toàn bộ SCHEDULED lên sau gói mới
+                                var pointer = startAt.AddDays((double)subscription.Package.DurationDays);
+
+                                var listScheduleSubscription = _subscriptionRepository.GetActiveSubscriptionQueryByUserId((int)userId).ToList();
+                                foreach (var sc in listScheduleSubscription)
+                                {
+                                    var days = (sc.EndAt - sc.StartAt).TotalDays;
+
+                                    sc.StartAt = pointer;
+                                    sc.EndAt = pointer.AddDays(days);
+                                    sc.UpdatedAt = DateTime.UtcNow;
+                                    pointer = sc.EndAt;
+
+                                    await _subscriptionRepository.UpdateAsync(sc);
+                                }
+                            }
+                        }
+
                         subscription.Status = SubscriptionStatus.ACTIVE;
                         subscription.UpdatedAt = DateTime.UtcNow;
                         await _subscriptionRepository.UpdateAsync(subscription);
+
+
 
                         // 6. Tạo subscription usage records
                         var package = await _packageRepository.GetByIdAsync(subscription.PackageId);

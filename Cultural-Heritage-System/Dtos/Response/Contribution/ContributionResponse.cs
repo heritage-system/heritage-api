@@ -21,7 +21,8 @@ namespace Cultural_Heritage_System.Models
         public string Status { get; set; }    
         public int View { get; set; }
         public SubscriptionDto? Subscription { get; set; }
-
+        public int? UserPoint { get; set; }
+        public bool UnSubscriptionLock { get; set; } = false;
         public bool IsSave { get; set; } = false;
     }
 

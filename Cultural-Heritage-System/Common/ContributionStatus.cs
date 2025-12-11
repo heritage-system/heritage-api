@@ -2,6 +2,6 @@
 {
     public enum ContributionStatus
     {
-        PENDING,APPROVED,REJECTED
+        PENDING,APPROVED,REJECTED, DISABLE
     }
 }

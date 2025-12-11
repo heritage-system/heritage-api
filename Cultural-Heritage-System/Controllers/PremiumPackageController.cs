@@ -125,11 +125,11 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("byActive")]
-        public async Task<ApiResponse<IEnumerable<PremiumPackageResponse>>> GetAllActivePackage()
+        public async Task<ApiResponse<PremiumPackageListResponse>> GetAllActivePackage()
         {
             var result = await _packageService.GetActivePackagesAsync();
 
-            return new ApiResponse<IEnumerable<PremiumPackageResponse>>(
+            return new ApiResponse<PremiumPackageListResponse>(
                 code: 200,
                 message: "Fetched all premium packages successfully",
                 result: result

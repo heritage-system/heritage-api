@@ -14,7 +14,7 @@ namespace Cultural_Heritage_System.Services
         Task<PremiumPackageResponse> UpdateAsync(int id, PremiumPackageUpdateRequest request);
         Task<bool> DeleteAsync(int id);
         Task<PageResponse<PremiumPackageResponse>> SearchPremiumPackagesAsync(PremiumPackageSearchRequest request);
-        Task<IEnumerable<PremiumPackageResponse>> GetActivePackagesAsync();
+        Task<PremiumPackageListResponse> GetActivePackagesAsync();
     }
 
 }

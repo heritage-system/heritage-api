@@ -1,4 +1,5 @@
-﻿using Cultural_Heritage_System.Dtos.Models;
+﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Dtos.Models;
 using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Request.ContribtutionReport;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
@@ -29,6 +30,7 @@ namespace Cultural_Heritage_System.Services
         Task<ContributionDetailUpdatedResponse> GetContributionDetailForUpdated(int id);
         Task<ContributionResponse> UpdateContribution(ContributionUpdateRequest request);
         Task<bool> RegisterContributionAccessLog(ContributionAccessLogCreationRequest request);
+        Task<bool> UpdateStatusContribution(long contributionId, ContributionStatus status);
     }
 }
 

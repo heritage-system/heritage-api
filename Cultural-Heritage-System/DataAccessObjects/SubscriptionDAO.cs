@@ -33,5 +33,20 @@ namespace Cultural_Heritage_System.DataAccessObjects
                                        && s.EndAt >= now);
         }
 
+        public IQueryable<Subscription> GetActiveSubscriptionQueryByUserId(int userId)
+        {
+            return _dbSet
+                .Include(f => f.Package)
+                .Where(f => f.UserId == userId && f.Status == SubscriptionStatus.ACTIVE)
+                .OrderBy(f => f.StartAt);
+        }
+        public async Task<Subscription?> GetSubscriptionById(int id)
+        {
+            return await _dbSet
+                .Include(c => c.Package)             
+                .FirstOrDefaultAsync(c => c.Id == id);
+        }
+
+
     }
 }

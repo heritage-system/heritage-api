@@ -9,7 +9,7 @@ namespace Cultural_Heritage_System.Dtos.Models
     {      
         public int UserId { get; set; }    
         public int PackageId { get; set; }
-
+        public bool IsUnlimited { get; set; } = false;
         public int Total { get; set; }      
         public int Used { get; set; } = 0;
 
