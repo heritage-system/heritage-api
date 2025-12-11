@@ -1,9 +1,13 @@
-﻿using Cultural_Heritage_System.Common;
+﻿using AutoMapper;
+using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Dtos.Models;
 using Cultural_Heritage_System.Dtos.Request.Subscription;
+using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Subscription;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
+using Cultural_Heritage_System.Repositories.Impl;
 using Net.payOS;
 using Net.payOS.Types;
 
@@ -20,6 +24,8 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly ILogger<SubscriptionService> _logger;
         private readonly IHttpContextAccessor httpContextAccessor;
         private readonly string _baseUrl;
+        private readonly IMapper mapper;
+
         public SubscriptionService(
             ISubscriptionRepository subscriptionRepository,
             ISubscriptionPaymentRepository paymentRepository,
@@ -27,7 +33,7 @@ namespace Cultural_Heritage_System.Services.Impl
             ISubscriptionUsageRepository usageRepository,
             IConfiguration configuration,
             ILogger<SubscriptionService> logger,
-            IHttpContextAccessor httpContextAccessor    )
+            IHttpContextAccessor httpContextAccessor, IMapper mapper)
         {
             _subscriptionRepository = subscriptionRepository;
             _paymentRepository = paymentRepository;
@@ -35,6 +41,7 @@ namespace Cultural_Heritage_System.Services.Impl
             _usageRepository = usageRepository;
             _configuration = configuration;
             _logger = logger;
+            this.mapper = mapper;
 
             // Khởi tạo PayOS
             _payOS = new PayOS(
@@ -239,7 +246,7 @@ namespace Cultural_Heritage_System.Services.Impl
                             {
                               
                                 // CASE 2: Nâng cấp → hủy gói hiện tại và điều chỉnh scheduled
-                                activeSubscription.Status = SubscriptionStatus.CANCELLED;
+                                activeSubscription.Status = SubscriptionStatus.UPGRADED;
                                 activeSubscription.UpdatedAt = DateTime.UtcNow;
                                 await _subscriptionRepository.UpdateAsync(activeSubscription);
 
@@ -343,118 +350,6 @@ namespace Cultural_Heritage_System.Services.Impl
         }
 
 
-        public async Task<bool> HandlePaymentWebhookAsync(PayOSWebhookData webhookData)
-        {
-            try
-            {
-                // 1. Tìm payment theo OrderCode
-                var payment = await _paymentRepository.GetByOrderCodeAsync(webhookData.OrderCode);
-                if (payment == null)
-                {
-                    _logger.LogWarning($"Payment not found for OrderCode: {webhookData.OrderCode}");
-                    return false;
-                }
-
-                // 2. Kiểm tra nếu đã xử lý rồi thì bỏ qua
-                if (payment.PaymentStatus == PaymentStatus.PAID)
-                {
-                    _logger.LogInformation($"Payment already processed: {webhookData.OrderCode}");
-                    return true;
-                }
-
-                // 3. Verify amount từ webhook có khớp với amount trong DB
-                if (webhookData.Amount != payment.Amount)
-                {
-                    _logger.LogWarning($"Amount mismatch for OrderCode {webhookData.OrderCode}. Expected: {payment.Amount}, Received: {webhookData.Amount}");
-                    return false;
-                }
-
-                // 4. Verify webhook signature (nên implement để bảo mật)
-                // var isValid = VerifyWebhookSignature(webhookData);
-                // if (!isValid) return false;
-
-                // 5. Kiểm tra code từ PayOS (00 = thành công)
-                if (webhookData.Code == "00")
-                {
-                    // Update payment
-                    payment.PaymentStatus = PaymentStatus.PAID;
-                    payment.TransactionCode = webhookData.Reference;
-                    payment.PaidAt = DateTime.UtcNow;
-                    payment.WebhookReceivedAt = DateTime.UtcNow;
-                    payment.PaymentMethod = webhookData.CounterAccountBankName;
-
-                    await _paymentRepository.UpdateAsync(payment);
-
-                    // Update subscription status to ACTIVE
-                    var subscription = await _subscriptionRepository.GetByIdAsync(payment.SubscriptionId);
-                    if (subscription != null)
-                    {
-                        subscription.Status = SubscriptionStatus.ACTIVE;
-                        subscription.UpdatedAt = DateTime.UtcNow;
-                        await _subscriptionRepository.UpdateAsync(subscription);
-
-                        // --- TẠO SUBSCRIPTION USAGE CHỈ KHI PAYMENT ĐÃ PAID ---
-                        var package = await _packageRepository.GetByIdAsync(subscription.PackageId);
-
-                        if (package.PackageBenefits != null)
-                        {
-                            foreach (var benefit in package.PackageBenefits)
-                            {
-                                // Kiểm tra đã có chưa để tránh tạo trùng
-                                var exists = await _usageRepository.ExistsAsync(subscription.Id, benefit.Benefit.BenefitName.ToString());
-                                if (!exists)
-                                {
-                                    var usage = new SubscriptionUsage
-                                    {
-                                        SubscriptionId = subscription.Id,
-                                        BenefitName = benefit.Benefit.BenefitName,
-                                        Total = benefit.Benefit.Value,
-                                        Used = 0
-                                    };
-                                    await _usageRepository.AddAsync(usage);
-                                }
-                            }
-                            await _usageRepository.SaveChangesAsync();
-                        }
-                    }
-
-
-                    await _subscriptionRepository.SaveChangesAsync();
-
-                    _logger.LogInformation($"Payment processed successfully: {webhookData.OrderCode}");
-                    return true;
-                }
-                else
-                {
-                    // Thanh toán thất bại
-                    payment.PaymentStatus = PaymentStatus.FAILED;
-                    payment.CancelReason = webhookData.Desc;
-                    payment.WebhookReceivedAt = DateTime.UtcNow;
-                    payment.UpdatedAt = DateTime.UtcNow;
-
-                    await _paymentRepository.UpdateAsync(payment);
-
-                    var subscription = await _subscriptionRepository.GetByIdAsync(payment.SubscriptionId);
-                    if (subscription != null)
-                    {
-                        subscription.Status = SubscriptionStatus.CANCELLED;
-                        subscription.UpdatedAt = DateTime.UtcNow;
-                        await _subscriptionRepository.UpdateAsync(subscription);
-                    }
-
-                    await _subscriptionRepository.SaveChangesAsync();
-
-                    _logger.LogWarning($"Payment failed: {webhookData.OrderCode} - {webhookData.Desc}");
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error handling webhook for OrderCode: {webhookData.OrderCode}");
-                return false;
-            }
-        }
-
         public async Task<Subscription?> GetActiveSubscriptionAsync()
         {
             var userId = GetCurrentUserId();
@@ -509,6 +404,22 @@ namespace Cultural_Heritage_System.Services.Impl
             }
 
             return null;
+        }
+
+        public async Task<List<SubscriptionResponse>> GetSubscriptionsByUserIdAsync()
+        {
+            var userId = GetCurrentUserId();
+            var subscriptions = await _subscriptionRepository.GetAllSubscriptionsByUserIdAsync((int)userId);
+
+            return mapper.Map<List<SubscriptionResponse>>(subscriptions);
+        }
+
+        public async Task<IEnumerable<SubscriptionResponse>> GetAllSubscriptionsAsync()
+        {
+            var entities = await _subscriptionRepository.GetAllAsync();
+
+            // map sang DTO
+            return mapper.Map<IEnumerable<SubscriptionResponse>>(entities);
         }
     }
 

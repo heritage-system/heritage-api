@@ -1,7 +1,10 @@
-﻿using Cultural_Heritage_System.Dtos.Request.Subscription;
+﻿using Cultural_Heritage_System.Dtos.Models;
+using Cultural_Heritage_System.Dtos.Request.Subscription;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Subscription;
+using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Services;
+using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -250,6 +253,52 @@ namespace Cultural_Heritage_System.Controllers
                 var frontendUrl = $"{_configuration["BaseUrl:FEUrl"]}{_configuration["PayOS:ReturnUrl"]}";
                 return Redirect($"{frontendUrl}?error=processing_error");
             }
+        }
+
+        /// <summary>
+        /// Lấy subscription đang active của một user (theo userId)
+        /// </summary>
+        [HttpGet("SubscriptionByUserId")]
+        [Authorize]
+        public async Task<IActionResult> GetSubscriptionByUserId()
+        {
+            try
+            {
+                var subscription = await _subscriptionService.GetSubscriptionsByUserIdAsync();
+
+                if (subscription == null)
+                    return NotFound(new ApiResponse<object>(
+                        code: 404,
+                        message: "No active subscription found for this user"
+                    ));
+
+                return Ok(new ApiResponse<object>(
+                    code: 200,
+                    message: "Subscription retrieved successfully",
+                    result: subscription
+                ));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting subscription by user id");
+                return BadRequest(new ApiResponse<object>(
+                    code: 400,
+                    message: ex.Message
+                ));
+            }
+        }
+
+        [HttpGet]
+        //[AllowAnonymous]
+        public async Task<ApiResponse<IEnumerable<SubscriptionResponse>>> GetAll()
+        {
+            var data = await _subscriptionService.GetAllSubscriptionsAsync();
+
+            return new ApiResponse<IEnumerable<SubscriptionResponse>>(
+                code : 200,
+                message: "Get all subscriptions successfully",
+                result: data
+            );
         }
 
     }

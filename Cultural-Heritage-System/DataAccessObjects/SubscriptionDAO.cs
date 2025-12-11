@@ -37,7 +37,7 @@ namespace Cultural_Heritage_System.DataAccessObjects
         {
             return _dbSet
                 .Include(f => f.Package)
-                .Where(f => f.UserId == userId && f.Status == SubscriptionStatus.ACTIVE)
+                .Where(f => f.UserId == userId && f.Status == SubscriptionStatus.ACTIVE )
                 .OrderBy(f => f.StartAt);
         }
         public async Task<Subscription?> GetSubscriptionById(int id)
@@ -48,5 +48,32 @@ namespace Cultural_Heritage_System.DataAccessObjects
         }
 
 
+        public async Task<List<Subscription>> GetSubscriptionsByUserIdAsync(int userId)
+        {
+            return await _dbSet
+                .Where(s => s.UserId == userId &&
+                            (s.Status == SubscriptionStatus.ACTIVE || s.Status == SubscriptionStatus.UPGRADED))
+                .Include(s => s.Package)
+                    .ThenInclude(p => p.PackageBenefits)
+                    .ThenInclude(pb => pb.Benefit)
+                .Include(s => s.Payments)
+                .Include(s => s.UsageRecords)
+                .OrderByDescending(s => s.Status == SubscriptionStatus.ACTIVE) 
+                .ThenBy(s => s.StartAt) 
+                .ToListAsync();
+        }
+
+        public override async Task<IEnumerable<Subscription>> GetAllAsync()
+        {
+            return await _dbSet
+                .Include(s => s.User)
+                .Include(s => s.Package)
+                    .ThenInclude(p => p.PackageBenefits)
+                        .ThenInclude(pb => pb.Benefit)
+                .Include(s => s.UsageRecords)
+                .Include(s => s.Payments)
+                .OrderByDescending(s => s.CreatedAt)
+                .ToListAsync();
+        }
     }
 }

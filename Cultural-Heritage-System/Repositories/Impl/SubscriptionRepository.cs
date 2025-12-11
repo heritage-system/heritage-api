@@ -34,5 +34,14 @@ namespace Cultural_Heritage_System.Repositories.Impl
         {
             return await _entityDAO.GetSubscriptionById(id);
         }
+        public Task<List<Subscription>> GetAllSubscriptionsByUserIdAsync(int userId)
+        {
+            return _entityDAO.GetSubscriptionsByUserIdAsync(userId);
+        }
+        public async Task<IEnumerable<Subscription>> GetSubscriptionsAsync()
+        {
+            return await _entityDAO.GetAllAsync();
+        }
+
     }
 }
