@@ -13,16 +13,15 @@ namespace Cultural_Heritage_System.DataAccessObjects
             _logger = logger;
         }
 
-        public IQueryable<Event> GetEventsQueryable()
-        {
-            return _dbSet.AsQueryable();
-        }
+
+
 
         public IQueryable<Event> GetEventsWithIncludes()
         {
-            return _dbSet
-                .Include(e => e.StreamingRooms)
-                .Include(e => e.Registrations);
+            return _context.Events
+             .Include(e => e.StreamingRooms)
+             .Include(e => e.Registrations)
+             .AsQueryable();
         }
 
         public Task<Event?> GetEventByIdAsync(long id)

@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Request.Event;
+using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Event;
+using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
@@ -49,41 +51,6 @@ namespace Cultural_Heritage_System.Services.Impl
             return string.IsNullOrWhiteSpace(id) ? (int?)null : int.Parse(id);
         }
 
-        public async Task<EventResponse> CreateEventAsync(EventCreateRequest request)
-        {
-            var userId = GetCurrentUserId();
-
-            var entity = _mapper.Map<Event>(request);
-            entity.CreatedBy = userId.ToString(); ;
-
-            var nowUtc = DateTime.UtcNow;
-            var startUtc = request.StartAt.Kind == DateTimeKind.Utc
-                ? request.StartAt
-                : request.StartAt.ToUniversalTime();
-            var closeUtc = request.CloseAt?.ToUniversalTime();
-
-            if (closeUtc.HasValue && closeUtc.Value <= nowUtc)
-            {
-                entity.Status = EventStatus.CLOSED;
-            }
-            else if (startUtc > nowUtc)
-            {
-                entity.Status = EventStatus.UPCOMING;
-            }
-            else
-            {
-                entity.Status = EventStatus.LIVE;
-            }
-
-            await _eventRepo.AddAsync(entity);
-
-            var created = await _eventRepo.GetEventByIdAsync(entity.Id)
-                          ?? throw new AppException(ErrorCode.EVENT_NOT_FOUND);
-
-            var resp = _mapper.Map<EventResponse>(created);
-            resp.RegisteredByMe = false;
-            return resp;
-        }
 
         private async Task ScheduleRemindEmailsForRoomAsync(Event ev, StreamingRoom room)
         {
@@ -131,46 +98,7 @@ namespace Cultural_Heritage_System.Services.Impl
             }
         }
 
-        public async Task<EventResponse> UpdateEventAsync(EventUpdateRequest request)
-        {
-            var e = await _eventRepo.GetEventByIdAsync(request.Id)
-                    ?? throw new AppException(ErrorCode.EVENT_NOT_FOUND);
 
-            // TODO: check role admin ở đây nếu cần
-
-            if (!string.IsNullOrWhiteSpace(request.Title))
-                e.Title = request.Title.Trim();
-
-            if (request.Description != null)
-                e.Description = request.Description;
-
-            if (request.ThumbnailUrl != null)
-                e.ThumbnailUrl = request.ThumbnailUrl;
-
-            if (request.StartAt.HasValue)
-                e.StartAt = request.StartAt.Value;
-
-            if (request.CloseAt.HasValue)
-                e.CloseAt = request.CloseAt.Value;
-
-            if (request.Status.HasValue)
-                e.Status = request.Status.Value;
-
-            if (request.Category.HasValue)
-                e.Category = request.Category.Value;
-
-            if (request.Tags.HasValue)
-                e.Tags = request.Tags.Value;
-
-            await _eventRepo.UpdateAsync(e);
-
-            var currentUserId = TryGetUserId();
-            var resp = _mapper.Map<EventResponse>(e);
-            resp.RegisteredByMe = currentUserId.HasValue &&
-                e.Registrations.Any(r => r.UserId == currentUserId && !r.IsCancelled);
-
-            return resp;
-        }
 
         public async Task DeleteEventAsync(long id)
         {
@@ -504,6 +432,90 @@ namespace Cultural_Heritage_System.Services.Impl
             return resp;
 
         }
+        public async Task<PageResponse<EventResponse>> SearchEventsAsync(
+        EventSearchRequest request)
+        {
+            // dùng includes để có Registrations + StreamingRooms cho AutoMapper
+            var query = _eventRepo.GetEventsWithIncludes();
+
+            // ----- 1. Filter keyword -----
+            if (!string.IsNullOrWhiteSpace(request.Keyword))
+            {
+                var keyword = request.Keyword.Trim().ToLower();
+                var unsignedKeyword = StringHelper.RemoveDiacritics(keyword);
+
+                query = query.Where(e =>
+                    e.Title.ToLower().Contains(keyword)
+                // nếu có TitleUnsigned thì mở dòng này
+                // || e.TitleUnsigned.Contains(unsignedKeyword)
+                );
+            }
+
+            // ----- 2. Filter Category -----
+            if (request.Category.HasValue)
+            {
+                query = query.Where(e => e.Category == request.Category.Value);
+            }
+
+            // ----- 3. Filter Tag ([Flags]) -----
+            if (request.Tag.HasValue)
+            {
+                var tag = request.Tag.Value;
+                query = query.Where(e => (e.Tags & tag) != 0);
+            }
+
+            // ----- 4. Filter Status (UPCOMING / LIVE / CLOSED / ...) -----
+            if (request.Status.HasValue)
+            {
+                query = query.Where(e => e.Status == request.Status.Value);
+            }
+
+            // ----- 5. Filter theo khoảng StartAt -----
+            if (request.FromDate.HasValue)
+            {
+                var fromUtc = request.FromDate.Value;
+                if (fromUtc.Kind != DateTimeKind.Utc)
+                    fromUtc = fromUtc.ToUniversalTime();
+
+                query = query.Where(e => e.StartAt >= fromUtc);
+            }
+
+            if (request.ToDate.HasValue)
+            {
+                var toUtc = request.ToDate.Value;
+                if (toUtc.Kind != DateTimeKind.Utc)
+                    toUtc = toUtc.ToUniversalTime();
+
+                query = query.Where(e => e.StartAt <= toUtc);
+            }
+
+            // ----- 6. Paging trên entity Event -----
+            var pagedEntities = await query
+                .OrderBy(e => e.StartAt)
+                .ToPagedResponseAsync(request.Page, request.PageSize); // PageResponse<Event>
+
+            var currentUserId = TryGetUserId();
+
+            // ----- 7. Map từng Event -> EventResponse bằng AutoMapper -----
+            var dtoItems = pagedEntities.Items.Select(e =>
+            {
+                var dto = _mapper.Map<EventResponse>(e);
+                dto.RegisteredByMe = currentUserId.HasValue &&
+                                     e.Registrations.Any(r => r.UserId == currentUserId && !r.IsCancelled);
+                return dto;
+            }).ToList();
+
+            // ----- 8. Trả về PageResponse<EventResponse> đúng schema -----
+            return new PageResponse<EventResponse>
+            {
+                Items = dtoItems,
+                CurrentPages = pagedEntities.CurrentPages,
+                PageSizes = pagedEntities.PageSizes,
+                TotalPages = pagedEntities.TotalPages,
+                TotalElements = pagedEntities.TotalElements
+            };
+        }
+
 
 
     }
