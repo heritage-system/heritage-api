@@ -13,5 +13,6 @@ namespace Cultural_Heritage_System.Dtos.Response.Quiz
         public int TotalQuestions { get; set; }
         public int NumberOfClear { get; set; } = 0;
         public bool isPremium { get; set; } = false;
+        public bool IsUnlock { get; set; } = false;
     }
 }

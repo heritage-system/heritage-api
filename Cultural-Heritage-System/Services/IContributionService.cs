@@ -30,7 +30,7 @@ namespace Cultural_Heritage_System.Services
         Task<ContributionDetailUpdatedResponse> GetContributionDetailForUpdated(int id);
         Task<ContributionResponse> UpdateContribution(ContributionUpdateRequest request);
         Task<bool> RegisterContributionAccessLog(ContributionAccessLogCreationRequest request);
-        Task<bool> UpdateStatusContribution(long contributionId, ContributionStatus status);
+        Task<bool> UpdateStatusContribution(long contributionId, ContributionStatus status, bool isAdmin);
     }
 }
 

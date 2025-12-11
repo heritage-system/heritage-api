@@ -134,6 +134,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<UserPointDAO>();
             builder.Services.AddScoped<PointHistoryDAO>();
             builder.Services.AddScoped<GameMatchHistoryDAO>();
+            builder.Services.AddScoped<ContributionReportReplyDAO>();
+            builder.Services.AddScoped<QuizUnlockDAO>();
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<ITagRepository, TagRepository>();
@@ -185,6 +187,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IUserPointRepository, UserPointRepository>();
             builder.Services.AddScoped<IPointHistoryRepository, PointHistoryRepository>();
             builder.Services.AddScoped<IGameMatchHistoryRepository, GameMatchHistoryRepository>();
+            builder.Services.AddScoped<IContributionReportReplyRepository, ContributionReportReplyRepository>();
+            builder.Services.AddScoped<IQuizUnlockRepository, QuizUnlockRepository>();
 
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<ITagService, TagService>();
@@ -212,6 +216,8 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IStreamingRoomService, StreamingRoomService>();
             builder.Services.AddScoped<IUserPointService, UserPointService>();
             builder.Services.AddScoped<IGameMatchHistoryService, GameMatchHistoryService>();
+            builder.Services.AddScoped<IContributionReportService, ContributionReportService>();
+            builder.Services.AddScoped<IContributionReportReplyService, ContributionReportReplyService>();
 
             builder.Services.Configure<AgoraOptions>(
             builder.Configuration.GetSection("Agora"));

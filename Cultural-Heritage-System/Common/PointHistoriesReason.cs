@@ -6,6 +6,7 @@
         CONTRIBUTION_VIEW,      
         UNLOCK_CONTRIBUTION,
         UNLOCK_SCENE,
+        UNLOCK_QUIZ,
         DAILY_BONUS,          
     }
 }

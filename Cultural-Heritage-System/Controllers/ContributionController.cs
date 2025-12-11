@@ -204,7 +204,7 @@ namespace Cultural_Heritage_System.Controllers
         [HttpPut("{id}/disable_contribution")]
         public async Task<ApiResponse<bool>> DisableContributionStatus(long id)
         {
-            var result = await contributionService.UpdateStatusContribution(id, ContributionStatus.DISABLE);
+            var result = await contributionService.UpdateStatusContribution(id, ContributionStatus.DISABLE, false);
             return new ApiResponse<bool>(
                 code: 200,
                 message: "Disable contribution status successfully",
@@ -215,7 +215,29 @@ namespace Cultural_Heritage_System.Controllers
         [HttpPut("{id}/reactive_contribution")]
         public async Task<ApiResponse<bool>> ReActiveContributionStatus(long id)
         {
-            var result = await contributionService.UpdateStatusContribution(id, ContributionStatus.APPROVED);
+            var result = await contributionService.UpdateStatusContribution(id, ContributionStatus.APPROVED, false);
+            return new ApiResponse<bool>(
+                code: 200,
+                message: "Disable contribution status successfully",
+                result: result
+            );
+        }
+
+        [HttpPut("{id}/disable_contribution_admin")]
+        public async Task<ApiResponse<bool>> DisableContributionStatusAdmin(long id)
+        {
+            var result = await contributionService.UpdateStatusContribution(id, ContributionStatus.DISABLE, true);
+            return new ApiResponse<bool>(
+                code: 200,
+                message: "Disable contribution status successfully",
+                result: result
+            );
+        }
+
+        [HttpPut("{id}/reactive_contribution_admin")]
+        public async Task<ApiResponse<bool>> ReActiveContributionStatusAdmin(long id)
+        {
+            var result = await contributionService.UpdateStatusContribution(id, ContributionStatus.APPROVED, true);
             return new ApiResponse<bool>(
                 code: 200,
                 message: "Disable contribution status successfully",

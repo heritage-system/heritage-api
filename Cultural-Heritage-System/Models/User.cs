@@ -37,6 +37,7 @@ namespace Cultural_Heritage_System.Models
 
         public ICollection<PaymentTransaction> PaymentTransactions { get; set; } = new List<PaymentTransaction>();
         public ICollection<QuizResult> QuizResults { get; set; } = new List<QuizResult>();
+        public ICollection<QuizUnlock> QuizUnlocks { get; set; } = new List<QuizUnlock>();
         public ICollection<SystemLog> SystemLogs { get; set; } = new List<SystemLog>();
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 

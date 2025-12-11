@@ -21,6 +21,7 @@ namespace Cultural_Heritage_System.Models
         public ICollection<QuizQuestion> Questions { get; set; } = new List<QuizQuestion>();
         public ICollection<QuizResult> Results { get; set; } = new List<QuizResult>();
 
+        public ICollection<QuizUnlock> QuizUnlocks { get; set; } = new List<QuizUnlock>();
         public void GenerateUnsignedFields()
         {
             TitleUnsigned = StringHelper.RemoveDiacritics(Title).ToLower();         

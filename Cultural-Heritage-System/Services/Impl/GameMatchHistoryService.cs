@@ -90,28 +90,28 @@ namespace Cultural_Heritage_System.Services.Impl
 
             if (playedTogether) return true;
 
-            // 2. Trùng IP trực tiếp → spam
-            if (!string.IsNullOrEmpty(userIP) && !string.IsNullOrEmpty(opponentIP))
-            {
-                if (userIP == opponentIP)
-                    return true;
-            }
+            //// 2. Trùng IP trực tiếp → spam
+            //if (!string.IsNullOrEmpty(userIP) && !string.IsNullOrEmpty(opponentIP))
+            //{
+            //    if (userIP == opponentIP)
+            //        return true;
+            //}
 
-            // 3. userId từng đánh với AI có IP trùng opponentIP → spam (giả danh)
-            bool userPlayedWithSameIP = recentMatches.Any(m =>
-                (m.Player1Id == userId && m.Player2IP == opponentIP) ||
-                (m.Player2Id == userId && m.Player1IP == opponentIP)
-            );
+            //// 3. userId từng đánh với AI có IP trùng opponentIP → spam (giả danh)
+            //bool userPlayedWithSameIP = recentMatches.Any(m =>
+            //    (m.Player1Id == userId && m.Player2IP == opponentIP) ||
+            //    (m.Player2Id == userId && m.Player1IP == opponentIP)
+            //);
 
-            if (userPlayedWithSameIP) return true;
+            //if (userPlayedWithSameIP) return true;
 
-            // 4. opponent từng đánh với tài khoản IP giống userIP
-            bool opponentPlayedWithSameIP = recentMatches.Any(m =>
-                (m.Player1Id == opponentId && m.Player2IP == userIP) ||
-                (m.Player2Id == opponentId && m.Player1IP == userIP)
-            );
+            //// 4. opponent từng đánh với tài khoản IP giống userIP
+            //bool opponentPlayedWithSameIP = recentMatches.Any(m =>
+            //    (m.Player1Id == opponentId && m.Player2IP == userIP) ||
+            //    (m.Player2Id == opponentId && m.Player1IP == userIP)
+            //);
 
-            if (opponentPlayedWithSameIP) return true;
+            //if (opponentPlayedWithSameIP) return true;
 
             return false; // OK, không phải spam
         }

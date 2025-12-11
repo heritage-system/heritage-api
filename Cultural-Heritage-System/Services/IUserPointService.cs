@@ -15,5 +15,6 @@ namespace Cultural_Heritage_System.Services
         Task<UserPointResponse> GetUserPointByUserId();
         Task<ContributionResponse> TradePointToUnlockContribution(PointToUnlockTokenRequest request);
         Task<PanoramaSceneResponse> TradePointToUnlockScene(PointToUnlockTokenRequest request);
+        Task<bool> TradePointToUnlockQuiz(PointToUnlockTokenRequest request);
     }
 }
