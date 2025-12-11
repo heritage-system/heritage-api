@@ -6,7 +6,7 @@ namespace Cultural_Heritage_System.Services
 {
     public interface IStreamingRoomService
     {
-        Task<StreamingRoomResponse> CreateRoomAsync(StreamingRoomCreateRequest request);
+
 
         // 🔥 Join thẳng, không request/admit/reject
         Task<StreamingJoinGrantResponse> IssueJoinTokensAsync(string roomName);
@@ -26,16 +26,12 @@ namespace Cultural_Heritage_System.Services
         Task LeaveAsync(string roomName);
 
         // 🔥 Optional: người dùng "đăng ký" event
-        Task RegisterAsync(string roomName);
-        Task<IReadOnlyList<StreamingRoomResponse>> GetUpcomingRoomsAsync(DateTime? from = null);
-        Task<IReadOnlyList<StreamingRoomResponse>> GetRoomsAdminAsync(StreamingRoomType? type = null);
+
         Task<StreamingRoomDetailResponse> GetRoomDetailAsync(string roomName);
         Task<StreamingRoomResponse> UpdateRoomAsync(string roomName, StreamingRoomUpdateRequest request);
         Task DeleteRoomAsync(string roomName);
 
-        // Admin join as CoHost
-        Task<StreamingJoinGrantResponse> IssueAdminJoinAsCoHostAsync(string roomName);
-        Task<IReadOnlyList<StreamingRoomResponse>> GetRoomsByEventAsync(long eventId);
+
 
     }
 }

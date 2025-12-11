@@ -21,22 +21,7 @@ namespace Cultural_Heritage_System.Controllers
             _logger = logger;
         }
 
-        [HttpPost]
-        //[Authorize(Roles = "Admin")]
-        [AllowAnonymous]
-        public async Task<ApiResponse<EventResponse>> CreateEvent([FromBody] EventCreateRequest request)
-        {
-            try
-            {
-                var evt = await _eventService.CreateEventAsync(request);
-                return new ApiResponse<EventResponse>(201, "Event created successfully", evt);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in CreateEvent");
-                return new ApiResponse<EventResponse>(500, ex.Message);
-            }
-        }
+        // ========== QUERY LIST / DETAIL ==========
 
         [HttpGet]
         public async Task<ApiResponse<List<EventResponse>>> GetEvents(
@@ -54,15 +39,7 @@ namespace Cultural_Heritage_System.Controllers
             return new ApiResponse<EventResponse>(200, "Event detail", evt);
         }
 
-        [HttpPut("{id:long}")]
-        //[Authorize(Roles = "Admin")]
-        [AllowAnonymous]
-        public async Task<ApiResponse<EventResponse>> UpdateEvent(long id, [FromBody] EventUpdateRequest request)
-        {
-            request.Id = id;
-            var evt = await _eventService.UpdateEventAsync(request);
-            return new ApiResponse<EventResponse>(200, "Event updated", evt);
-        }
+        // ========== DELETE ==========
 
         [HttpDelete("{id:long}")]
         //[Authorize(Roles = "Admin")]
@@ -73,6 +50,8 @@ namespace Cultural_Heritage_System.Controllers
             return new ApiResponse<object>(200, "Event deleted");
         }
 
+        // ========== REGISTRATION ==========
+
         [HttpPost("{id:long}/register")]
         [Authorize]
         public async Task<ApiResponse<EventRegistrationResponse>> Register(long id)
@@ -80,9 +59,18 @@ namespace Cultural_Heritage_System.Controllers
             var res = await _eventService.RegisterAsync(id);
             return new ApiResponse<EventRegistrationResponse>(200, "Registered to event", res);
         }
+
+        [HttpPost("{id:long}/unregister")]
+        [Authorize]
+        public async Task<ApiResponse<EventRegistrationResponse>> Unregister(long id)
+        {
+            var res = await _eventService.UnregisterAsync(id);
+            return new ApiResponse<EventRegistrationResponse>(200, "Unregistered from event", res);
+        }
+
         [HttpGet("{id:long}/registrations")]
         //[Authorize(Roles = "Admin")]
-        [AllowAnonymous] // hoặc bật Authorize Admin nếu bạn muốn
+        [AllowAnonymous]
         public async Task<ApiResponse<List<EventRegistrationUserResponse>>> GetEventRegistrations(long id)
         {
             try
@@ -94,24 +82,19 @@ namespace Cultural_Heritage_System.Controllers
                     list
                 );
             }
-
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error in GetEventRegistrations");
                 return new ApiResponse<List<EventRegistrationUserResponse>>(500, "Internal server error");
             }
         }
-        [HttpPost("{id:long}/unregister")]
-        [Authorize]
-        public async Task<ApiResponse<EventRegistrationResponse>> Unregister(long id)
-        {
-            var res = await _eventService.UnregisterAsync(id);
-            return new ApiResponse<EventRegistrationResponse>(200, "Unregistered from event", res);
-        }
+
+        // ========== WITH ROOMS (ADMIN) ==========
+
         [HttpPost("with-rooms")]
         //[Authorize(Roles = "Admin")]
         public async Task<ApiResponse<EventResponse>> CreateWithRooms(
-       [FromBody] EventWithRoomsCreateRequest request)
+            [FromBody] EventWithRoomsCreateRequest request)
         {
             var result = await _eventService.CreateEventWithRoomsAsync(request);
             return new ApiResponse<EventResponse>(
@@ -134,6 +117,22 @@ namespace Cultural_Heritage_System.Controllers
                 message: "Event with streaming rooms updated successfully",
                 result: result
             );
+        }
+
+        // ========== SEARCH (PAGING + FILTER) ==========
+
+        [HttpGet("search")]
+        //[Authorize(Roles = "ADMIN,STAFF")]
+        public async Task<ApiResponse<PageResponse<EventResponse>>> SearchEvents(
+            [FromQuery] EventSearchRequest request)
+        {
+            var result = await _eventService.SearchEventsAsync(request);
+
+            return new ApiResponse<PageResponse<EventResponse>>
+            {
+                code = 200,
+                result = result
+            };
         }
     }
 }

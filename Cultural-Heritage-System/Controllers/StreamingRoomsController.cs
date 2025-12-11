@@ -1,5 +1,4 @@
-﻿// Controllers/StreamingRoomsController.cs
-using Cultural_Heritage_System.Common;
+﻿using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Request.Streaming;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Streaming;
@@ -24,29 +23,7 @@ public class StreamingRoomsController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost("rooms")]
-    [AllowAnonymous] // hoặc [Authorize] tuỳ bạn
-    public async Task<ApiResponse<StreamingRoomResponse>> CreateRoom(
-        [FromBody] StreamingRoomCreateRequest req)
-    {
-        var room = await _svc.CreateRoomAsync(req);
-        return new ApiResponse<StreamingRoomResponse>(201, "Room created", room);
-    }
-
-    // 🔥 Người dùng đăng ký event
-    [HttpPost("rooms/{roomName}/register")]
-    [AllowAnonymous]
-    public async Task<ApiResponse<object>> Register(string roomName)
-    {
-        await _svc.RegisterAsync(roomName);
-        return new ApiResponse<object>(200, "Registered", null);
-    }
-    [HttpGet("rooms/upcoming")]
-    public async Task<ApiResponse<List<StreamingRoomResponse>>> GetUpcoming([FromQuery] DateTime? from = null)
-    {
-        var rooms = await _svc.GetUpcomingRoomsAsync(from);
-        return new ApiResponse<List<StreamingRoomResponse>>(200, "OK", rooms.ToList());
-    }
+    // ========== CLIENT JOIN / PARTICIPANTS ==========
 
     [HttpPost("rooms/{roomName}/join-token")]
     [AllowAnonymous]
@@ -92,7 +69,7 @@ public class StreamingRoomsController : ControllerBase
     }
 
     [HttpPost("rooms/{roomName}/set-role")]
-    [AllowAnonymous]
+    [AllowAnonymous] // TODO: đổi lại [Authorize] / Roles nếu cần
     public async Task<ApiResponse<object>> SetRole(string roomName, [FromBody] StreamingSetRoleRequest dto)
     {
         await _svc.SetRoleAsync(roomName, dto);
@@ -106,31 +83,21 @@ public class StreamingRoomsController : ControllerBase
         await _svc.KickAsync(roomName, dto);
         return new ApiResponse<object>(200, "Kicked", null);
     }
-    // 🔥 ADMIN: list rooms theo type
-    [HttpGet("rooms/admin")]
-    //[Authorize(Roles = "Admin")]
-    [AllowAnonymous]
-    public async Task<ApiResponse<List<StreamingRoomResponse>>> GetRoomsAdmin(
-        [FromQuery] StreamingRoomType? type)
-    {
-        var rooms = await _svc.GetRoomsAdminAsync(type);
-        return new ApiResponse<List<StreamingRoomResponse>>(200, "OK", rooms.ToList());
-    }
 
-    // 🔥 ADMIN: xem chi tiết 1 room
+    // ========== ADMIN / MANAGEMENT ==========
+
+    // xem chi tiết 1 room (kèm participants)
     [HttpGet("rooms/{roomName}")]
-    //[Authorize(Roles = "Admin")]
-    [AllowAnonymous]
+    [AllowAnonymous] // hoặc [Authorize(Roles = "Admin")]
     public async Task<ApiResponse<StreamingRoomDetailResponse>> GetRoomDetail(string roomName)
     {
         var room = await _svc.GetRoomDetailAsync(roomName);
-        return new ApiResponse<StreamingRoomDetailResponse>(200, "Get Room Detail ", room);
+        return new ApiResponse<StreamingRoomDetailResponse>(200, "Get Room Detail", room);
     }
 
-    // 🔥 ADMIN: update room (title, startAt, type)
+    // update room (title, startAt, type)
     [HttpPut("rooms/{roomName}")]
-    //[Authorize(Roles = "Admin")]
-    [AllowAnonymous]
+    [AllowAnonymous] // hoặc [Authorize(Roles = "Admin")]
     public async Task<ApiResponse<StreamingRoomResponse>> UpdateRoom(
         string roomName,
         [FromBody] StreamingRoomUpdateRequest request)
@@ -139,29 +106,21 @@ public class StreamingRoomsController : ControllerBase
         return new ApiResponse<StreamingRoomResponse>(200, "Room Updated", room);
     }
 
-    // 🔥 ADMIN: delete room
+    // delete room
     [HttpDelete("rooms/{roomName}")]
-    //[Authorize(Roles = "Admin")]
-    [AllowAnonymous]
+    [AllowAnonymous] // hoặc [Authorize(Roles = "Admin")]
     public async Task<ApiResponse<object>> DeleteRoom(string roomName)
     {
         await _svc.DeleteRoomAsync(roomName);
-        return new ApiResponse<object>(200, "Deleted ", null);
+        return new ApiResponse<object>(200, "Deleted", null);
     }
 
-    // 🔥 ADMIN: join bất kỳ room với role CoHost
+    // admin join với role CoHost
     [HttpPost("rooms/{roomName}/admin-join-token")]
     //[Authorize(Roles = "Admin")]
     public async Task<ApiResponse<StreamingJoinGrantResponse>> AdminJoinAsCoHost(string roomName)
     {
         var grant = await _svc.IssueJoinTokensAsync(roomName);
         return new ApiResponse<StreamingJoinGrantResponse>(200, "Join tokens issued", grant);
-    }
-    [HttpGet("rooms/by-event/{eventId:long}")]
-    [AllowAnonymous] // hoặc [Authorize(Roles="Admin")] tuỳ bạn
-    public async Task<ApiResponse<List<StreamingRoomResponse>>> GetRoomsByEvent(long eventId)
-    {
-        var rooms = await _svc.GetRoomsByEventAsync(eventId);
-        return new ApiResponse<List<StreamingRoomResponse>>(200, "OK", rooms.ToList());
     }
 }

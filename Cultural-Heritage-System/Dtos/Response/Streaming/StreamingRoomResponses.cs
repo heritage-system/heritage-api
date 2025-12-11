@@ -35,6 +35,7 @@ namespace Cultural_Heritage_System.Dtos.Response.Streaming
         public int Id { get; set; }
         public int RoomId { get; set; }
         public int UserId { get; set; }
+        public string UserName { get; set; }
         public RoomRole Role { get; set; }
         public ParticipantStatus Status { get; set; }
         public string RtcUid { get; set; } = default!;
