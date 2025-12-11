@@ -14,5 +14,6 @@ namespace Cultural_Heritage_System.Dtos.Response.Panorama
         public string? Description { get; set; }
         public PanoramaStatus Status { get; set; }
         public PremiumType PremiumType { get; set; }
+        public bool UnSubscriptionLock { get; set; } = false;
     }
 }

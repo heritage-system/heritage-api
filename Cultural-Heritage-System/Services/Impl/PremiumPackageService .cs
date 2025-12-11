@@ -10,6 +10,7 @@ using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 using Cultural_Heritage_System.Repositories.Impl;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using static StackExchange.Redis.Role;
@@ -21,12 +22,16 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly IPremiumPackageRepository _packageRepo;
         private readonly IMapper _mapper;
         private readonly ILogger<PremiumPackageService> logger;
+        private readonly ISubscriptionRepository _subRepo;
+        private readonly IHttpContextAccessor httpContextAccessor;
 
-        public PremiumPackageService(IPremiumPackageRepository packageRepo, IMapper mapper, ILogger<PremiumPackageService> logger)
+        public PremiumPackageService(IPremiumPackageRepository packageRepo, IMapper mapper, ILogger<PremiumPackageService> logger, ISubscriptionRepository subRepo, IHttpContextAccessor httpContextAccessor)
         {
             _packageRepo = packageRepo;
             _mapper = mapper;
             this.logger = logger;
+            _subRepo = subRepo;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<IEnumerable<PremiumPackageResponse>> GetAllAsync()
@@ -73,10 +78,21 @@ namespace Cultural_Heritage_System.Services.Impl
             return _packageRepo.GetQueryable();
         }
 
-        public async Task<IEnumerable<PremiumPackageResponse>> GetActivePackagesAsync()
+        public async Task<PremiumPackageListResponse> GetActivePackagesAsync()
         {
             var data = await _packageRepo.GetActivePackageAsyns();
-            return _mapper.Map<IEnumerable<PremiumPackageResponse>>(data);
+            var list = _mapper.Map<IEnumerable<PremiumPackageResponse>>(data).ToList();
+            var response = new PremiumPackageListResponse { PremiumPackages = list };
+            var userId = GetCurrentUserId();
+            if (userId != null)
+            {
+                var activeSubscription = await _subRepo.GetActiveSubscription((int)userId);
+                if (activeSubscription != null)
+                {
+                    response.CurrentPackageId = activeSubscription.PackageId;
+                }
+            }
+            return response;
         }
 
         public async Task<PremiumPackageResponse?> GetByIdAsync(int id)
@@ -131,6 +147,24 @@ namespace Cultural_Heritage_System.Services.Impl
             await _packageRepo.SaveChangesAsync();
             return true;
         }
+
+        private int? GetCurrentUserId()
+        {
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                return null;
+            }
+
+            if (int.TryParse(accountIdClaim, out int userId))
+            {
+                return userId;
+            }
+
+            return null;
+        }
+
+
     }
 
 

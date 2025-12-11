@@ -1,5 +1,4 @@
 ﻿using Cultural_Heritage_System.DataAccessObjects;
-using Cultural_Heritage_System.Models;
 
 namespace Cultural_Heritage_System.Repositories.Impl
 {
@@ -12,7 +11,7 @@ namespace Cultural_Heritage_System.Repositories.Impl
             _dao = dao;
         }
 
-        public IQueryable<Event> GetEventsQueryable() => _dao.GetEventsQueryable();
+
 
         public IQueryable<Event> GetEventsWithIncludes() => _dao.GetEventsWithIncludes();
 

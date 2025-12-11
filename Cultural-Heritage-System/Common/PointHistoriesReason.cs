@@ -4,7 +4,8 @@
     {
         PVP_WIN,  
         CONTRIBUTION_VIEW,      
-        CONVERT_POINT_TO_UNLOCK,    
+        UNLOCK_CONTRIBUTION,
+        UNLOCK_SCENE,
         DAILY_BONUS,          
     }
 }

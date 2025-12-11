@@ -301,7 +301,7 @@ namespace Cultural_Heritage_System.Helpers
                 .ForMember(dest => dest.Address,
                 opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.Address : string.Empty))
                 .ForMember(dest => dest.DateOfBirth,
-                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.DateOfBirth : null))                
+                opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.DateOfBirth : null))
                 .ForMember(dest => dest.UserName,
                 opt => opt.MapFrom(src => src.User != null ? src.User.UserName : string.Empty))
                 .ForMember(dest => dest.Phone,
@@ -477,7 +477,9 @@ namespace Cultural_Heritage_System.Helpers
             // Chỉ cần 1 cái map StreamingRoom -> Response
             CreateMap<StreamingRoom, StreamingRoomResponse>();
             CreateMap<StreamingRoom, StreamingRoomDetailResponse>();
-            CreateMap<StreamingParticipant, StreamingParticipantResponse>();
+            CreateMap<StreamingParticipant, StreamingParticipantResponse>()
+                .ForMember(dest => dest.UserName,
+                    opt => opt.MapFrom(src => src.User.UserName));
 
             CreateMap<EventCreateRequest, Event>()
                 .ForMember(dest => dest.Status, opt => opt.Ignore())  // set trong service

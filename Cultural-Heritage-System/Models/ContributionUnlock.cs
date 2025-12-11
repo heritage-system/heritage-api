@@ -19,6 +19,9 @@ namespace Cultural_Heritage_System.Models
         public int ContributionId { get; set; }
         public Contribution Contribution { get; set; }
 
+        [Column("unlocking_method", TypeName = "nvarchar(30)")]
+        public UnlockingMethod UnlockingMethod { get; set; } = UnlockingMethod.BY_SUBSCRIPTION;
+
 
     }
 

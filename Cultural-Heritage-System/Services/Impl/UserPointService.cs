@@ -7,6 +7,7 @@ using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Request.UserPoint;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
+using Cultural_Heritage_System.Dtos.Response.Panorama;
 using Cultural_Heritage_System.Dtos.Response.UserPoint;
 using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
@@ -25,13 +26,17 @@ namespace Cultural_Heritage_System.Services.Impl
         private readonly IPointHistoryRepository pointHistoryRepository;
         private readonly IUserRepository userRepository;
         private readonly ISubscriptionRepository subscriptionRepository;
+        private readonly IContributionRepository contributionRepository;
+        private readonly IContributionUnlockRepository contributionUnlockRepository;
+        private readonly IPanoramaSceneRepository panoramaSceneRepository;
+        private readonly IPanoramaSceneUnlockRepository panoramaSceneUnlockRepository;
         private readonly IMapper mapper;
 
         private readonly ILogger<UserPointService> logger;
 
         public UserPointService(IUserPointRepository userPointRepository, IUserRepository userRepository, ILogger<UserPointService> logger, IMailService mailService,
             IMapper mapper, IHttpContextAccessor httpContextAccessor, IPointHistoryRepository pointHistoryRepository,
-            ISubscriptionRepository subscriptionRepository)
+            ISubscriptionRepository subscriptionRepository, IContributionRepository contributionRepository, IContributionUnlockRepository contributionUnlockRepository, IPanoramaSceneRepository panoramaSceneRepository, IPanoramaSceneUnlockRepository panoramaSceneUnlockRepository)
         {
             this.userPointRepository = userPointRepository;
             this.userRepository = userRepository;
@@ -40,7 +45,10 @@ namespace Cultural_Heritage_System.Services.Impl
             this.httpContextAccessor = httpContextAccessor;
             this.subscriptionRepository = subscriptionRepository;
             this.pointHistoryRepository = pointHistoryRepository;
-
+            this.contributionRepository = contributionRepository;
+            this.contributionUnlockRepository = contributionUnlockRepository;
+            this.panoramaSceneRepository = panoramaSceneRepository;
+            this.panoramaSceneUnlockRepository = panoramaSceneUnlockRepository;
         }
 
         public async Task<UserPointResponse> GetUserPointByUserId()
@@ -126,6 +134,110 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 return false;
             }
+        }
+
+        public async Task<ContributionResponse> TradePointToUnlockContribution(PointToUnlockTokenRequest request)
+        {            
+            var existingContribution = await contributionRepository.GetContributionById(request.ReferenceId);
+
+            if (existingContribution == null)
+                throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
+
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+
+            var userPoint = await GetUserPointByUserId();
+
+            if(userPoint == null)
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            if (userPoint.TotalPoints < request.ChangeAmount)
+            {
+                throw new AppException(ErrorCode.NO_ENOUGH_POINT);
+            }
+            var userId = int.Parse(accountIdClaim);
+
+            var unlockExisted = await contributionUnlockRepository.GetContributionUnlockByUserAndContribution(userId,request.ReferenceId);
+
+            if(unlockExisted != null && unlockExisted.UnlockingMethod == UnlockingMethod.BY_SUBSCRIPTION)
+            {
+                unlockExisted.UnlockingMethod = UnlockingMethod.BY_POINT;
+                unlockExisted.UpdatedAt = DateTime.Now;
+                await contributionUnlockRepository.UpdateAsync(unlockExisted);
+            }
+            else
+            {
+                var unlock = new ContributionUnlock
+                {
+                    UserId = userId,
+                    ContributionId = (int)request.ReferenceId,
+                    UnlockingMethod = UnlockingMethod.BY_POINT
+                };
+                await contributionUnlockRepository.AddAsync(unlock);
+            }                
+
+            await UpdateUserPoint(new UserPointUpdateRequest { UserId = int.Parse(accountIdClaim), ChangeAmount = -request.ChangeAmount, Reason = request.Reason, ReferenceId = request.ReferenceId });
+
+            var result = mapper.Map<ContributionResponse>(existingContribution);
+            return result;
+
+          
+        }
+
+        public async Task<PanoramaSceneResponse> TradePointToUnlockScene(PointToUnlockTokenRequest request)
+        {
+            var existingPanoramaScene = await panoramaSceneRepository.GetPanoramaSceneById(request.ReferenceId);
+
+            if (existingPanoramaScene == null)
+                throw new AppException(ErrorCode.PANORAMA_SCENE_NOT_FOUND);
+
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+
+            var userPoint = await GetUserPointByUserId();
+
+            if (userPoint == null)
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            if (userPoint.TotalPoints < request.ChangeAmount)
+            {
+                throw new AppException(ErrorCode.NO_ENOUGH_POINT);
+            }
+            var userId = int.Parse(accountIdClaim);
+
+            var unlockExisted = await panoramaSceneUnlockRepository.GetPanoramaSceneUnlockByUserAndPanoramaScene(userId, request.ReferenceId);
+
+            if (unlockExisted != null && unlockExisted.UnlockingMethod == UnlockingMethod.BY_SUBSCRIPTION)
+            {
+                unlockExisted.UnlockingMethod = UnlockingMethod.BY_POINT;
+                unlockExisted.UpdatedAt = DateTime.Now;
+                await panoramaSceneUnlockRepository.UpdateAsync(unlockExisted);
+            }
+            else
+            {
+                var unlock = new PanoramaSceneUnlock
+                {
+                    UserId = userId,
+                    PanoramaSceneId = (int)request.ReferenceId,
+                    UnlockingMethod = UnlockingMethod.BY_POINT
+                };
+                await panoramaSceneUnlockRepository.AddAsync(unlock);
+            }
+
+            await UpdateUserPoint(new UserPointUpdateRequest { UserId = int.Parse(accountIdClaim), ChangeAmount = -request.ChangeAmount, Reason = request.Reason, ReferenceId = request.ReferenceId });
+
+            var result = mapper.Map<PanoramaSceneResponse>(existingPanoramaScene);
+            return result;
+
+
         }
     }
 

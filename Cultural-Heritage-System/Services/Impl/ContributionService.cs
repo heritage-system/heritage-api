@@ -186,7 +186,8 @@ namespace Cultural_Heritage_System.Services.Impl
 
         public async Task<ContributionResponse> GetContributionDetail(int id)
         {
-            var existingContribution = await contributionRepository.GetContributionByIdAndStatus(id, ContributionStatus.APPROVED);
+            var existingContribution = await contributionRepository
+                .GetContributionByIdAndStatus(id, ContributionStatus.APPROVED);
 
             if (existingContribution == null)
                 throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
@@ -194,43 +195,21 @@ namespace Cultural_Heritage_System.Services.Impl
             var response = mapper.Map<ContributionResponse>(existingContribution);
 
             var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
-            // Nếu free thì trả luôn          
+
+            // ========== FREE CONTENT ==========
             if (existingContribution.PremiumType == PremiumType.FREE)
             {
-
                 if (!string.IsNullOrEmpty(accountIdClaim))
                 {
-                    var userFreeId = int.Parse(accountIdClaim);
-
-                    response.IsSave = await contributionSaveRepository.IsContributionSaveExists(userFreeId, id);
-                    //// kiểm tra đã có log chưa
-                    //var existingFreeLog = await contributionAccessLogRepository.GetContributionAccessLogs(userFreeId, existingContribution.Id);
-
-                    //if (existingFreeLog == null)
-                    //{
-                    //    var log = new ContributionAccessLog
-                    //    {
-                    //        UserId = userFreeId,
-                    //        ContributionId = existingContribution.Id,
-                    //    };
-
-                    //    await contributionAccessLogRepository.AddAsync(log);
-                    //}
-                    //else
-                    //{
-                    //    existingFreeLog.UpdatedAt = DateTime.UtcNow;
-                    //    await contributionAccessLogRepository.UpdateAsync(existingFreeLog);
-                    //}
+                    var userIdFree = int.Parse(accountIdClaim);
+                    response.IsSave = await contributionSaveRepository.IsContributionSaveExists(userIdFree, id);
                 }
-
-                return response;
+                return response; // FULL
             }
 
-
-            // Premium → check used        
+            // ========== PREMIUM + NOT LOGIN → PREVIEW ==========
             if (string.IsNullOrEmpty(accountIdClaim))
             {
-                // chưa login → chỉ preview
                 response.Content = null;
                 return response;
             }
@@ -239,43 +218,77 @@ namespace Cultural_Heritage_System.Services.Impl
 
             response.IsSave = await contributionSaveRepository.IsContributionSaveExists(userId, id);
 
-            // Lấy subscription active
-            var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+            // ========== CHECK UNLOCK STATUS ==========
+            var unlockContribution = await contributionUnlockRepository
+                .GetContributionUnlockByUserAndContribution(userId, id);
 
-            if (activeSub == null)
-            {
-                // không có sub → chỉ preview
-                response.Content = null;
-                return response;
-            }
-
-            var contributionUnlock = activeSub.UsageRecords.FirstOrDefault(c => c.BenefitName == BenefitName.CONTRIBUTION);
-            if (contributionUnlock == null)
-            {
-                throw new AppException(ErrorCode.SUBSCRIPTION_USAGE_NOT_FOUND);
-            }
-
-            response.Subscription = mapper.Map<SubscriptionDto>(activeSub);
-            if (contributionUnlock.Total != null)
-            {
-                response.Subscription.Total = (int)contributionUnlock.Total;
-
-            }
-            response.Subscription.Used = contributionUnlock.Used;
-
-            var unlockContribution = await contributionUnlockRepository.GetContributionUnlockByUserAndContribution(userId, id);
-
+            // --------------------------
+            // CASE 1: CHƯA MỞ → PREVIEW
+            // --------------------------
             if (unlockContribution == null)
             {
-                // không có sub → chỉ preview
                 response.Content = null;
+
+                // Lấy subscription info CHỈ KHI user chưa mở và có sub active
+                var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+                if (activeSub != null)
+                {
+                    var usage = activeSub.UsageRecords
+                        .FirstOrDefault(c => c.BenefitName == BenefitName.CONTRIBUTION);
+
+                    if (usage != null)
+                    {
+                        response.Subscription = mapper.Map<SubscriptionDto>(activeSub);
+                        if (usage.Total != null)
+                            response.Subscription.Total = (int)usage.Total;
+                        else
+                        {
+                            response.Subscription.IsUnlimited = true;
+                        }
+
+                        response.Subscription.Used = usage.Used;
+                    }
+                }
+
+                response.UserPoint = (await userPointService.GetUserPointByUserId()).TotalPoints;
+
                 return response;
             }
 
+            // --------------------------
+            // CASE 2: ĐÃ MỞ BẰNG POINT → FULL
+            // --------------------------
+            if (unlockContribution.UnlockingMethod == UnlockingMethod.BY_POINT)
+            {
+                response.UserPoint = (await userPointService.GetUserPointByUserId()).TotalPoints;
+                return response; // Không lấy subscription info nữa
+            }
 
+            // --------------------------
+            // CASE 3: ĐÃ MỞ BẰNG SUB → CẦN CHECK SUB CÒN HẠN
+            // --------------------------
+            if (unlockContribution.UnlockingMethod == UnlockingMethod.BY_SUBSCRIPTION)
+            {
+                var activeSub = await subscriptionRepository.GetActiveSubscription(userId);
+
+                response.UserPoint = (await userPointService.GetUserPointByUserId()).TotalPoints;
+                // Sub hết hạn → mất quyền, về PREVIEW
+                if (activeSub == null)
+                {
+                    response.UnSubscriptionLock = true;
+                    response.Content = null;
+                    return response;
+                }
+
+                // Sub còn hạn → FULL nhưng KHÔNG trả Subscription info nữa
+                
+                return response;
+            }
 
             return response;
         }
+
+
 
         public async Task<ContributionResponse> UnlockContribution(int contributionId)
         {
@@ -317,7 +330,8 @@ namespace Cultural_Heritage_System.Services.Impl
             var unlock = new ContributionUnlock
             {
                 UserId = userId,
-                ContributionId = contributionId
+                ContributionId = contributionId,
+                UnlockingMethod = UnlockingMethod.BY_SUBSCRIPTION
             };
             await contributionUnlockRepository.AddAsync(unlock);
 
@@ -801,6 +815,38 @@ namespace Cultural_Heritage_System.Services.Impl
             return mapper.Map<ContributionResponse>(contribution);
         }
 
+        public async Task<bool> UpdateStatusContribution(long contributionId, ContributionStatus status)
+        {
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            var currentContributor = await contributorRepository
+                .GetContributorByUserId(int.Parse(accountIdClaim));
+            if (currentContributor == null)
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            var contribution = await contributionRepository.GetContributionById(contributionId);
+            if (contribution == null)
+                throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
+
+
+            if (contribution.ContributorId != currentContributor.Id)
+                throw new AppException(ErrorCode.FORBIDDEN);
+
+            if(contribution.Status != ContributionStatus.APPROVED && contribution.Status != ContributionStatus.DISABLE)
+            {
+                throw new AppException(ErrorCode.CONTRIBUTION_NOT_EXISTED);
+            }
+
+            // Update fields
+            contribution.Status = status;
+            contribution.UpdatedAt = DateTime.Now;
+
+            await contributionRepository.UpdateAsync(contribution);
+
+            return true;
+        }
         private async Task<int?> GetNextStaffForContributionAsync()
         {
             var staffList = await staffRepository.GetActiveReviewersAsync();

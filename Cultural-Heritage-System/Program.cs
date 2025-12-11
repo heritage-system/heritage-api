@@ -30,6 +30,7 @@ namespace Cultural_Heritage_System
                  {
                      //options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
                      //options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                     //options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
                      options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
                  });
             builder.Services.Configure<StreamCleanupOptions>(builder.Configuration.GetSection("StreamCleanup"));
@@ -176,7 +177,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<ISubscriptionUsageRepository, SubscriptionUsageRepository>();
             builder.Services.AddScoped<ISubscriptionPaymentRepository, SubscriptionPaymentRepository>();
             builder.Services.AddScoped<IConfirmTokenRepository, ConfirmTokenRepository>();
-            builder.Services.AddScoped<ISubscriptionPaymentRepository, SubscriptionPaymentRepository>();        
+            builder.Services.AddScoped<ISubscriptionPaymentRepository, SubscriptionPaymentRepository>();
             builder.Services.AddScoped<IEventRegistrationRepository, EventRegistrationRepository>();
             builder.Services.AddScoped<IEventRepository, EventRepository>();
             builder.Services.AddScoped<IStreamingRoomRepository, StreamingRoomRepository>();
@@ -281,11 +282,11 @@ namespace Cultural_Heritage_System
             app.UseHttpsRedirection();
             app.UseCors("AllowReactApp");
 
-              app.UseAuthentication();
-  app.UseAuthorization();
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.UseMiddleware<ExceptionMiddleware>();
-          
+
 
 
 

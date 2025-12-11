@@ -1,10 +1,13 @@
-﻿using Cultural_Heritage_System.Dtos.Models;
+﻿using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Dtos.Models;
 using Cultural_Heritage_System.Dtos.Request.ContribtutionReport;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
+using Cultural_Heritage_System.Dtos.Request.Panorama;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Contribution;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Services;
+using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -195,6 +198,28 @@ namespace Cultural_Heritage_System.Controllers
                 code: 200,
                 message: "Updated contribution successfully",
                 result: users
+            );
+        }
+
+        [HttpPut("{id}/disable_contribution")]
+        public async Task<ApiResponse<bool>> DisableContributionStatus(long id)
+        {
+            var result = await contributionService.UpdateStatusContribution(id, ContributionStatus.DISABLE);
+            return new ApiResponse<bool>(
+                code: 200,
+                message: "Disable contribution status successfully",
+                result: result
+            );
+        }
+
+        [HttpPut("{id}/reactive_contribution")]
+        public async Task<ApiResponse<bool>> ReActiveContributionStatus(long id)
+        {
+            var result = await contributionService.UpdateStatusContribution(id, ContributionStatus.APPROVED);
+            return new ApiResponse<bool>(
+                code: 200,
+                message: "Disable contribution status successfully",
+                result: result
             );
         }
 

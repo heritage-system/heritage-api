@@ -17,5 +17,6 @@ namespace Cultural_Heritage_System.Dtos.Response.Panorama
         public PremiumType PremiumType { get; set; }
         public List<PanoramaSceneResponse> Scenes { get; set; } = new List<PanoramaSceneResponse>();
         public SubscriptionDto? Subscription { get; set; }
+        public int? UserPoint { get; set; }        
     }
 }
