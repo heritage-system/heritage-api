@@ -34,5 +34,10 @@ namespace Cultural_Heritage_System.Repositories.Impl
         {
             return _entityDAO.GetFavoriteByUserAndHeritageAsync(userId, heritageId);
         }
+
+        public IQueryable<Favorite> GetQueryable()
+        {
+            return _entityDAO.GetQueryable();
+        }
     }
 }

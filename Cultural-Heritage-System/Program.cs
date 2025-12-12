@@ -213,6 +213,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IUserPointService, UserPointService>();
             builder.Services.AddScoped<IGameMatchHistoryService, GameMatchHistoryService>();
             builder.Services.AddScoped<IDashboardService, DashboardService>();
+            builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 
             builder.Services.Configure<AgoraOptions>(
             builder.Configuration.GetSection("Agora"));
