@@ -28,8 +28,8 @@ namespace Cultural_Heritage_System.Controllers
         }
      
         [HttpGet("search_staff")]
-        //[Authorize]
-        public async Task<ApiResponse<PageResponse<StaffSearchResponse>>> SearchMemberForAdmin(
+        [Authorize(Roles = "ADMIN,STAFF")]
+        public async Task<ApiResponse<PageResponse<StaffSearchResponse>>> SearchStaffForAdmin(
            [FromQuery] StaffSearchRequest request)
 
         {
@@ -41,6 +41,7 @@ namespace Cultural_Heritage_System.Controllers
         }
     
         [HttpGet("staff_detail")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<StaffDetailResponse>> GetStaffDetailForAdmin(int id)
         {
             var result = await staffService.GetStaffDetailForAdmin(id);
@@ -52,6 +53,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("{id}/update")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<bool>> UpdateStaffForAdmin(int id,[FromBody] StaffUpdateRequest request)
         {
             var result = await staffService.UpdateStaffForAdmin(id, request);

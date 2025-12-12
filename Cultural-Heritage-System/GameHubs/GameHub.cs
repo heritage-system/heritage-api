@@ -459,12 +459,12 @@ namespace Cultural_Heritage_System.GameHubs
             {
                 int diff = Math.Abs(p1.Score - p2.Score);
 
-                int baseGain = 20;
-                int bonusGain = diff / 20;
+                int baseGain = 2;
+                int bonusGain = diff / 2;
                 totalGain = baseGain + bonusGain;
 
-                if (totalGain > 60)
-                    totalGain = 60;
+                if (totalGain > 5)
+                    totalGain = 5;
             }
 
             // -------------------------

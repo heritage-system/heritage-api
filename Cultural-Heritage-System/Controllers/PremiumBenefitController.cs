@@ -37,7 +37,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost]
-        [AllowAnonymous]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ActionResult<ApiResponse<PremiumBenefitResponse>>> Create([FromForm] PremiumBenefitCreateRequest req)
         {
             var result = await _service.CreateAsync(req);
@@ -49,7 +49,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut]
-        [AllowAnonymous]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<PremiumBenefitResponse>> Update([FromQuery] int id, [FromBody] PremiumBenefitUpdateRequest req)
         {
             var result = await _service.UpdateAsync(id, req);
@@ -57,7 +57,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpDelete]
-        [AllowAnonymous]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<object>> Delete([FromQuery] int id)
         {
             var success = await _service.DeleteAsync(id);

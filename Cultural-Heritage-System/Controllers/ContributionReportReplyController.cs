@@ -19,6 +19,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("by-reportId")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<IActionResult> GetRepliesByContributionReportId(long reportId)
         {
             var replies = await _reportReplyService.GetRepliesByContributionReportIdAsync(reportId);
