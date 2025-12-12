@@ -46,5 +46,12 @@ namespace Cultural_Heritage_System.DataAccessObjects
             return await _dbSet
                 .CountAsync(f => f.UserId == userId);
         }
+
+        public IQueryable<Favorite> GetQueryable()
+        {
+            return _dbSet
+                .Include(f => f.Heritage)
+                    .ThenInclude(h => h.Category);
+        }
     }
 }
