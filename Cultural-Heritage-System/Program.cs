@@ -1,4 +1,4 @@
-﻿
+
 using Cultural_Heritage_System.Configuration;
 using Cultural_Heritage_System.DataAccessObjects;
 using Cultural_Heritage_System.GameHubs;
@@ -212,6 +212,7 @@ namespace Cultural_Heritage_System
             builder.Services.AddScoped<IStreamingRoomService, StreamingRoomService>();
             builder.Services.AddScoped<IUserPointService, UserPointService>();
             builder.Services.AddScoped<IGameMatchHistoryService, GameMatchHistoryService>();
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
 
             builder.Services.Configure<AgoraOptions>(
             builder.Configuration.GetSection("Agora"));

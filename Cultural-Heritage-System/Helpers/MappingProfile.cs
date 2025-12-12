@@ -450,6 +450,12 @@ namespace Cultural_Heritage_System.Helpers
                 opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.Phone : string.Empty))
                 .ForMember(dest => dest.NumberOfContributionAcceptances,
                     opt => opt.MapFrom(src => src.ContributionAcceptances != null ? src.ContributionAcceptances.Count : 0))
+                .ForMember(dest => dest.NumberOfAcceptedContributions,
+                    opt => opt.MapFrom(src => src.ContributionAcceptances != null 
+                        ? src.ContributionAcceptances.Count(ca => ca.Status == ContributionStatus.APPROVED) : 0))
+                .ForMember(dest => dest.NumberOfDeniedContributions,
+                    opt => opt.MapFrom(src => src.ContributionAcceptances != null 
+                        ? src.ContributionAcceptances.Count(ca => ca.Status == ContributionStatus.REJECTED) : 0))
                 .ForMember(dest => dest.NumberOfReportReplies,
                     opt => opt.MapFrom(src => src.ReportReplies != null ? src.ReportReplies.Count : 0));
 
