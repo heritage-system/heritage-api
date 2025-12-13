@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.Helpers;
+using System.Text.Json.Serialization;
 
 namespace Cultural_Heritage_System.Models
 {
-    public class Contributor : BaseEntity<int>
+    public class Contributor : BaseEntity<int>,IUnsignedEntity
     {
         [Required]
         [ForeignKey("User")]
@@ -12,7 +14,7 @@ namespace Cultural_Heritage_System.Models
         public int UserId { get; set; }
         public User? User { get; set; }
 
-        [Column("bio", TypeName = "text")]
+        [Column("bio")]
         public string? Bio { get; set; }
 
         [Column("expertise")]
@@ -29,8 +31,20 @@ namespace Cultural_Heritage_System.Models
 
         [Column("status", TypeName = "nvarchar(20)")]
         public ContributorStatus Status { get; set; } = ContributorStatus.APPLIED;
-      
+
+        [Column("is_premium_eligible")]
+        public bool IsPremiumEligible { get; set; } = false;
+
         public ICollection<Contribution> Contributions { get; set; } = new List<Contribution>();
-       
+
+        [Column("expertise_unsigned")]
+        public string ExpertiseUnsigned { get; set; }
+        public void GenerateUnsignedFields()
+        {
+            ExpertiseUnsigned = StringHelper.RemoveDiacritics(Expertise).ToLower();
+        }
+
+        [JsonIgnore]
+        public ICollection<Heritage> ContributorHeritages { get; set; } = new List<Heritage>();
     }
 }

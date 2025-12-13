@@ -1,4 +1,5 @@
-﻿using Cultural_Heritage_System.Dtos.Request;
+﻿using Azure.Core;
+using Cultural_Heritage_System.Dtos.Request;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -49,19 +50,19 @@ namespace Cultural_Heritage_System.Controllers
             };
         }
 
-        [HttpPost("facebook")]
-        [AllowAnonymous]
-        public async Task<ApiResponse<SignInResponse>> SigInFacebook([FromQuery] string code)
-        {
-            var result = await authService.SignInWithFacebook(code);
+        //[HttpPost("facebook")]
+        //[AllowAnonymous]
+        //public async Task<ApiResponse<SignInResponse>> SigInFacebook([FromQuery] string code)
+        //{
+        //    var result = await authService.SignInWithFacebook(code);
 
-            return new ApiResponse<SignInResponse>
-            {
-                code = ((int)HttpStatusCode.OK),
-                message = "SignIn Facebook Successfully",
-                result = result
-            };
-        }
+        //    return new ApiResponse<SignInResponse>
+        //    {
+        //        code = ((int)HttpStatusCode.OK),
+        //        message = "SignIn Facebook Successfully",
+        //        result = result
+        //    };
+        //}
 
         [HttpPost("forgot-password")]
         public async Task<ApiResponse<ForgotPasswordResponse>> ForgotPassword([FromBody] Dtos.Request.ForgotPasswordRequest req)
@@ -86,6 +87,31 @@ namespace Cultural_Heritage_System.Controllers
             {
                 code = ((int)HttpStatusCode.OK),
                 message = "Reset Password Successfully",
+                result = result
+            };
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<ApiResponse<SignInResponse>> RefreshToken([FromBody] string refreshToken)
+        {
+            var result = await authService.RefreshToken(refreshToken);
+            return new ApiResponse<SignInResponse>
+            {
+                code = ((int)HttpStatusCode.OK),
+                message = "Refresh Token successful",
+                result = result
+            };
+        }
+
+        [HttpGet("confirm-email")]    
+        public async Task<ApiResponse<bool>> ConfirmEmail(int uid, string token)
+        {
+            var result = await authService.ConfirmEmail(uid, token);
+
+            return new ApiResponse<bool>
+            {
+                code = ((int)HttpStatusCode.OK),
+                message = "Confirm email Successfully",
                 result = result
             };
         }

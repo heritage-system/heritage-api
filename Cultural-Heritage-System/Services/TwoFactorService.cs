@@ -13,11 +13,11 @@ namespace Cultural_Heritage_System.Services
     public class TwoFactorService
     {
 
-        private readonly UserRepository userRepository;
+        private readonly IUserRepository userRepository;
         private readonly IJwtService jwtService;
         private readonly Logger<TwoFactorService> logger;
 
-        public TwoFactorService(UserRepository userRepository, IJwtService jwtService)
+        public TwoFactorService(IUserRepository userRepository, IJwtService jwtService)
         {
             this.userRepository = userRepository;
             this.jwtService = jwtService;
@@ -93,7 +93,7 @@ namespace Cultural_Heritage_System.Services
             var accessToken = jwtService.GenerateAccessToken(claims);
             var refreshToken = jwtService.GenerateRefreshToken(claims);
 
-            return new SignInResponse(accessToken, refreshToken, user.Role?.Name ?? "", "Bearer", TwoFaStep.VERIFICATION_REQUIRED);
+            return new SignInResponse(accessToken, refreshToken, user.Role?.Name ?? "", "Bearer", TwoFaStep.VERIFICATION_REQUIRED, user.UserName,user.Profile.AvatarUrl);
         }
 
 

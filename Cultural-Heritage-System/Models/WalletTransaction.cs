@@ -7,10 +7,10 @@ namespace Cultural_Heritage_System.Models
     public class WalletTransaction : BaseEntity<int>
     {
         [Required]
-        [ForeignKey("Wallet")]
-        [Column("wallet_id")]
-        public int WalletId { get; set; }
-        public Wallet? Wallet { get; set; }
+        [ForeignKey("User")]
+        [Column("user_id")]
+        public int UserId { get; set; }
+        public User? User { get; set; }
 
         [Column("type", TypeName = "nvarchar(20)")]
         public WalletTransactionType Type { get; set; }
@@ -20,14 +20,6 @@ namespace Cultural_Heritage_System.Models
 
         [Column("description", TypeName = "text")]
         public string? Description { get; set; }
-
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [ForeignKey("RelatedPurchase")]
-        [Column("related_purchase_id")]
-        public int? RelatedPurchaseId { get; set; }
-        public ContributionPurchase? RelatedPurchase { get; set; }
 
     }
 }

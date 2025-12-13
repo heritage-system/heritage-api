@@ -1,0 +1,47 @@
+﻿using CloudinaryDotNet.Core;
+using Cultural_Heritage_System.Common;
+using Cultural_Heritage_System.DataAccessObjects;
+using Cultural_Heritage_System.Models;
+using Cultural_Heritage_System.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using SendGrid.Helpers.Mail;
+using System.Collections.Generic;
+using System.Numerics;
+using System.Threading.Tasks;
+
+namespace Cultural_Heritage_System.Repositories.Impl
+{
+    public class SubscriptionRepository : BaseRepository<Subscription>, ISubscriptionRepository
+    {
+        private readonly SubscriptionDAO _entityDAO;
+
+        public SubscriptionRepository(SubscriptionDAO dao) : base(dao)
+        {
+            _entityDAO = dao;
+        }
+        public async Task<Subscription?> GetActiveSubscription(int userId)
+        {         
+            return await _entityDAO.GetActiveSubscription(userId);
+        }
+
+        public IQueryable<Subscription> GetActiveSubscriptionQueryByUserId(int userId)
+        {
+            return _entityDAO.GetActiveSubscriptionQueryByUserId(userId);
+        }
+
+        public async Task<Subscription?> GetSubscriptionById(int id)
+        {
+            return await _entityDAO.GetSubscriptionById(id);
+        }
+        public Task<List<Subscription>> GetAllSubscriptionsByUserIdAsync(int userId)
+        {
+            return _entityDAO.GetSubscriptionsByUserIdAsync(userId);
+        }
+        public async Task<IEnumerable<Subscription>> GetSubscriptionsAsync()
+        {
+            return await _entityDAO.GetAllAsync();
+        }
+
+    }
+}

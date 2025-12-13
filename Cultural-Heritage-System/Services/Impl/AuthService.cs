@@ -5,34 +5,46 @@ using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
     public class AuthService : IAuthService
     {
-
+        private readonly IHttpContextAccessor httpContextAccessor;
         private readonly ILogger<AuthenticationService> logger;
         private readonly IJwtService jwtService;
         private readonly PasswordHasher<User> passwordHasher;
-        private readonly UserRepository userRepository;
-        private readonly RoleRepository roleRepository;
+        private readonly IUserRepository userRepository;
+        private readonly IRoleRepository roleRepository;
+        private readonly IStaffRepository staffRepository;
+        private readonly IContributorRepository contributorRepository;
         private readonly GoogleAuthClient googleAuthClient;
         private readonly GoogleUserInfoClient googleUserInfoClient;
-        private readonly ProfileRepository profileRepository;
+        private readonly IProfileRepository profileRepository;
+        private readonly IRefreshTokenRepository refreshTokenRepository;
+        private readonly IConfirmTokenRepository confirmTokenRepository;
         //private readonly FacebookAuthClient facebookAuthClient;
         //private readonly FacebookUserInfoClient facebookUserInfoClient;
 
         public AuthService(
             ILogger<AuthenticationService> logger,
             IJwtService jwtService,
-            UserRepository userRepository,
-            RoleRepository roleRepository,
+            IUserRepository userRepository,
+            IRoleRepository roleRepository,
             GoogleAuthClient googleAuthClient,
             GoogleUserInfoClient googleUserInfoClient,
-            ProfileRepository profileRepository
+            IProfileRepository profileRepository,
+            IRefreshTokenRepository refreshTokenRepository,
+            IHttpContextAccessor httpContextAccessor,
+            IStaffRepository staffRepository,
+             IContributorRepository contributorRepository,
+             IConfirmTokenRepository confirmTokenRepository
             )
         {
             this.logger = logger;
@@ -45,6 +57,11 @@ namespace Cultural_Heritage_System.Services.Impl
             this.profileRepository = profileRepository;
             //this.facebookAuthClient = facebookAuthClient;
             //this.facebookUserInfoClient = facebookUserInfoClient;
+            this.refreshTokenRepository = refreshTokenRepository;
+            this.httpContextAccessor = httpContextAccessor;
+            this.staffRepository = staffRepository;
+            this.contributorRepository = contributorRepository;
+            this.confirmTokenRepository = confirmTokenRepository;
         }
 
         public async Task<SignInResponse> SignIn(SignInRequest request)
@@ -75,8 +92,48 @@ namespace Cultural_Heritage_System.Services.Impl
 
             if (user.UserStatus == UserStatus.PENDING_VERIFICATION)
             {
+                if (user.Role?.Name == DefinitionRole.MEMBER)
+                {
+                    var confirm = await confirmTokenRepository.FindTokenByUserIdAsync(user.Id);
+                    if (confirm == null)
+                    {
+                        throw new AppException(ErrorCode.UNAUTHORIZED);
+                    }
+                    if (confirm.Expires < DateTime.UtcNow)
+                    {
+                        throw new AppException(ErrorCode.ACCOUNT_LOCKED);
+                    }
+                    throw new AppException(ErrorCode.NO_CONFIRM_EMAIL);
 
-                return new SignInResponse(TwoFaStep.SETUP_REQUIRED);
+
+                }
+            }
+
+            if (user.UserStatus == UserStatus.PENDING_APPROVE)
+            {
+                user.UserStatus = UserStatus.ACTIVE;
+                await userRepository.UpdateAsync(user);
+                // Nếu là staff
+                if (user.Role?.Name?.ToLower() == "staff")
+                {
+                    var staff = await staffRepository.GetStaffByUserId(user.Id);
+                    if (staff != null)
+                    {
+                        staff.StaffStatus = StaffStatus.ACTIVE;
+                        await staffRepository.UpdateAsync(staff);
+                    }
+                }
+
+                // Nếu là contributor
+                if (user.Role?.Name?.ToLower() == "contributor")
+                {
+                    var contributor = await contributorRepository.GetContributorByUserId(user.Id);
+                    if (contributor != null)
+                    {
+                        contributor.Status = ContributorStatus.ACTIVE;
+                        await contributorRepository.UpdateAsync(contributor);
+                    }
+                }
             }
             
             if (user.Enable2FA)
@@ -95,9 +152,15 @@ namespace Cultural_Heritage_System.Services.Impl
             var accessToken = jwtService.GenerateAccessToken(claims);
             var refreshToken = jwtService.GenerateRefreshToken(claims);
 
+            await refreshTokenRepository.AddAsync(new RefreshToken
+            {
+                UserId = user.Id,
+                Token = refreshToken
+            });
+
             logger.LogInformation("SignIn success for userId: {UserId}", user.Id);
 
-            return new SignInResponse(accessToken, refreshToken, user.Role.Name, "Bearer", TwoFaStep.NONE);
+            return new SignInResponse(accessToken, refreshToken, user.Role.Name, "Bearer", TwoFaStep.NONE, user.UserName,user.Profile.AvatarUrl);
         }
 
         public async Task<SignInResponse> SignInWithGoogle(string code)
@@ -120,7 +183,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 user = new User
                 {
                     UserName = userInfo.Name,
-                    FullName = userInfo.Name,
+                    
                     Email = userInfo.Email,
                     Role = role,
                     PasswordHash = passwordHasher.HashPassword(user, "123")
@@ -130,7 +193,8 @@ namespace Cultural_Heritage_System.Services.Impl
 
                 Profile profile = new Profile
                 {
-                    UserId = user.Id,                  
+                    UserId = user.Id,
+                    FullName = userInfo.Name,
                     AvatarUrl = userInfo.Picture,
                 };
                 await profileRepository.AddAsync(profile);
@@ -147,9 +211,16 @@ namespace Cultural_Heritage_System.Services.Impl
             var accessToken = jwtService.GenerateAccessToken(claims);
             var refreshToken = jwtService.GenerateRefreshToken(claims);
 
+            await refreshTokenRepository.AddAsync(new RefreshToken
+            {
+                UserId = user.Id,
+                Token = refreshToken
+            });
+
+
             logger.LogInformation("SignIn Google success for userId: {UserId}", user.Id);
 
-            return new SignInResponse(accessToken, refreshToken, user.Role.Name, "Bearer", TwoFaStep.NONE);
+            return new SignInResponse(accessToken, refreshToken, user.Role.Name, "Bearer", TwoFaStep.NONE,user.UserName,user.Profile.AvatarUrl);
         }
 
 
@@ -216,14 +287,108 @@ namespace Cultural_Heritage_System.Services.Impl
         //    return new SignInResponse(accessToken, refreshToken, user.Role.Name, "Bearer", TwoFaStep.NONE);
         //}
 
-        public Task<SignInResponse> RefreshToken()
+        public async Task<SignInResponse> RefreshToken(string refreshToken)
         {
-            throw new NotImplementedException();
+            if (string.IsNullOrWhiteSpace(refreshToken))
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+        
+            var rt = await refreshTokenRepository.FindByTokenAsync(refreshToken);
+            if (rt == null) 
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+          
+            var user = await userRepository.FindUserById(rt.UserId);
+            if (user == null)
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+
+            var claims = new[]
+            {
+                new Claim("userId", user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim("Authorities", user.Role.Name)
+            };
+
+            var accessToken = jwtService.GenerateAccessToken(claims);
+            var newRefreshToken = jwtService.GenerateRefreshToken(claims);
+
+            rt.Token = newRefreshToken;
+
+            await refreshTokenRepository.UpdateAsync(rt);
+
+            // 5) TwoFaStep: parse từ field đúng (VD: user.TwoFaStepString)
+            TwoFaStep stepEnum = TwoFaStep.NONE;
+            if (!string.IsNullOrWhiteSpace(user.TwoFactorSecret))
+            {
+                if (!Enum.TryParse(user.TwoFactorSecret, ignoreCase: true, out stepEnum))
+                    stepEnum = TwoFaStep.NONE;
+            }
+         
+            // 6) Trả response
+            return new SignInResponse(
+                accessToken,
+                newRefreshToken,
+                user.Role?.Name ?? "User",
+                "Bearer",
+                stepEnum,
+                user.UserName,
+                user.Profile.AvatarUrl
+            );
         }
+
 
         public Task SignOut()
         {
             throw new NotImplementedException();
+        }
+
+
+        public async Task<bool> ConfirmEmail(int userId, string token)
+        {
+           
+            var user = await userRepository.FindUserById(userId);
+            if (user == null)
+                throw new AppException(ErrorCode.USER_NOT_EXISTED);
+
+            if (user.UserStatus == UserStatus.ACTIVE)
+                return true;
+            
+            var confirm = await confirmTokenRepository.FindByTokenAsync(userId, token);
+            
+            if (confirm == null)
+                throw new AppException(ErrorCode.INVALID_TOKEN);
+
+            
+            confirm.Revoked = DateTime.UtcNow;
+            confirm.UpdatedAt = DateTime.UtcNow;
+            await confirmTokenRepository.UpdateAsync(confirm);
+
+            user.UserStatus = UserStatus.ACTIVE;
+            await userRepository.UpdateAsync(user);
+
+            // Nếu là staff
+            if (user.Role?.Name?.ToLower() == "staff")
+            {
+                var staff = await staffRepository.GetStaffByUserId(user.Id);
+                if (staff != null)
+                {
+                    staff.StaffStatus = StaffStatus.ACTIVE;
+                    await staffRepository.UpdateAsync(staff);
+                }
+            }
+
+            // Nếu là contributor
+            if (user.Role?.Name?.ToLower() == "contributor")
+            {
+                var contributor = await contributorRepository.GetContributorByUserId(user.Id);
+                if (contributor != null)
+                {
+                    contributor.Status = ContributorStatus.ACTIVE;
+                    await contributorRepository.UpdateAsync(contributor);
+                }
+            }
+
+            return true;
         }
 
 

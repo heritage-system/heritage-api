@@ -13,17 +13,13 @@ namespace Cultural_Heritage_System.Models
         public int UserId { get; set; }
         public User User { get; set; }
 
-        [Column("score")]
-        public int Score { get; set; }
+        [Column("number_of_clear")]
+        public int NumberOfClear { get; set; }
 
         [Column("quiz_id")]
-        [ForeignKey("Quiz")]
+        [ForeignKey(nameof(Quiz))]
         public long QuizId { get; set; }
         public Quiz Quiz { get; set; }
-
-        [Column("completed_at")]
-        public DateTime CompletedAt { get; set; }
-
     }
 
 }
