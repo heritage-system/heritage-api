@@ -22,6 +22,7 @@ using Cultural_Heritage_System.Dtos.Response.Category;
 using Cultural_Heritage_System.Dtos.Response.ContributionReport;
 using Cultural_Heritage_System.Dtos.Response.Contributor;
 using Cultural_Heritage_System.Dtos.Response.Event;
+using Cultural_Heritage_System.Dtos.Response.GameMatchHistory;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Location;
 using Cultural_Heritage_System.Dtos.Response.Media;
@@ -459,6 +460,12 @@ namespace Cultural_Heritage_System.Helpers
                 opt => opt.MapFrom(src => src.User.Profile != null ? src.User.Profile.Phone : string.Empty))
                 .ForMember(dest => dest.NumberOfContributionAcceptances,
                     opt => opt.MapFrom(src => src.ContributionAcceptances != null ? src.ContributionAcceptances.Count : 0))
+                .ForMember(dest => dest.NumberOfAcceptedContributions,
+                    opt => opt.MapFrom(src => src.ContributionAcceptances != null 
+                        ? src.ContributionAcceptances.Count(ca => ca.Status == ContributionStatus.APPROVED) : 0))
+                .ForMember(dest => dest.NumberOfDeniedContributions,
+                    opt => opt.MapFrom(src => src.ContributionAcceptances != null 
+                        ? src.ContributionAcceptances.Count(ca => ca.Status == ContributionStatus.REJECTED) : 0))
                 .ForMember(dest => dest.NumberOfReportReplies,
                     opt => opt.MapFrom(src => src.ReportReplies != null ? src.ReportReplies.Count : 0));
 
@@ -566,6 +573,8 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<SubscriptionUsage, SubscriptionUsageDto>()
                 .ForMember(dest => dest.BenefitName, opt => opt.MapFrom(src => src.BenefitName.ToString()))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+
+            CreateMap<GameMatchHistory, UserMatchHistoryResponse>();
         }
 
 

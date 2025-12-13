@@ -42,8 +42,7 @@ namespace Cultural_Heritage_System.Controllers
         // ========== DELETE ==========
 
         [HttpDelete("{id:long}")]
-        [Authorize]
-        //[AllowAnonymous]
+        [Authorize(Roles = "ADMIN,STAFF")]       
         public async Task<ApiResponse<object>> DeleteEvent(long id)
         {
             await _eventService.DeleteEventAsync(id);
@@ -69,8 +68,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("{id:long}/registrations")]
-        //[Authorize(Roles = "Admin")]
-        [AllowAnonymous]
+        [Authorize(Roles = "ADMIN,STAFF")]      
         public async Task<ApiResponse<List<EventRegistrationUserResponse>>> GetEventRegistrations(long id)
         {
             try
@@ -92,7 +90,7 @@ namespace Cultural_Heritage_System.Controllers
         // ========== WITH ROOMS (ADMIN) ==========
 
         [HttpPost("with-rooms")]
-        [Authorize]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<EventResponse>> CreateWithRooms(
             [FromBody] EventWithRoomsCreateRequest request)
         {
@@ -105,7 +103,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("with-rooms/{id:long}")]
-        [Authorize]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<EventResponse>> UpdateWithRooms(
             long id,
             [FromBody] EventWithRoomsUpdateRequest request)
@@ -122,7 +120,7 @@ namespace Cultural_Heritage_System.Controllers
         // ========== SEARCH (PAGING + FILTER) ==========
 
         [HttpGet("search")]
-        //[Authorize(Roles = "ADMIN,STAFF")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<PageResponse<EventResponse>>> SearchEvents(
             [FromQuery] EventSearchRequest request)
         {

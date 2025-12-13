@@ -2,6 +2,7 @@
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.PremiumPackage;
 using Cultural_Heritage_System.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Cultural_Heritage_System.Controllers
@@ -72,6 +73,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ActionResult<ApiResponse<PremiumPackageResponse>>> Create(
             [FromForm] PremiumPackageCreateRequest request)
         {
@@ -85,6 +87,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ActionResult<ApiResponse<PremiumPackageResponse>>> Update(
             [FromQuery] int id,
             [FromForm] PremiumPackageUpdateRequest request)
@@ -106,6 +109,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpDelete]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ActionResult<ApiResponse<object>>> Delete([FromQuery] int id)
         {
             var success = await _packageService.DeleteAsync(id);

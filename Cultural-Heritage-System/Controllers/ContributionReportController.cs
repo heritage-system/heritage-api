@@ -20,7 +20,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("all")]
-        //[Authorize(Roles = "MEMBER")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<PageResponse<ContributionReportResponse>>> GetAll(
              [FromQuery] int page,
              [FromQuery] int pageSize,
@@ -40,7 +40,7 @@ namespace Cultural_Heritage_System.Controllers
 
 
         [HttpGet("id")]
-        //[Authorize(Roles = "MEMBER")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<ContributionReportResponse>> GetById([FromQuery] long id)
         {
             var report = await _reportService.GetByIdAsync(id);
@@ -60,7 +60,7 @@ namespace Cultural_Heritage_System.Controllers
         }
        
         [HttpPost("answer")]
-        //[Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<object>> Answer([FromBody] AnswerContributionReportRequest request)
         {
             if (!ModelState.IsValid)

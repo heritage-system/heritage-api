@@ -23,7 +23,11 @@ namespace Cultural_Heritage_System.DataAccessObjects
                 .ThenInclude(c => c.User)
                 .ThenInclude(u => u.Profile)
                 .Include(h => h.ContributionHeritageTags)
+                    .ThenInclude(ht => ht.Heritage)
+                        .ThenInclude(h => h.Category)
                 .Include(h => h.ContributionAccessLogs)
+                .Include(h => h.ContributionSaves)
+                .Include(h => h.Reviews)
                 .AsQueryable();
         }
 
@@ -34,7 +38,11 @@ namespace Cultural_Heritage_System.DataAccessObjects
                 .ThenInclude(c => c.User)
                 .ThenInclude(u => u.Profile)
                 .Include(h => h.ContributionHeritageTags)
+                    .ThenInclude(ht => ht.Heritage)
+                        .ThenInclude(h => h.Category)
                 .Include(h => h.ContributionAccessLogs)
+                .Include(h => h.ContributionSaves)
+                .Include(h => h.Reviews)
                 .Where(c => c.Status == ContributionStatus.APPROVED)
                 .AsQueryable();
         }

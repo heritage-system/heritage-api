@@ -43,7 +43,8 @@ namespace Cultural_Heritage_System.Controllers
             };
         }
 
-        [HttpPost("create")]     
+        [HttpPost("create")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<bool>> Create([FromBody] PanoramaTourCreationRequest request)
         {
             var result = await panoramaTourService.CreatePanoramaTour(request);
@@ -79,6 +80,7 @@ namespace Cultural_Heritage_System.Controllers
 
 
         [HttpPut("{id}/update")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<bool>> UpdatePanoramaTour(long id, [FromBody] PanoramaTourCreationRequest request)
         {
             var result = await panoramaTourService.UpdatePanoramaTour(id, request);
@@ -90,7 +92,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpDelete("{id}/delete")]
-        //[Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<long?>> DeletePanoramaTour(long id)
         {
 
@@ -102,6 +104,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("get_panorama_tour")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<PageResponse<PanoramaTourSearchForAdminResponse>>> GetListPanoramaTourForAdmin(
            [FromQuery] PanoramaTourSearchRequest request)
 
@@ -114,6 +117,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("get_panorama_tour_detail_for_admin")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<PanoramaTourDetailForAdminResponse>> GetPanoramaTourDetailForAdmin(long id)
         {
             var result = await panoramaTourService.GetPanoramaTourDetailForAdmin(id);
@@ -125,6 +129,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("create_scene")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<long>> CreateScene([FromBody] PanoramaSceneCreationRequest request)
         {
             var result = await panoramaTourService.CreatePanoramaScene(request);
@@ -137,6 +142,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("{id}/update_scene")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<bool>> UpdatePanoramaScene(long id, [FromBody] PanoramaSceneCreationRequest request)
         {
             var result = await panoramaTourService.UpdatePanoramaScene(id, request);
@@ -148,7 +154,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpDelete("{id}/delete_scene")]
-        //[Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]     
         public async Task<ApiResponse<long?>> DeletePanoramaScene(long id)
         {
 
@@ -160,6 +166,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("{id}/unlock_scene")]
+        [Authorize]
         public async Task<ApiResponse<PanoramaSceneResponse>> UnlockPanoramaScene(long id)
         {
             var result = await panoramaTourService.UnlockPanoramaScene(id);

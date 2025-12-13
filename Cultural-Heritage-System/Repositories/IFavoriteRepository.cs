@@ -10,6 +10,7 @@ namespace Cultural_Heritage_System.Repositories
         IQueryable<Favorite> GetFavoritesQueryByUserId(int userId);
         Task<bool> IsFavoriteExistsAsync(int userId, long heritageId);
         Task<int> GetFavoriteCountByUserIdAsync(int userId);
+        IQueryable<Favorite> GetQueryable();
       
     }
 }

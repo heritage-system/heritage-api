@@ -129,7 +129,7 @@ namespace Cultural_Heritage_System.GameHubs
                 try
                 {
                     var rnd = new Random();
-                    int delayMs = rnd.Next(2000, 5000); // 5000ms = 5s, 20000ms = 20s
+                    int delayMs = rnd.Next(5000, 8000); // 5000ms = 5s, 20000ms = 20s
                     await Task.Delay(delayMs, cancelToken.Token);
 
                     // Nếu sau 30s mà vẫn còn trong hàng chờ → đấu bot
@@ -459,12 +459,12 @@ namespace Cultural_Heritage_System.GameHubs
             {
                 int diff = Math.Abs(p1.Score - p2.Score);
 
-                int baseGain = 20;
-                int bonusGain = diff / 20;
+                int baseGain = 2;
+                int bonusGain = diff / 2;
                 totalGain = baseGain + bonusGain;
 
-                if (totalGain > 60)
-                    totalGain = 60;
+                if (totalGain > 5)
+                    totalGain = 5;
             }
 
             // -------------------------

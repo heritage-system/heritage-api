@@ -25,6 +25,7 @@ namespace Cultural_Heritage_System.Controllers
         /// Create a new review (with optional media and replies).
         /// </summary>
         [HttpPost("create_review")]
+        [Authorize]
         public async Task<ApiResponse<ReviewResponse>> CreateReview([FromBody] ReviewCreateRequest request)
         {
 
@@ -82,6 +83,7 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
         [HttpPut]
+        [Authorize]
         public async Task<ApiResponse<ReviewUpdateResponse>> UpdateReview([FromForm] ReviewUpdateRequest request)
         {
             // Toggle like/unlike
@@ -94,6 +96,7 @@ namespace Cultural_Heritage_System.Controllers
             );
         }
         [HttpDelete]
+        [Authorize]
         public async Task<ApiResponse<ReviewDeleteResponse>> DeleteReview([FromBody] ReviewDeleteRequest request)
         {
             // Toggle like/unlike
