@@ -317,7 +317,32 @@ public class ContributorService : IContributorService
             throw new AppException(ErrorCode.CONTRIBUTOR_NOT_EXISTED);
         }
 
+        if (contributor.Status != ContributorStatus.ACTIVE)
+        {
+            throw new AppException(ErrorCode.INVALID_STATUS);
+        }
+
         contributor.Status = ContributorStatus.SUSPENDED;
+        contributor.Verified = true;
+        contributor.UpdatedAt = DateTime.UtcNow;
+        contributor.UpdatedBy = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value ?? "system";
+
+        var targetUser = await userRepository.FindUserById(contributor.UserId);
+        if (targetUser == null)
+        {
+            throw new AppException(ErrorCode.USER_NOT_EXISTED);
+        }
+
+        var memberRole = await roleRepository.FindByRoleName(DefinitionRole.MEMBER);
+        if (memberRole == null)
+        {
+            memberRole = new Role { Name = DefinitionRole.MEMBER };
+            await roleRepository.CreateRole(memberRole);
+        }
+
+        targetUser.RoleId = memberRole.Id;
+        await userRepository.UpdateAsync(targetUser);
+
         await contributorRepository.UpdateAsync(contributor);
     }
 

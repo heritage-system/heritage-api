@@ -5,6 +5,7 @@ using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Models;
 using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Response;
+using Cultural_Heritage_System.Dtos.Response.GameMatchHistory;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
@@ -13,6 +14,7 @@ using Cultural_Heritage_System.Repositories;
 using Cultural_Heritage_System.Repositories.Impl;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
@@ -71,6 +73,32 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 return false;
             }
+        }
+
+        public async Task<List<UserMatchHistoryResponse>> GetUserGameMatchHistory()
+        {
+            var accountIdClaim = httpContextAccessor.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
+                throw new AppException(ErrorCode.UNAUTHORIZED);
+            }
+            int userId = int.Parse(accountIdClaim);
+            var query = await gameMatchHistoryRepository
+                .GetQueryable()
+                .Where(g => g.Player1Id == userId || g.Player2Id == userId)
+                .OrderByDescending(g => g.CreatedAt) 
+                .Take(20)
+                .ToListAsync();           
+
+            var response =  mapper.Map<List<UserMatchHistoryResponse>>(query);
+
+            foreach (var item in response)
+            {
+                item.UserNumber = item.Player1Id == userId ? 1 : 2;
+            }
+
+            return response;
+
         }
 
         public async Task<bool> IsSpamMatch(int userId, string userIP, int opponentId, string opponentIP)

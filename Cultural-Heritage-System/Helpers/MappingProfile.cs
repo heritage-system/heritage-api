@@ -22,6 +22,7 @@ using Cultural_Heritage_System.Dtos.Response.Category;
 using Cultural_Heritage_System.Dtos.Response.ContributionReport;
 using Cultural_Heritage_System.Dtos.Response.Contributor;
 using Cultural_Heritage_System.Dtos.Response.Event;
+using Cultural_Heritage_System.Dtos.Response.GameMatchHistory;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Location;
 using Cultural_Heritage_System.Dtos.Response.Media;
@@ -572,6 +573,8 @@ namespace Cultural_Heritage_System.Helpers
             CreateMap<SubscriptionUsage, SubscriptionUsageDto>()
                 .ForMember(dest => dest.BenefitName, opt => opt.MapFrom(src => src.BenefitName.ToString()))
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+
+            CreateMap<GameMatchHistory, UserMatchHistoryResponse>();
         }
 
 

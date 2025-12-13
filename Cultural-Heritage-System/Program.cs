@@ -266,6 +266,8 @@ namespace Cultural_Heritage_System
                 );
             });
 
+            builder.Services.AddHttpClient();
+
 
 
             var app = builder.Build();

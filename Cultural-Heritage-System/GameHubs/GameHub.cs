@@ -129,7 +129,7 @@ namespace Cultural_Heritage_System.GameHubs
                 try
                 {
                     var rnd = new Random();
-                    int delayMs = rnd.Next(2000, 5000); // 5000ms = 5s, 20000ms = 20s
+                    int delayMs = rnd.Next(5000, 8000); // 5000ms = 5s, 20000ms = 20s
                     await Task.Delay(delayMs, cancelToken.Token);
 
                     // Nếu sau 30s mà vẫn còn trong hàng chờ → đấu bot
