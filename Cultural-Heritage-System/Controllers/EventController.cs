@@ -42,8 +42,8 @@ namespace Cultural_Heritage_System.Controllers
         // ========== DELETE ==========
 
         [HttpDelete("{id:long}")]
-        //[Authorize(Roles = "Admin")]
-        [AllowAnonymous]
+        [Authorize]
+        //[AllowAnonymous]
         public async Task<ApiResponse<object>> DeleteEvent(long id)
         {
             await _eventService.DeleteEventAsync(id);
@@ -92,7 +92,7 @@ namespace Cultural_Heritage_System.Controllers
         // ========== WITH ROOMS (ADMIN) ==========
 
         [HttpPost("with-rooms")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<ApiResponse<EventResponse>> CreateWithRooms(
             [FromBody] EventWithRoomsCreateRequest request)
         {
@@ -105,7 +105,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("with-rooms/{id:long}")]
-        //[Authorize(Roles = "Admin")]
+        [Authorize]
         public async Task<ApiResponse<EventResponse>> UpdateWithRooms(
             long id,
             [FromBody] EventWithRoomsUpdateRequest request)

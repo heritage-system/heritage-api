@@ -26,7 +26,7 @@ public class StreamingRoomsController : ControllerBase
     // ========== CLIENT JOIN / PARTICIPANTS ==========
 
     [HttpPost("rooms/{roomName}/join-token")]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<ApiResponse<StreamingJoinGrantResponse>> IssueJoinTokens(string roomName)
     {
         var grant = await _svc.IssueJoinTokensAsync(roomName);
@@ -53,7 +53,7 @@ public class StreamingRoomsController : ControllerBase
     }
 
     [HttpPost("rooms/{roomName}/heartbeat")]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<ApiResponse<object>> Heartbeat(string roomName)
     {
         await _svc.HeartbeatAsync(roomName);
@@ -61,7 +61,7 @@ public class StreamingRoomsController : ControllerBase
     }
 
     [HttpPost("rooms/{roomName}/leave")]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<ApiResponse<object>> Leave(string roomName)
     {
         await _svc.LeaveAsync(roomName);
@@ -69,7 +69,7 @@ public class StreamingRoomsController : ControllerBase
     }
 
     [HttpPost("rooms/{roomName}/set-role")]
-    [AllowAnonymous] // TODO: đổi lại [Authorize] / Roles nếu cần
+    [Authorize] // TODO: đổi lại [Authorize] / Roles nếu cần
     public async Task<ApiResponse<object>> SetRole(string roomName, [FromBody] StreamingSetRoleRequest dto)
     {
         await _svc.SetRoleAsync(roomName, dto);
@@ -77,7 +77,7 @@ public class StreamingRoomsController : ControllerBase
     }
 
     [HttpPost("rooms/{roomName}/kick")]
-    [AllowAnonymous]
+    [Authorize]
     public async Task<ApiResponse<object>> Kick(string roomName, [FromBody] StreamingAdmitRejectRequest dto)
     {
         await _svc.KickAsync(roomName, dto);
@@ -97,7 +97,7 @@ public class StreamingRoomsController : ControllerBase
 
     // update room (title, startAt, type)
     [HttpPut("rooms/{roomName}")]
-    [AllowAnonymous] // hoặc [Authorize(Roles = "Admin")]
+    [Authorize] // hoặc [Authorize(Roles = "Admin")]
     public async Task<ApiResponse<StreamingRoomResponse>> UpdateRoom(
         string roomName,
         [FromBody] StreamingRoomUpdateRequest request)
@@ -108,7 +108,7 @@ public class StreamingRoomsController : ControllerBase
 
     // delete room
     [HttpDelete("rooms/{roomName}")]
-    [AllowAnonymous] // hoặc [Authorize(Roles = "Admin")]
+    [Authorize] // hoặc [Authorize(Roles = "Admin")]
     public async Task<ApiResponse<object>> DeleteRoom(string roomName)
     {
         await _svc.DeleteRoomAsync(roomName);
@@ -117,6 +117,7 @@ public class StreamingRoomsController : ControllerBase
 
     // admin join với role CoHost
     [HttpPost("rooms/{roomName}/admin-join-token")]
+    [Authorize]
     //[Authorize(Roles = "Admin")]
     public async Task<ApiResponse<StreamingJoinGrantResponse>> AdminJoinAsCoHost(string roomName)
     {
