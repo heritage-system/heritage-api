@@ -39,10 +39,13 @@ namespace Cultural_Heritage_System.Services.Impl
 
         private int GetCurrentUserId()
         {
-            var id = _http.HttpContext?.User.FindFirst("userId")?.Value;
-            if (string.IsNullOrWhiteSpace(id))
+            var accountIdClaim = _http.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
-            return int.Parse(id);
+            }
+
+            return int.Parse(accountIdClaim);
         }
 
         private int? TryGetUserId()
@@ -361,11 +364,8 @@ namespace Cultural_Heritage_System.Services.Impl
             var existingById = existingRooms.ToDictionary(r => r.Id, r => r);
 
             // Lấy id người tạo từ Event.CreatedBy (string), nếu fail thì fallback sang current user
-            int creatorId;
-            if (!int.TryParse(e.CreatedBy ?? string.Empty, out creatorId))
-            {
-                creatorId = GetCurrentUserId();
-            }
+
+            int creatorId = GetCurrentUserId();
 
             var newRooms = new List<StreamingRoom>();
 
