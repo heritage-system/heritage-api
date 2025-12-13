@@ -27,6 +27,8 @@ namespace Cultural_Heritage_System.Dtos.Response.Staff
       
         //static
         public int NumberOfContributionAcceptances { get; set; }
+        public int NumberOfAcceptedContributions { get; set; }
+        public int NumberOfDeniedContributions { get; set; }
         public int NumberOfReportReplies { get; set; }       
     }
 }

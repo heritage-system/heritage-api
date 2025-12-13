@@ -92,7 +92,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
             if (user.UserStatus == UserStatus.PENDING_VERIFICATION)
             {
-                if(user.Role?.Name == DefinitionRole.MEMBER)
+                if (user.Role?.Name == DefinitionRole.MEMBER)
                 {
                     var confirm = await confirmTokenRepository.FindTokenByUserIdAsync(user.Id);
                     if (confirm == null)
@@ -105,8 +105,12 @@ namespace Cultural_Heritage_System.Services.Impl
                     }
                     throw new AppException(ErrorCode.NO_CONFIRM_EMAIL);
 
-                   
+
                 }
+            }
+
+            if (user.UserStatus == UserStatus.PENDING_APPROVE)
+            {
                 user.UserStatus = UserStatus.ACTIVE;
                 await userRepository.UpdateAsync(user);
                 // Nếu là staff

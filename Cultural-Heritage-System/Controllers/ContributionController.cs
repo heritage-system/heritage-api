@@ -27,7 +27,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost]
-        [AllowAnonymous]
+        [Authorize(Roles = "CONTRIBUTOR")]
         public async Task<ApiResponse<ContributionResponse>> CreateContribution([FromBody] ContributionCreationRequest request)
         {
 
@@ -62,6 +62,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("unlock_contribution")]
+        [Authorize]
         public async Task<ApiResponse<ContributionResponse>> UnlockContribution(int id)
         {
             return new ApiResponse<ContributionResponse>(
@@ -85,6 +86,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("add_contribution_save")]
+        [Authorize]
         public async Task<ApiResponse<bool>> AddContributionSave(int id)
         {
             return new ApiResponse<bool>(
@@ -96,6 +98,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpDelete("remove_contribution_save")]
+        [Authorize]
         public async Task<ApiResponse<object>> RemoveContributionSave(int id)
         {
 
@@ -132,6 +135,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("create_contribution_report")]
+        [Authorize]
         public async Task<ApiResponse<bool>> CreateContributionReport(ContributionReportCreationRequest request)
         {
             return new ApiResponse<bool>(
@@ -155,6 +159,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("get_contribution_overview")]
+        [Authorize]
         public async Task<ApiResponse<ContributionOverviewResponse>> GetContributionOverview(int id)
         {
             var result = await contributionService.GetContributionOverview(id);
@@ -166,6 +171,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("get_list_contribution_overview")]
+        [Authorize]
         public async Task<ApiResponse<PageResponse<ContributionOverviewListItemResponse>>> GetListContributionsOverview(
            [FromQuery] ContributionOverviewSearchRequest request)
 
@@ -178,6 +184,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("get_contribution_updated")]
+        [Authorize]
         public async Task<ApiResponse<ContributionDetailUpdatedResponse>> GetContributionDetailUpdated(int id)
         {
             var result = await contributionService.GetContributionDetailForUpdated(id);
@@ -189,7 +196,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("updated_contribution")]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<ApiResponse<ContributionResponse>> UpdateContribution([FromBody] ContributionUpdateRequest request)
         {
             var users = await contributionService.UpdateContribution(request);
@@ -202,6 +209,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("{id}/disable_contribution")]
+        [Authorize]
         public async Task<ApiResponse<bool>> DisableContributionStatus(long id)
         {
             var result = await contributionService.UpdateStatusContribution(id, ContributionStatus.DISABLE, false);
@@ -213,6 +221,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("{id}/reactive_contribution")]
+        [Authorize]
         public async Task<ApiResponse<bool>> ReActiveContributionStatus(long id)
         {
             var result = await contributionService.UpdateStatusContribution(id, ContributionStatus.APPROVED, false);
@@ -224,6 +233,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("{id}/disable_contribution_admin")]
+        [Authorize]
         public async Task<ApiResponse<bool>> DisableContributionStatusAdmin(long id)
         {
             var result = await contributionService.UpdateStatusContribution(id, ContributionStatus.DISABLE, true);
@@ -235,6 +245,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("{id}/reactive_contribution_admin")]
+        [Authorize]
         public async Task<ApiResponse<bool>> ReActiveContributionStatusAdmin(long id)
         {
             var result = await contributionService.UpdateStatusContribution(id, ContributionStatus.APPROVED, true);

@@ -20,6 +20,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<ApiResponse<PageResponse<FavoriteHeritageResponse>>> GetFavorites(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,
@@ -50,6 +51,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<ApiResponse<object>> AddFavorite([FromBody] AddFavoriteRequest request)
         {
             try
@@ -72,6 +74,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpDelete]
+        [Authorize]
         public async Task<ApiResponse<object>> RemoveFavorite([FromBody] RemoveFavoriteRequest request)
         {
             try

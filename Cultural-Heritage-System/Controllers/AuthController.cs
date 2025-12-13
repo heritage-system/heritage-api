@@ -50,19 +50,19 @@ namespace Cultural_Heritage_System.Controllers
             };
         }
 
-        [HttpPost("facebook")]
-        [AllowAnonymous]
-        public async Task<ApiResponse<SignInResponse>> SigInFacebook([FromQuery] string code)
-        {
-            var result = await authService.SignInWithFacebook(code);
+        //[HttpPost("facebook")]
+        //[AllowAnonymous]
+        //public async Task<ApiResponse<SignInResponse>> SigInFacebook([FromQuery] string code)
+        //{
+        //    var result = await authService.SignInWithFacebook(code);
 
-            return new ApiResponse<SignInResponse>
-            {
-                code = ((int)HttpStatusCode.OK),
-                message = "SignIn Facebook Successfully",
-                result = result
-            };
-        }
+        //    return new ApiResponse<SignInResponse>
+        //    {
+        //        code = ((int)HttpStatusCode.OK),
+        //        message = "SignIn Facebook Successfully",
+        //        result = result
+        //    };
+        //}
 
         [HttpPost("forgot-password")]
         public async Task<ApiResponse<ForgotPasswordResponse>> ForgotPassword([FromBody] Dtos.Request.ForgotPasswordRequest req)

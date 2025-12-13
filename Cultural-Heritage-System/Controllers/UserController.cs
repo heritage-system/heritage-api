@@ -80,7 +80,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("search_member")]
-        //[Authorize]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<PageResponse<UserSearchResponse>>> SearchMemberForAdmin(
            [FromQuery] UserSearchRequest request)
 
@@ -93,7 +93,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("create_user")]
-        [Authorize]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<UserCreationResponse>> CreateUserForAdmin([FromBody] UserCreationByAdminRequest request)
         {
             var users = await userService.CreateUserForAdmin(request);
@@ -106,6 +106,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("user_detail")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<UserDetailResponse>> GetUserDetailForAdmin(int id)
         {
             var result = await userService.GetUserDetailForAdmin(id);
@@ -117,6 +118,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPut("{id}/status")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<bool>> ChangeUserStatusForAdmin(int id, [FromBody] UserStatus status)
         {
             var result = await userService.ChangeUserStatusForAdmin(id, status);
@@ -128,6 +130,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("remind_mail")]
+
         public async Task<ApiResponse<bool>> SendRemindMailTest()
         {
             var vnZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");

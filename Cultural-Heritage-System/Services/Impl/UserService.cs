@@ -281,7 +281,7 @@ namespace Cultural_Heritage_System.Services.Impl
             User user = mapper.Map<User>(request);
             var generatedPassword = PasswordHelper.GenerateRandomPassword(8);
             user.PasswordHash = passwordHasher.HashPassword(user, generatedPassword);
-            user.UserStatus = UserStatus.PENDING_VERIFICATION;
+            user.UserStatus = UserStatus.PENDING_APPROVE;
 
             var role = await roleRepository.FindByRoleName(request.RoleName.ToUpper());
             if (role == null)

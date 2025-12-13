@@ -61,6 +61,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("save_quiz_result")]
+        [Authorize]
         public async Task<ApiResponse<bool>> SaveQuizResult([FromBody] SaveQuizResultRequest request)
         {
             return new ApiResponse<bool>(
@@ -72,6 +73,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("unlock_quiz")]
+        [Authorize]
         public async Task<ApiResponse<bool>> UnlockContribution(int id)
         {
             return new ApiResponse<bool>(
@@ -82,7 +84,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("create_quiz")]
-        //[Authorize(Roles ="ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<bool>> CreateQuiz([FromBody] QuizCreationRequest request)
         {
          
@@ -96,7 +98,7 @@ namespace Cultural_Heritage_System.Controllers
 
 
         [HttpPut("update_quiz")]
-        //[Authorize(Roles ="ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<bool>> UpdateQuiz([FromBody] QuizUpdateRequest request)
         {
            
@@ -109,7 +111,7 @@ namespace Cultural_Heritage_System.Controllers
 
 
         [HttpDelete("delete_quiz")]
-        //[Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<long?>> DeleteQuiz([FromQuery] long id)
         {
             
@@ -121,7 +123,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpPost("create_quiz_question")]
-        //[Authorize(Roles ="ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<bool>> CreateQuizQuestion([FromBody] QuizQuestionCreationRequest request)
         {
 
@@ -135,7 +137,7 @@ namespace Cultural_Heritage_System.Controllers
 
 
         [HttpPut("update_quiz_question")]
-        //[Authorize(Roles ="ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<bool>> UpdateQuizQuestion([FromBody] QuizQuestionUpdateRequest request)
         {
 
@@ -148,7 +150,7 @@ namespace Cultural_Heritage_System.Controllers
 
 
         [HttpDelete("delete_quiz_question")]
-        //[Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<long?>> DeleteQuizQuestion([FromQuery] long id)
         {
 
@@ -160,7 +162,7 @@ namespace Cultural_Heritage_System.Controllers
         }
 
         [HttpGet("admin/detail/{quizId}")]
-        //[Authorize(Roles = "ADMIN")]
+        [Authorize(Roles = "ADMIN,STAFF")]
         public async Task<ApiResponse<QuizDetailAdminResponse>> GetQuizDetailAdmin([FromRoute] long quizId)
         {
             var result = await quizService.GetQuizDetailAdmin(quizId);
