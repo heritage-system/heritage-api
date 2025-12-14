@@ -15,71 +15,166 @@ namespace Cultural_Heritage_System.Middlewares
             this.StatusCode = StatusCode;
         }
 
-        public static readonly ErrorCode USER_NOT_EXISTED = new ErrorCode(404, "User not existed", HttpStatusCode.NotFound);
-        public static readonly ErrorCode USER_EXISTED = new ErrorCode(404, "User existed", HttpStatusCode.NotFound);
-        public static readonly ErrorCode UNAUTHORIZED = new ErrorCode(401, "Unauthorized", HttpStatusCode.Unauthorized);
-        public static readonly ErrorCode ROLE_EXISTED = new ErrorCode(400, "Role existed", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode ROLE_NOT_EXISTED = new ErrorCode(404, "Role not existed", HttpStatusCode.NotFound);
-        public static readonly ErrorCode FORBIDDEN = new ErrorCode(403, "Forbidden", HttpStatusCode.Forbidden);
-        public static readonly ErrorCode ACCOUNT_LOCKED = new ErrorCode(403, "Account locked", HttpStatusCode.Forbidden);
-        public static readonly ErrorCode INVALID_DATE_OF_BIRTH = new ErrorCode(400, "Date of birth must be less than current time", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode LICENSENUMBER_EXISTED = new ErrorCode(400, "License number already exists", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode SPECIALTY_NOT_FOUND = new ErrorCode(404, "Specialty not found", HttpStatusCode.NotFound);
-        public static readonly ErrorCode SPECIALTY_EXISTED = new ErrorCode(400, "Specialty existed", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode TWO_FACTOR_SECRET_NOT_SET = new ErrorCode(400, "Two-factor authentication is not configured for this account.", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode INVALID_2FA_CODE = new ErrorCode(401, "The verification code is invalid or has expired.", HttpStatusCode.Unauthorized);
-        public static readonly ErrorCode FILE_INVALID = new ErrorCode(400, "File invalid", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode OTP_NOT_TRUE = new ErrorCode(400, "Otp not true", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode ATTEMPTS_OVER_LIMIT = new ErrorCode(400, "Attempts was over limit", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode EXPIRED_OTP = new ErrorCode(400, "Expired otp", HttpStatusCode.BadRequest);
+        public static readonly ErrorCode USER_NOT_EXISTED =
+            new(404, "Người dùng không tồn tại", HttpStatusCode.NotFound);
 
-        public static readonly ErrorCode TAG_EXISTED = new ErrorCode(400, "Tag already exists", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode TAG_NOT_EXISTED = new ErrorCode(404, "Tag not existed", HttpStatusCode.NotFound);
-        public static readonly ErrorCode INVALID_TAG_NAME = new ErrorCode(400, "Invalid tag name", HttpStatusCode.BadRequest);
+        public static readonly ErrorCode USER_EXISTED =
+            new(404, "Người dùng đã tồn tại", HttpStatusCode.NotFound);
 
-        public static readonly ErrorCode CATEGORY_EXISTED = new ErrorCode(400, "Category already exists", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode CATEGORY_NOT_EXISTED = new ErrorCode(404, "Category not existed", HttpStatusCode.NotFound);
-        public static readonly ErrorCode INVALID_CATEGORY_NAME = new ErrorCode(400, "Invalid CATEGORY name", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode CATEGORY_ALREADY_USED = new ErrorCode(404, "Category already used cannot delete", HttpStatusCode.NotFound);
+        public static readonly ErrorCode UNAUTHORIZED =
+            new(401, "Chưa xác thực", HttpStatusCode.Unauthorized);
 
-        public static readonly ErrorCode HERITAGE_NOT_EXISTED = new ErrorCode(404, "Heritage not existed", HttpStatusCode.NotFound);
-        public static readonly ErrorCode CONTRIBUTOR_NOT_EXISTED = new ErrorCode(404, "Contributor not existed", HttpStatusCode.NotFound);
-        public static readonly ErrorCode CONTRIBUTOR_EXISTED = new ErrorCode(400, "Contributor already exists", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode INVALID_CONTRIBUTOR_DATA = new ErrorCode(400, "Invalid contributor data", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode HERITAGE_NOT_FOUND = new ErrorCode(404, "Heritage not found", HttpStatusCode.NotFound);
-        public static readonly ErrorCode FAVORITE_ALREADY_EXISTS = new ErrorCode(400, "Heritage is already in favorite", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode FAVORITE_NOT_FOUND = new ErrorCode(404, "Heritage is not in favorites", HttpStatusCode.NotFound);
+        public static readonly ErrorCode ROLE_EXISTED =
+            new(400, "Vai trò đã tồn tại", HttpStatusCode.BadRequest);
 
-        public static readonly ErrorCode CONTRIBUTION_NOT_EXISTED = new ErrorCode(404, "Contribution not existed", HttpStatusCode.NotFound);
-        public static readonly ErrorCode INVALID_ROLE = new ErrorCode(400, "Contributor rights can only be granted to Members.", HttpStatusCode.NotFound);
-        public static readonly ErrorCode CONTRIBUTOR_DISABLED = new ErrorCode(403, "This contributor has been disabled and cannot be approved.", HttpStatusCode.NotFound);
-        public static readonly ErrorCode CONTRIBUTOR_IS_NOT_PREMIUM_ELIGIBLE = new ErrorCode(400, "Contributor is not premium eligible", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode USER_NOT_PREMIUM = new ErrorCode(400, "User not buy premium service yet", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode OVER_OPEN_LIMIT = new ErrorCode(400, "User has no open contribution token", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode CONTRIBUTION_SAVE_ALREADY_EXISTS = new ErrorCode(400, "Contribution save is already existed", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode CONTRIBUTION_SAVE_NOT_FOUND = new ErrorCode(404, "Contribution save is not in favorites", HttpStatusCode.NotFound);
-        public static readonly ErrorCode INVALID_STATUS = new ErrorCode(403, "Invalid contributor status.", HttpStatusCode.BadRequest);
+        public static readonly ErrorCode ROLE_NOT_EXISTED =
+            new(404, "Vai trò không tồn tại", HttpStatusCode.NotFound);
 
-        public static readonly ErrorCode REVIEW_NOT_FOUND = new ErrorCode(404, "Review not found", HttpStatusCode.NotFound);
-        public static readonly ErrorCode ACCEPTANCE_NOT_FOUND = new(404, "Acceptance not found", HttpStatusCode.NotFound);
-        public static readonly ErrorCode NOTE_REQUIRED_WHEN_REJECT = new(400, "Note is required when rejecting a contribution", HttpStatusCode.BadRequest);
+        public static readonly ErrorCode FORBIDDEN =
+            new(403, "Không có quyền truy cập", HttpStatusCode.Forbidden);
 
-        public static readonly ErrorCode QUIZ_NOT_FOUND = new ErrorCode(404, "Quiz not found", HttpStatusCode.NotFound);
-        public static readonly ErrorCode QUIZ_QUESTION_NOT_FOUND = new ErrorCode(404, "Quiz question not found", HttpStatusCode.NotFound);
+        public static readonly ErrorCode ACCOUNT_LOCKED =
+            new(403, "Tài khoản đã bị khóa", HttpStatusCode.Forbidden);
 
-        public static readonly ErrorCode PANORAMA_TOUR_NOT_FOUND = new ErrorCode(404, "Panorama tour not found", HttpStatusCode.NotFound);
-        public static readonly ErrorCode PANORAMA_SCENE_NOT_FOUND = new ErrorCode(404, "Panorama scene not found", HttpStatusCode.NotFound);
+        public static readonly ErrorCode INVALID_DATE_OF_BIRTH =
+            new(400, "Ngày sinh phải nhỏ hơn thời điểm hiện tại", HttpStatusCode.BadRequest);
 
-        public static readonly ErrorCode SUBSCRIPTION_USAGE_NOT_FOUND = new ErrorCode(404, " Subscription usage not found", HttpStatusCode.NotFound);
+        public static readonly ErrorCode LICENSENUMBER_EXISTED =
+            new(400, "Số giấy phép đã tồn tại", HttpStatusCode.BadRequest);
 
-        public static readonly ErrorCode INVALID_TOKEN = new ErrorCode(400, "Mã không hợp lệ", HttpStatusCode.BadRequest);
-        public static readonly ErrorCode NO_CONFIRM_EMAIL = new ErrorCode(400, "Bạn chưa xác nhận email", HttpStatusCode.BadRequest);
+        public static readonly ErrorCode SPECIALTY_NOT_FOUND =
+            new(404, "Chuyên môn không tồn tại", HttpStatusCode.NotFound);
 
-        public static readonly ErrorCode ROOM_NOT_FOUND = new ErrorCode(404, "Room not found", HttpStatusCode.NotFound);
-        public static readonly ErrorCode STREAM_NOT_STARTED = new ErrorCode(400, "stream not started", HttpStatusCode.NotFound);
-        public static readonly ErrorCode EVENT_NOT_FOUND = new ErrorCode(400, "Event not found", HttpStatusCode.NotFound);
+        public static readonly ErrorCode SPECIALTY_EXISTED =
+            new(400, "Chuyên môn đã tồn tại", HttpStatusCode.BadRequest);
 
-        public static readonly ErrorCode NO_ENOUGH_POINT = new ErrorCode(400, "Không đủ điểm để đổi", HttpStatusCode.NotFound);
+        public static readonly ErrorCode TWO_FACTOR_SECRET_NOT_SET =
+            new(400, "Tài khoản chưa được cấu hình xác thực hai yếu tố", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode INVALID_2FA_CODE =
+            new(401, "Mã xác thực không hợp lệ hoặc đã hết hạn", HttpStatusCode.Unauthorized);
+
+        public static readonly ErrorCode FILE_INVALID =
+            new(400, "Tệp không hợp lệ", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode OTP_NOT_TRUE =
+            new(400, "Mã OTP không chính xác", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode ATTEMPTS_OVER_LIMIT =
+            new(400, "Đã vượt quá số lần thử cho phép", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode EXPIRED_OTP =
+            new(400, "Mã OTP đã hết hạn", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode TAG_EXISTED =
+            new(400, "Thẻ đã tồn tại", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode TAG_NOT_EXISTED =
+            new(404, "Thẻ không tồn tại", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode INVALID_TAG_NAME =
+            new(400, "Tên thẻ không hợp lệ", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode CATEGORY_EXISTED =
+            new(400, "Danh mục đã tồn tại", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode CATEGORY_NOT_EXISTED =
+            new(404, "Danh mục không tồn tại", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode INVALID_CATEGORY_NAME =
+            new(400, "Tên danh mục không hợp lệ", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode CATEGORY_ALREADY_USED =
+            new(404, "Danh mục đang được sử dụng, không thể xóa", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode HERITAGE_NOT_EXISTED =
+            new(404, "Di sản không tồn tại", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode CONTRIBUTOR_NOT_EXISTED =
+            new(404, "Cộng tác viên không tồn tại", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode CONTRIBUTOR_EXISTED =
+            new(400, "Cộng tác viên đã tồn tại", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode INVALID_CONTRIBUTOR_DATA =
+            new(400, "Dữ liệu cộng tác viên không hợp lệ", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode HERITAGE_NOT_FOUND =
+            new(404, "Không tìm thấy di sản", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode FAVORITE_ALREADY_EXISTS =
+            new(400, "Di sản đã có trong danh sách yêu thích", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode FAVORITE_NOT_FOUND =
+            new(404, "Di sản không có trong danh sách yêu thích", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode CONTRIBUTION_NOT_EXISTED =
+            new(404, "Đóng góp không tồn tại", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode INVALID_ROLE =
+            new(400, "Chỉ có thể cấp quyền cộng tác viên cho người dùng thành viên", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode CONTRIBUTOR_DISABLED =
+            new(403, "Cộng tác viên này đã bị vô hiệu hóa và không thể phê duyệt", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode CONTRIBUTOR_IS_NOT_PREMIUM_ELIGIBLE =
+            new(400, "Cộng tác viên không đủ điều kiện đăng nội dung premium", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode USER_NOT_PREMIUM =
+            new(400, "Người dùng chưa mua dịch vụ premium", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode OVER_OPEN_LIMIT =
+            new(400, "Người dùng đã hết lượt mở ", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode CONTRIBUTION_SAVE_ALREADY_EXISTS =
+            new(400, "Đóng góp này đã được lưu trước đó", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode CONTRIBUTION_SAVE_NOT_FOUND =
+            new(404, "Đóng góp này không có trong danh sách đã lưu", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode INVALID_STATUS =
+            new(403, "Trạng thái cộng tác viên không hợp lệ", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode REVIEW_NOT_FOUND =
+            new(404, "Không tìm thấy đánh giá", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode ACCEPTANCE_NOT_FOUND =
+            new(404, "Không tìm thấy thông tin phê duyệt", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode NOTE_REQUIRED_WHEN_REJECT =
+            new(400, "Cần ghi chú khi từ chối đóng góp", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode QUIZ_NOT_FOUND =
+            new(404, "Không tìm thấy bài quiz", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode QUIZ_QUESTION_NOT_FOUND =
+            new(404, "Không tìm thấy câu hỏi quiz", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode PANORAMA_TOUR_NOT_FOUND =
+            new(404, "Không tìm thấy tour panorama", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode PANORAMA_SCENE_NOT_FOUND =
+            new(404, "Không tìm thấy cảnh panorama", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode SUBSCRIPTION_USAGE_NOT_FOUND =
+            new(404, "Không tìm thấy thông tin sử dụng gói dịch vụ", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode INVALID_TOKEN =
+            new(400, "Mã không hợp lệ", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode NO_CONFIRM_EMAIL =
+            new(400, "Bạn chưa xác nhận email", HttpStatusCode.BadRequest);
+
+        public static readonly ErrorCode ROOM_NOT_FOUND =
+            new(404, "Không tìm thấy phòng", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode STREAM_NOT_STARTED =
+            new(400, "Buổi phát trực tiếp chưa bắt đầu", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode EVENT_NOT_FOUND =
+            new(400, "Không tìm thấy sự kiện", HttpStatusCode.NotFound);
+
+        public static readonly ErrorCode NO_ENOUGH_POINT =
+            new(400, "Không đủ điểm để đổi", HttpStatusCode.NotFound);
     }
 }
-

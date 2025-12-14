@@ -194,7 +194,7 @@ public class ContributorService : IContributorService
             Bio = request.Bio,
             Expertise = request.Expertise,
             Verified = false,
-            Status = ContributorStatus.APPLIED,
+            Status = ContributorStatus.ACTIVE,
             IsPremiumEligible = request.IsPremiumEligible,
             CreatedBy = accountIdClaim,
             UpdatedBy = accountIdClaim

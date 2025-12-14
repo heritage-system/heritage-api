@@ -22,6 +22,7 @@ using Cultural_Heritage_System.Dtos.Response.Category;
 using Cultural_Heritage_System.Dtos.Response.ContributionReport;
 using Cultural_Heritage_System.Dtos.Response.Contributor;
 using Cultural_Heritage_System.Dtos.Response.Event;
+using Cultural_Heritage_System.Dtos.Response.EventRegistration;
 using Cultural_Heritage_System.Dtos.Response.GameMatchHistory;
 using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Location;
@@ -575,7 +576,15 @@ namespace Cultural_Heritage_System.Helpers
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
 
             CreateMap<GameMatchHistory, UserMatchHistoryResponse>();
-        }
+
+            CreateMap<EventRegistration, UserEventRegistrationResponse>()
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Event.Title))
+                .ForMember(dest => dest.ThumbnailUrl, opt => opt.MapFrom(src => src.Event.ThumbnailUrl))
+                .ForMember(dest => dest.StartAt, opt => opt.MapFrom(src => src.Event.StartAt))
+                .ForMember(dest => dest.CloseAt, opt => opt.MapFrom(src => src.Event.CloseAt))
+                .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Event.Category))
+                .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Event.Tags));             
+    }
 
 
     }
