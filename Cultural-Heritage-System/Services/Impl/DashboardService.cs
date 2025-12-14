@@ -147,24 +147,39 @@ namespace Cultural_Heritage_System.Services.Impl
         public async Task<List<ContributionTrendPoint>> GetContributionTrendAsync(int months)
         {
             var today = DateTime.UtcNow;
-            var start = new DateTime(today.Year, today.Month, 1).AddMonths(-Math.Max(months - 1, 0));
+            var start = new DateTime(today.Year, today.Month, 1)
+                .AddMonths(-Math.Max(months - 1, 0));
 
-            var data = await contributionRepository.GetContributionsQueryable()
+            var rawData = await contributionRepository.GetContributionsQueryable()
                 .Where(c => c.CreatedAt >= start)
-                .GroupBy(c => new { c.CreatedAt.Year, c.CreatedAt.Month })
-                .Select(g => new ContributionTrendPoint
+                .GroupBy(c => new
                 {
-                    Period = $"{g.Key.Year}-{g.Key.Month:D2}",
+                    Year = c.CreatedAt.Year,
+                    Month = c.CreatedAt.Month
+                })
+                .Select(g => new
+                {
+                    g.Key.Year,
+                    g.Key.Month,
                     Total = g.Count(),
                     Approved = g.Count(x => x.Status == ContributionStatus.APPROVED),
                     Pending = g.Count(x => x.Status == ContributionStatus.PENDING),
                     Rejected = g.Count(x => x.Status == ContributionStatus.REJECTED)
                 })
-                .OrderBy(x => x.Period)
+                .OrderBy(x => x.Year)
+                .ThenBy(x => x.Month)
                 .ToListAsync();
 
-            return data;
+            return rawData.Select(x => new ContributionTrendPoint
+            {
+                Period = $"{x.Year}-{x.Month:D2}",
+                Total = x.Total,
+                Approved = x.Approved,
+                Pending = x.Pending,
+                Rejected = x.Rejected
+            }).ToList();
         }
+
 
         public async Task<List<EngagementByCategoryItem>> GetEngagementByCategoryAsync(int topCategories)
         {

@@ -2,6 +2,8 @@
 using Cultural_Heritage_System.Dtos.Request.Event;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Event;
+using Cultural_Heritage_System.Dtos.Response.EventRegistration;
+using Cultural_Heritage_System.Dtos.Response.GameMatchHistory;
 
 namespace Cultural_Heritage_System.Services
 {
@@ -16,6 +18,7 @@ namespace Cultural_Heritage_System.Services
         Task<EventResponse> CreateEventWithRoomsAsync(EventWithRoomsCreateRequest request);
         Task<EventResponse> UpdateEventWithRoomsAsync(EventWithRoomsUpdateRequest request);
         Task<PageResponse<EventResponse>> SearchEventsAsync(EventSearchRequest request);
+        Task<List<UserEventRegistrationResponse>> GetUserEventRegistrations();
 
     }
 }

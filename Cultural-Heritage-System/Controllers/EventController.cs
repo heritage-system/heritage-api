@@ -2,7 +2,10 @@
 using Cultural_Heritage_System.Dtos.Request.Event;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Event;
+using Cultural_Heritage_System.Dtos.Response.EventRegistration;
+using Cultural_Heritage_System.Dtos.Response.GameMatchHistory;
 using Cultural_Heritage_System.Services;
+using Cultural_Heritage_System.Services.Impl;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -132,5 +135,19 @@ namespace Cultural_Heritage_System.Controllers
                 result = result
             };
         }
+
+        [HttpGet("event_registrations")]
+        [Authorize]
+        public async Task<ApiResponse<List<UserEventRegistrationResponse>>> GetUserEventRegistrations()
+        {
+            var result = await _eventService.GetUserEventRegistrations();
+
+            return new ApiResponse<List<UserEventRegistrationResponse>>(
+                code: 200,
+                message: "Get list successfully",
+                result: result
+            );
+        }
+
     }
 }
