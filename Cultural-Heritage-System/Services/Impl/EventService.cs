@@ -3,11 +3,16 @@ using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Request.Event;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Event;
+using Cultural_Heritage_System.Dtos.Response.EventRegistration;
+using Cultural_Heritage_System.Dtos.Response.GameMatchHistory;
 using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
+using Cultural_Heritage_System.Repositories.Impl;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using static StackExchange.Redis.Role;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
@@ -516,7 +521,19 @@ namespace Cultural_Heritage_System.Services.Impl
             };
         }
 
+        public async Task<List<UserEventRegistrationResponse>> GetUserEventRegistrations()
+        {
+          
+            int userId = GetCurrentUserId();
 
-
+            var now = DateTime.UtcNow;
+            var query = await _regRepo.GetEventRegistrationsQueryable()               
+                .Where(g => g.UserId == userId && g.IsCancelled == false && g.Event.StartAt >= now)
+                .OrderByDescending(g => g.CreatedAt)
+                .Take(20)
+                .ToListAsync();
+          
+            return _mapper.Map<List<UserEventRegistrationResponse>>(query);
+        }
     }
 }

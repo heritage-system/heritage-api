@@ -6,7 +6,7 @@ namespace Cultural_Heritage_System.Repositories
     {
         Task<EventRegistration?> GetByEventAndUserAsync(long eventId, int userId);
         Task<List<EventRegistration>> GetByEventWithUserAsync(long eventId);
-
+        IQueryable<EventRegistration> GetEventRegistrationsQueryable();
 
     }
 }
