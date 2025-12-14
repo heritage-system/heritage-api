@@ -156,7 +156,7 @@ namespace Cultural_Heritage_System.Services.Impl
                     ?? throw new AppException(ErrorCode.EVENT_NOT_FOUND);
 
             if (e.Status is EventStatus.CLOSED or EventStatus.ARCHIVED)
-                throw new AppException(ErrorCode.FORBIDDEN);
+                throw new AppException(ErrorCode.EVENT_CLOSED);
 
             var existing = await _regRepo.GetByEventAndUserAsync(eventId, userId);
             if (existing != null)
