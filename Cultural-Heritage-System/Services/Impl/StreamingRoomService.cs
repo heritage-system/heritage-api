@@ -159,7 +159,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.ROOM_NOT_FOUND);
 
             if (sp != null && sp.Status == ParticipantStatus.KICKED)
-                throw new AppException(ErrorCode.UNAUTHORIZED);
+                throw new AppException(ErrorCode.BEEN_KICKED);
 
             if (sp == null)
             {
