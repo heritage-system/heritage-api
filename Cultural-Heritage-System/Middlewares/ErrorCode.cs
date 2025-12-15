@@ -164,21 +164,26 @@ namespace Cultural_Heritage_System.Middlewares
 
         public static readonly ErrorCode NO_CONFIRM_EMAIL =
             new(400, "Bạn chưa xác nhận email", HttpStatusCode.BadRequest);
-     
+
 
         public static readonly ErrorCode STREAM_NOT_STARTED =
             new(400, "Buổi phát trực tiếp chưa bắt đầu", HttpStatusCode.NotFound);
+        public static readonly ErrorCode DUPLICATE_USER =
+           new(409, "Người dùng đã  vào phòng trước đó", HttpStatusCode.NotFound);
 
         public static readonly ErrorCode EVENT_NOT_FOUND =
             new(400, "Không tìm thấy sự kiện", HttpStatusCode.NotFound);
 
         public static readonly ErrorCode NO_ENOUGH_POINT =
             new(400, "Không đủ điểm để đổi", HttpStatusCode.NotFound);
+        public static readonly ErrorCode BEEN_KICKED =
+           new(400, "NGười dùng đã bị kick ", HttpStatusCode.NotFound);
+
         public static readonly ErrorCode ROOM_NOT_FOUND = new ErrorCode(404, "Chưa đến thời gian mở phòng", HttpStatusCode.NotFound);
-       
-       
+
+
         public static readonly ErrorCode ROOM_CLOSED = new ErrorCode(403, "Phòng đã đóng", HttpStatusCode.Forbidden);
-        public static readonly ErrorCode EVENT_CLOSED = new ErrorCode(403, "Event đã đóng", HttpStatusCode.Forbidden);
-       
+        public static readonly ErrorCode EVENT_CLOSED = new ErrorCode(403, "Sự kiện đã đóng", HttpStatusCode.Forbidden);
+
     }
 }
