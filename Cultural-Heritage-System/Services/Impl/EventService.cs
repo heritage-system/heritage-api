@@ -3,11 +3,16 @@ using Cultural_Heritage_System.Common;
 using Cultural_Heritage_System.Dtos.Request.Event;
 using Cultural_Heritage_System.Dtos.Response;
 using Cultural_Heritage_System.Dtos.Response.Event;
+using Cultural_Heritage_System.Dtos.Response.EventRegistration;
+using Cultural_Heritage_System.Dtos.Response.GameMatchHistory;
 using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
 using Cultural_Heritage_System.Models;
 using Cultural_Heritage_System.Repositories;
+using Cultural_Heritage_System.Repositories.Impl;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using static StackExchange.Redis.Role;
 
 namespace Cultural_Heritage_System.Services.Impl
 {
@@ -39,10 +44,13 @@ namespace Cultural_Heritage_System.Services.Impl
 
         private int GetCurrentUserId()
         {
-            var id = _http.HttpContext?.User.FindFirst("userId")?.Value;
-            if (string.IsNullOrWhiteSpace(id))
+            var accountIdClaim = _http.HttpContext?.User.FindFirst("userId")?.Value;
+            if (string.IsNullOrEmpty(accountIdClaim))
+            {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
-            return int.Parse(id);
+            }
+
+            return int.Parse(accountIdClaim);
         }
 
         private int? TryGetUserId()
@@ -153,7 +161,7 @@ namespace Cultural_Heritage_System.Services.Impl
                     ?? throw new AppException(ErrorCode.EVENT_NOT_FOUND);
 
             if (e.Status is EventStatus.CLOSED or EventStatus.ARCHIVED)
-                throw new AppException(ErrorCode.FORBIDDEN);
+                throw new AppException(ErrorCode.EVENT_CLOSED);
 
             var existing = await _regRepo.GetByEventAndUserAsync(eventId, userId);
             if (existing != null)
@@ -361,11 +369,8 @@ namespace Cultural_Heritage_System.Services.Impl
             var existingById = existingRooms.ToDictionary(r => r.Id, r => r);
 
             // Lấy id người tạo từ Event.CreatedBy (string), nếu fail thì fallback sang current user
-            int creatorId;
-            if (!int.TryParse(e.CreatedBy ?? string.Empty, out creatorId))
-            {
-                creatorId = GetCurrentUserId();
-            }
+
+            int creatorId = GetCurrentUserId();
 
             var newRooms = new List<StreamingRoom>();
 
@@ -516,7 +521,19 @@ namespace Cultural_Heritage_System.Services.Impl
             };
         }
 
+        public async Task<List<UserEventRegistrationResponse>> GetUserEventRegistrations()
+        {
+          
+            int userId = GetCurrentUserId();
 
-
+            var now = DateTime.UtcNow;
+            var query = await _regRepo.GetEventRegistrationsQueryable()               
+                .Where(g => g.UserId == userId && g.IsCancelled == false && g.Event.StartAt >= now)
+                .OrderByDescending(g => g.CreatedAt)
+                .Take(20)
+                .ToListAsync();
+          
+            return _mapper.Map<List<UserEventRegistrationResponse>>(query);
+        }
     }
 }

@@ -58,7 +58,7 @@ namespace Cultural_Heritage_System.Services.Impl
         {
             var me = await participantRepo.GetByRoomAndUser(roomId, userId);
             if (me == null || (me.Role != RoomRole.HOST && me.Role != RoomRole.COHOST))
-                throw new AppException(ErrorCode.FORBIDDEN);
+                throw new AppException(ErrorCode.ROOM_CLOSED);
         }
 
         private static string EnsureRtcUid(string? rtcUid, int userId)
@@ -75,7 +75,7 @@ namespace Cultural_Heritage_System.Services.Impl
 
             // phòng đã đóng thì cấm join luôn
             if (room.Type == StreamingRoomType.CLOSED)
-                throw new AppException(ErrorCode.FORBIDDEN);
+                throw new AppException(ErrorCode.ROOM_CLOSED);
 
             var nowUtc = DateTime.UtcNow;
 
@@ -159,7 +159,7 @@ namespace Cultural_Heritage_System.Services.Impl
                 throw new AppException(ErrorCode.ROOM_NOT_FOUND);
 
             if (sp != null && sp.Status == ParticipantStatus.KICKED)
-                throw new AppException(ErrorCode.UNAUTHORIZED);
+                throw new AppException(ErrorCode.BEEN_KICKED);
 
             if (sp == null)
             {

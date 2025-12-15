@@ -1,8 +1,6 @@
 ﻿using AutoMapper;
-using Cultural_Heritage_System.Dtos.Request.Heritage;
 using Cultural_Heritage_System.Dtos.Request.Tag;
 using Cultural_Heritage_System.Dtos.Response;
-using Cultural_Heritage_System.Dtos.Response.Heritage;
 using Cultural_Heritage_System.Dtos.Response.Tag;
 using Cultural_Heritage_System.Helpers;
 using Cultural_Heritage_System.Middlewares;
@@ -55,7 +53,7 @@ namespace Cultural_Heritage_System.Services.Impl
             {
                 throw new AppException(ErrorCode.UNAUTHORIZED);
             }
-            tag.CreatedBy = accountIdClaim;        
+            tag.CreatedBy = accountIdClaim;
             await tagRepository.AddAsync(tag);
             return mapper.Map<CreateTagResponse>(tag);
         }

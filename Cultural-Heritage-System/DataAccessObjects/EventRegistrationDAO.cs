@@ -21,6 +21,12 @@ namespace Cultural_Heritage_System.DataAccessObjects
                 .ToListAsync();
         }
 
+        public IQueryable<EventRegistration> GetEventRegistrationsQueryable()
+        {
+            return _dbSet
+                .Include(c => c.User)                  
+                .Include(c => c.Event);
+        }
 
     }
 }
